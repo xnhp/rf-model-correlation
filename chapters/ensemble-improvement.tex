@@ -1,0 +1,192 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+The question that arises immediately when considering ensemble learning is whether combining the outputs of members could possibly \textit{hurt} the generalisation error. If member models are random according to a random variable parameter $\Theta$, we can quantify this by comparing the ensemble loss to the loss of an expected member. This is exactly the ambiguity-effect (\ref).
+\marginnote{
+    \textit{Ambiguity-effect}, sometimes also called \textit{ensemble improvement} is defined as (see {thm:ambiguity-effect-decomp})
+$$
+\Mavg L(Y, q_{i}) - L(Y, \bar{q})
+$$
+for ensemble members $q_1, ..., q_M$, combiner $\bar{q}$ and loss function $L$.
+}
+
+We have yet to see if and when this quantity is non-negative, i.e. combining individual models in an ensemble does not hurt performance. Further, we want to see how large this improvement actually is and whether on can construct better ensembles by adressing it explicitly.
+
+\subsection{Unchanged bias and reduction in variance}
+\label{sec:unchanged-bias}
+
+In section \ref{sec:ensemble-learning-motivation} we gave arguments for how in specific cases, the ensemble bias equals the bias of any member. We now have the tools to show this in a more general manner \cite{wood23}.
+
+For the ensemble bias, application of the ambiguity-effect decomposition (see \ref{todo}) to a set of centroid models $q_{i}^\star$ yields:
+% TODO also use LE (loss-effect) notation in other places -- but make sure we're not confusing anything
+$$
+\underbrace{
+\LE{y}{\bar{q}^\star} 
+}_{\text{ens. bias}}
+= 
+\underbrace{
+\Mavg \LE{y}{q_{i}^\star}
+}_{\text{avg. bias}}
+- 
+\underbrace{
+\Mavg\LE{\bar{q}^\star}{q_{i}^\star}
+}_{\Delta}
+$$
+For the ensemble variance, application of the diversity-effect decomposition (see \ref{todo}) while substituting $y \gets \bar{q}^\star$:
+$$
+\underbrace{
+\mathbb{E}_{D}\left[ \LE{\bar{q}^\star}{\bar{q}} \right]
+}_{\text{ens. var.}}
+ = 
+\underbrace{
+\Mavg \LE{\bar{q}^\star}{q_{i}^\star} 
+}_{\Delta}
++ 
+\underbrace{
+\Mavg \mathbb{E}_{D}\left[ \LE{q_{i}^\star}{q_{i}} \right] 
+}_{\text{avg. var.}}
+- 
+\underbrace{
+\mathbb{E}_{D}\left[ \Mavg \LE{\bar{q}}{q_{i}} \right] 
+}_{\text{diversity}}
+$$
+Due to Lemma (\ref{qstars-same}) which states that in homogeneous ensembles $q_{i}^\star = q_{j}^\star = \bar{q}^\star$, we can conclude that $\Delta = 0$. This shows two things: First, the ensemble bias-effect is equal to the average member bias-effect:
+$$
+\Delta = 0 ~ ~ \rightarrow ~ ~ \LE{y}{\bar{q}^\star} = \Mavg \LE{y}{q_{i}^\star}
+$$
+Second, the ensemble variance-effect is exactly the difference between the average variance-effect and the diversity. In other words, \textit{variance reduction is exactly measured by diversity}.
+
+\subsection{Improvement for Bregman Divergences}
+
+It is important to note that the ensemble combiner often is an expectation in itself, for instance the arithmetic mean of member outputs. This motivated \citeauthoryear{abe} to invoke Jensen's inequality
+\sidenote{Jensen's inequality, in a probabilistic setting, states that, for a function $\phi:\mathbb{R} \to \mathbb{R}$ and a random variable $X$
+$$
+\phi \text{~convex} \rightarrow \phi\left(\mathbb{E}_{}\left[ X \right] \right) \leq \mathbb{E}_{}\left[ \phi(X) \right] 
+$$
+}
+. For a loss function $\ell$ that is convex in its first argument, it holds that
+$$
+\underbrace{
+\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X)\right] , Y  ) 
+}_{\text{"ensemble loss"}}
+~ ~ \leq ~ ~ 
+\mathbb{E}_{\Theta}\left[ 
+\underbrace{
+\ell(q_{\Theta}(X), Y)  
+}_{\text{"member loss"}}
+\right]
+$$
+and thus
+$$
+\mathbb{E}_{{\Theta}}\left[ \ell (q_{\Theta}(X),Y) \right]  -
+\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right] ,Y ) \geq 0
+$$
+Further, \citeauthoryear{abe} interpret this \textit{Jensen gap}, i.e. the difference between these quantities as a measure of ensemble improvement.
+It is evident, that the Jensen gap is but a special case of ambiguity-effect (\ref{thm:ambiguity-effect-decomp}) for $\bar{q} \defeq \Mavg q_{i}$ and convex loss functions. 
+This shows that the ensemble loss is always smaller-equal than the expected member loss, but \textit{only} if the ensemble output is actually produced by expectation / arithmetic mean. 
+
+However, it can not be assumed from the outset that the arithmetic mean is the best ensemble combiner. Indeed, for the cross-entropy loss, \citeauthor{abe} proceed to note that the Jensen gap corresponds to a form that is "not immediately recognizable". Although they do find an interpretation of it, it is still necessarily dependent on the outcome $Y$ 
+\marginnote{
+	In fact, for the case of cross-entropy, \citeauthoryear{wood23} show that the ambiguity term is still nonnegative, i.e. that the arithmetic mean combiner does not hurt performance. 
+}.
+As illustrated in \ref{sec:bregman-divergences} on Bregman divergences, 
+it seems reasonable to define the ensemble combiner in accordance to the Bregman divergence, i.e. to be the \textit{dual} expectation $\mathcal{E}_{\Theta}\left[ q_{\Theta} \right]$. 
+% TODO actually talk about these combiners somewhere
+Non-negativity is then easily shown since in that case ambiguity-effect reduces to ambiguity (see \ref{above})
+$$
+\Breg{\bar{q}}{q} = \mathbb{E}_{}\left[ \Breg{Y}{\bar{q}} - \Breg{Y}{q} \right]
+\hspace{1em} \text{for $\bar{q} = \mathcal{E}_\Theta\left[q_\Theta\right]$}
+$$ and the value of any Bregman divergence is always non-negative. Further, ambiguity is now independent of the outcome.
+
+This shows that for any Bregman divergence, ensembling using the adequate combiner can in fact not hurt performance. Second, we obtain an intuitive measure of ensemble improvement. Third, this ensemble improvement appears in an exact decomposition of the ensemble generalisation error.
+
+
+
+\subsection{Improvement for the \zeroone-Loss}
+
+Bregman divergences are certainly useful for regression tasks. Further, divergences such as the \textsc{KL}-divergence are useful for estimating class \textit{probabilities} and indeed, classification tasks can be approached by selecting the class with the highest overall probability.
+In other settings, however, we are mainly concerned with whether the correct class is assigned or not. This gives rise to the \zeroone-loss $\ell(y', y) \defeq \mathbb{1}\left[ y' \not = y \right]$. The expected loss of a model $q$ is $L(q_{}) \defeq \mathbb{E}_{D}\left[ \Lzo{q_{}(X)}{Y} \right]$. Let $\bar{q}$ be the majority vote combiner.
+In the following, we will review results which characterise the ensemble improvement in this setting.
+
+Given ensemble members $q_{\Theta}$ parameterised by a random variable $\Theta$, denote the proportion of erroneous ("wrong") classifiers for an example-outcome pair $(X,Y)$ as $W_{\Theta} \defeq W_{\Theta}(X,Y) \defeq \mathbb{E}_{\Theta}\left[ \Lzo{q_{\Theta}(X)}{Y} \right]$. In expectation, this is the average member loss $\Mavg\Lzo{q_{i}(X)}{Y}$. 
+
+Using Markov's inequality, we can readily upper-bound the error of the ensemble in terms of expected errors of the members~\cite{theisen}
+\sidenote{ Markov's inequality states that for a nonnegative random variable $X$ and $a > 0$ $$ \mathbb{P}\left[X \geq a\right] \leq \frac{\mathbb{E}\left[X\right]}{a}.$$ The final equality is due to that one can swap the order of expectations in $\mathbb{E}_{D}\left[ W_{\Theta} \right] = \mathbb{E}_{{D}}\left[ \mathbb{E}_{\Theta}\left[ \ind{q_{\Theta}(X) \not= Y} \right] \right] = \mathbb{E}_{\Theta}\left[  L(q_{\Theta}) \right]$. 
+}
+.
+$$
+0 
+~ ~ \leq ~ ~ 
+L(\bar{q}) 
+~ ~ \leq ~ ~ 
+\prob{}{W_{\Theta}  \geq \frac{1}{2}} 
+~ ~\leq ~ ~
+2 \mathbb{E}_{}\left[ W_{\Theta} \right] 
+= 
+2 \mathbb{E}_{\Theta}\left[ L(q_{\Theta}) \right] 
+$$
+While there indeed exist examples for which this upper bound is tight \ref{theisen}, it is reasonable to suspect that the ensemble being worse by a factor of two is only a pathological case and not relevant for practise.
+The way forward is to impose assumptions on the performance of the member models.
+
+\begin{definition} 
+    % TODO move to introduction, relate to margin defs
+   \label{def:weak-learner} 
+    A model $q_\Theta$ is a \textit{weak learner} iff it performs better than as if randomly guessing, i.e. $\mathbb{E}_{D}\left[ W_{\Theta} \right] \geq \frac{1}{2}$.
+\end{definition}
+
+\begin{theorem} (\cite{wood23}) In ensembles of weak learners, diversity-effect is non-negative:
+$$
+\mathbb{E}_{D}\left[ 
+\mathbb{E}_{Y}\left[ 
+\Mavg \Lzo{Y}{q_{i}} - \Lzo{Y}{\bar{q}}
+\right] 
+\right] 
+~ ~ \geq ~ ~ 0
+$$
+\end{theorem}
+% TODO at least provide intuition on why that is
+
+In particular, this means that the ensemble improvement is non-negative. 
+% TODO double terms, this is confusing, they're really the same thinthing.
+
+\cite{theisen} further restrict the weak learner assumption to a condition called \textit{competence}.
+\begin{definition} (Competence, \cite{theisen})
+An ensemble is \textit{competent} iff
+$$
+\forall t  \in \left[ 0, \frac{1}{2} \right] : \prob{(X,Y) \sim D}{ W_{\Theta}(X,Y) \in \left[ t, \frac{1}{2} \right]} 
+~ ~ \geq ~ ~
+\prob{(X,Y)\sim D}{W_{\Theta}(X,Y) \in \left[ \frac{1}{2}, 1-t \right]}
+$$
+\end{definition}
+% TODO illustration for this
+% TODO this might also be a motivation for DRF approach
+The weak learner assumption is a special case of this for $t = \frac{1}{2}$. Ensembles of weak learners are competent and as such, this provides a more general proof for \ref{thm:above}. The competence assumption, however, allows to exclude pathological cases and give tighter bounds for the ensemble improvement -- here in terms of disagreements between members.
+\sidenote{
+    Because we focus mainly on binary classification, we give this result in its simplified form for $k=2$ classes but note that their actual result gives bounds for arbitrary $k$.
+}
+% TODO really need to resolve the naming conflict ensemble improvement / diversity / ambiguity
+% TODO overfull
+\begin{theorem} (\cite{theisen}, for binary classification) Let $D(q_{\Theta}, q_{\Theta'}) \defeq \mathbb{E}_{D}\left[ \Lzo{q_{\Theta}}{q_{\Theta'}} \right]$ be the \textit{disagreement rate} between two members. In competent ensembles it holds that
+$$
+\mathbb{E}_{\Theta, \Theta'}\left[ D(q_{\Theta}, q_{\Theta'}) \right] 
+~ ~  \geq ~ ~ 
+\mathbb{E}_{\Theta}\left[ L(q_{\Theta}) - L(\bar{q}) \right] 
+~ ~  \geq ~ ~ 
+\mathbb{E}_{\Theta, \Theta'}\left[ D(q_{\Theta}, q_{\Theta'}) \right] - \mathbb{E}_{\Theta}\left[ L(q_{\Theta}) \right]  
+$$
+\end{theorem}
+
+% TODO this was really important to put here for some reason but now I lost my train of thought....
+% -- I guess it was that competence is actually motivation for DRF weightin
+% in the sense that it would influence margins/ratio incorrect trees st the ensemble is "more competent"
+% TODO should show how this improves upon the naive bound above
+% TODO mention that we can (easily) experimentally verify that RFs are competent
+
+% TODO at least can relate this to other bounds...
+
+% TODO should also at least mention margin bounds, breiman bound...
+
+% TODO for more, cf louppe 4.1.2
+
+
+\end{document}

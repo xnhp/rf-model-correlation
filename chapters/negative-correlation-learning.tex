@@ -1,0 +1,160 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+Consider the bias-variance-covariance decomposition for the squared error loss \ref{thm:bias-variance-covariance-decomp}: 
+\begin{align*}
+\mathbb{E}_{D}\left[ (y - \bar{q}(x))^2 \right]  &= (\mathbb{E}_{D}\left[ \bar{q}(x) \right] - y)^2 \\
+& + \mathbb{E}_{D}\left[ \frac{1}{M^2}\sum_{i=1}^M (q_{i}(x) - \mathbb{E}_{D}\left[ q_{i}(x) \right] )^2 \right]  \\
+& + \mathbb{E}_{D}\left[ \frac{1}{M^2}\sum_{i \not=j}^M (q_{i}(x) - \mathbb{E}_{D}\left[ q_{i}(x) \right] )(q_{j}(x) - \mathbb{E}_{D}\left[ q_{j}(x) \right] ) \right] 
+\end{align*}
+% TODO remove explicit dependence on x
+The covariance term contributes positively (resp. negatively) to the ensemble error if the outputs of the members are positively (resp. negatively) correlated. 
+
+Training neural network models involves optimising the weights of the neural network with respect to a given loss function. A common practise is to add \textit{regularisation terms} to this loss function in order to bias the model towards e.g. sparse predictions \cite{todo}. 
+
+\cite{LiuYao} suggest training an ensemble of neural networks simultaneously. The $i$-th member network is trained using a loss function $\ell_{i}$ that contains a regularisation term $p_{i}$, which is intended to influence the training of the $i$-th member such that its predictions are negatively correlated with the other members. This is known as \textit{Negative Correlation Learning} (NCL). The hyperparameter $\lambda \in \mathbb{R}$ determines how much weight is put on either of the two components.
+$$
+e_{i} \defeq
+\sum_{k=1}^n (q_{i}(x_{k}) - y_{k})^2 ~ ~ + ~ ~ \lambda ~ p_{i}
+$$
+where the first term is the individual error of the $i$-th member and the regularisation term is
+$$
+p_{i} \defeq \sum_{k=1}^n \left( 
+(q_{i}(x_{k}) - \bar{q}(x_{k}))^2
+\sum_{i \not=j}^M (q_{i}(x_{k}) - \bar{q}(x_{k}))
+\right)
+$$
+% TODO mention that it corresponds to the i-th term in the double sum above.
+If $p_{i}$ is small, then the $i$-th member is negatively correlated with the rest of the ensemble.
+Note that the penalty term corresponds to contribution of the $i$-th member to the ambiguity (\ref{thm:ambiguity-decomp}).
+$$
+p_{i} = - \left(\sum_k^n q_{i}(x) - \bar{q}(x)\right)^2
+$$
+% TODO highlight somewhere that this links bias-variance-covariance decomp and ambiguity -- i.e. expression via covarance is actually artifact of squared error -- and more importantly, that we are comparing model outputs and not losses -- which, at first, seems confusing
+Indeed, as \cite{brown2005} noted, this approach can also be motivated via the ambiguity decomposition. The error of the full ensemble is \sidenote{We additionally use a factor of $\frac{1}{2}$ }
+$$
+\frac{1}{2}(\bar{q}(x)-y)^2 = \Mavg \frac{1}{2}(q_{i}(x)-y)^2 ~ ~ - ~ ~ \Mavg \frac{1}{2}(q_{i} - \bar{q})^2
+$$
+Due to this, they propose a diversity-encouraging loss-function for the $i$-th member of the form
+\begin{definition} (NCL neural network objective for squared error \cite{brown2005})
+$$
+\ell_{i}(x,y) \defeq \frac{1}{2} \Mavg \frac{1}{2} (q_{i}-y)^2 ~ ~ - \lambda \Mavg \frac{1}{2} (q_{i} - \bar{q})^2
+$$
+\end{definition}
+Then the penalty coeffient $\lambda$ smoothly distinguishes between training $q_{i}$ to either maximise its individual performance or the ensemble performance, since
+$$
+\frac{\partial\ell_{i}}{\partial q_{i}} = \frac{1}{M}
+\left(
+(q_{i}-y) - \lambda (q_{i} - \bar{q})
+\right)
+$$
+and
+$$
+\begin{align}
+\lambda = 0 &\rightarrow \frac{\partial\ell_{i}}{\partial q_{i}} = \frac{1}{M}(q_{i}-y) = \frac{1}{M} \frac{\partial\ell_{i}}{\partial q_{i}} \\
+\lambda = 1 &\rightarrow \frac{\partial\ell_{i}}{\partial q_{i}} = \frac{1}{M}(\bar{q} - y) = \frac{\partial\bar{q}}{\partial q_{i}}
+\end{align}
+$$
+
+Several authors have attempted to transfer or generalise Negative Correlation Learning to other loss functions. For instance, \cite{webb21} directly proved an ambiguity decomposition for the KL-divergence $K$ and proposed the objective
+$$
+\ell_{i}(x,y) \defeq \Mavg K(y \mid\mid q_{i}) ~ ~ - ~ ~ \lambda ~ \Mavg K(\bar{q} \mid\mid q_{i})
+$$
+% TODO consistent notation for KL-divergence
+where $\bar{q}$ is the geometric mean combiner (see \ref{todo}). The proof is not trivial and does not give insight into whether such a decomposition might also exist for other loss functions.
+
+\cite{buschjaeger} approached the problem by attempting to derive a generalised decomposition of the ensemble error. The basic idea is to consider a Taylor approximation around a notion of expected model $q^\star \defeq \mathbb{E}_{\Theta}\left[ q_{\Theta} \right]$.
+% TODO under considerations of breggies, should expected model sometimes use dual expectation?
+\begin{align*}
+\mathbb{E}_{}\left[ \ell(y, q) \right]  &= 
+\mathbb{E}_{}\left[ \ell(q^\star) \right] 
++ \mathbb{E}_{}\left[ (q - q^\star)^\top \nabla_{q^\star}(\ell (q^\star)) \right]  \\
+&+ \mathbb{E}_{\Theta}\left[ \frac{1}{2} (q-q^\star)^\top\nabla^2_{q^\star}(\ell(q^\star))(q-q^\star) \right] 
++ \mathbb{E}_{}\left[ R_{3} \right] 
+\end{align*}
+
+where $R_{3}$ is the remainder of the approximation, which vanishes if the third derivative of $\ell$ is zero.
+By definition of $q^\star$, $\mathbb{E}_{\Theta}\left[ \nabla_{q^\star}(\ell(q^\star)) \right] = \nabla_{q^\star}(\ell(q^\star))$ and $\mathbb{E}_{\Theta}\left[ q-q^\star \right] = 0$ and thus the second term vanishes.
+The expectations can be approximated as follows:
+$$
+q^\star = \mathbb{E}_{{\Theta}}\left[ q_{\Theta} \right] \approx f \defeq \Mavg q_{i}
+$$
+\begin{align*}
+\mathbb{E}_{\Theta}\left[ \frac{1}{2} (q-q^\star)^\top\nabla^2_{q^\star}(\ell(q^\star))(q-q^\star) \right] \approx \frac{1}{2}\Mavg d_{i}^\top D d_{i} \\
+\text{~~for $D \defeq \nabla^2_{f(x)}(\ell(f(x)),y)$ and $d_{i} \defeq (q_{i}(x) - f(x))$}
+\end{align*}
+\vspace{0.5em}
+$$
+\mathbb{E}_{\Theta}\left[ R_{3}(x) \right]  \approx \tilde{R}
+$$
+Note that here they \textit{assume} the expected model $q^\star$ to also be the ensemble combiner, i.e. $q^\star \approx \Mavg q_{i}$. 
+% TODD can we relate this to the qstar lemma?
+Based on this, they propose the following training objective.
+\begin{definition} Generalised NCL objective as proposed by \cite{buschj}
+    \label{def:buschj-ncl-objective}
+$$
+\ell(f) \defeq \Mavg \ell(q_{i}) - \frac{1}{2} \Mavg d_{i}^\top D d_{i}
+$$
+where $D \defeq \nabla^2_{f(x)}(\ell(f(x)),y)$ and $d_{i} \defeq (q_{i}(x) - f(x))$
+% TODO clarify what f is
+\end{definition}
+This is based on the assumption that the remainder to the Taylor approximation $R_{3}$ is negligibly small. Let us consider some examples of commonly used loss functions.
+\begin{itemize}
+\item For the squared error, the third derivative vanishes and thus the decomposition is exact.
+\item For the negatively log-likelihood $\ell(z,y) \defeq - \sum_{i}^k y_{i}\log(z_{i})$, the third derivate is not bounded and thus this decomposition can not be used.
+\item For the cross-entropy loss $\ell(z,y) \defeq - \sum_{i}^k y_{i} \log \frac{e^{z_{i}}}{\sum_{j}e^{z_{j}}}$, the third derivative is bounded and while the decomposition is not exact, it can be used for approximation. % TODO clarify
+\item For any other loss function, this would have to be checked.
+% TODO clarify
+\end{itemize}
+Thus, this approach makes several assumptions and is not applicable to some widely used loss functions.
+
+It is evident however, \textit{that we already have a fully general ambiguity decomposition at hand}, namely the ambiguity-effect decomposition (\ref{thm:ambiguity-effect-decomp}). 
+This decomposition is exact and holds for \textit{any} loss function (including the \zeroone-loss). 
+For Bregman divergences, this reduces to the ambiguity decomposition \ref{thm:bregman-ambiguity-decomp}.
+% TODO direct comparison to those above, e.g. NLL, CE -- need to study wood23 a bit more
+%
+We claim that the adequate generalisation of the NCL objective follows this structure.
+\begin{definition} We propose the following generalisation of the NCL neural network objective. For general loss functions $L$:
+$$
+\ell_{i} \defeq \Mavg L(y, q_{i}) ~ ~ - \lambda \left( 
+\Mavg L(y, q_{i}) - L(y, \bar{q})
+\right)
+$$
+And for Bregman divergences:
+$$
+\ell_{i} \defeq \Mavg \Breg{y}{q_{i}} ~ ~ - \lambda\left( \Mavg \Breg{\bar{q}}{q_{i}} \right)
+$$
+\end{definition}
+NCL for the squared error loss as introduced by \cite{LiuYao} and \cite{brown2005}, as well as for the KL-divergence as given by \cite{webb} can directly seen to be special cases of this.
+
+
+This gives a general framework for Negative Correlation Learning with arbitrary loss functions. Because it is founded on the exact and intuitive bias-variance-diversity decomposition, this also yields a natural and intuitive means for understanding and analysing Negative Correlation Learning and its effects.
+
+% TODO maybe move this to the outlook section
+Note that the Dynamic Random Forest approach \ref{sec:before} is very similar in spirit. The construction procedure of individual decision trees greedily optimises its own performance (\ref{sec:decision trees greedily optimise a loss fn}), which corresponds to the first term in the NCL neural network objective. The introduction of example weights based on the ensemble diversity influences the decision tree construction to improve the ensemble loss, which corresponds to the second term.
+
+Although the term \textit{Negative Correlation Learning} in the literature refers specifically to neural networks, we can now see that it is rather a style of training ensemble members with respect to the ambiguity decomposition.
+To the best of our knowledge, only one other algorithm has been published that realises this: \cite{negative-correlation-forests} proposes to refine the leaf predictions in a given Random Forest using using gradient descent according to the objective defined in \ref{def:buschj-ncl-objective}.
+
+\subsection{Experiments}
+
+% we can now:
+% - do NCL with other losses
+% - analyse them according to the decomp
+
+As a proof of concept, we perform Negative Correlation Learning with small neural networks based on the cross-entropy loss (ref{thm:cross-entropy-decomp}).
+
+The case of KL-divergence was already investigated empirically in detail in \cite{Webb}.
+
+\marginnote{
+   Experiment setup, NN architecture? (also see margintable command/environment)
+}
+
+% TODO some remarks about peculiarities with NNs..?
+% TODO looking at margin plots / hists would also be interesting here
+
+
+
+% TODO NCL with zero-one-loss? One for which decomp does not hold. would be cool. 
+
+\end{document}
