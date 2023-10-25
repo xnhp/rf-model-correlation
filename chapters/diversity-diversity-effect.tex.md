@@ -3,11 +3,13 @@
 
 chapter introduction. We will now introduce a way to understand ensemble diversity. 
 
-\subsection{Measures of ensemble diversity} \label{sec:measures-ensemble-diversity}
+\section{Measures of ensemble diversity} \label{sec:measures-ensemble-diversity}
 
 Review.  Maybe a table with all these measures? Would look nice. But probably not too relevant. 
 
-\subsection{Ambiguity} 
+
+% TODO write somewhere that bayes error can also be considered a variance (see Adlam22 eq (5)
+\section{Ambiguity} 
 
 % TODO cite 
 %- krog_NeuralNetworkEnsembles
@@ -61,7 +63,7 @@ Variance measures the spread of training error across models trained with differ
 
 
 %TODO need to argue more that this is indeed centroid? should come from generalised / bregman etc.?
-\subsection{The Bias-Variance-Diversity-Effect decomposition} \label{sec:bias-variance-diversity-decomp}
+\section{The Diversity-Effect decomposition} \label{sec:bias-variance-diversity-decomp}
 % TODO double decomposition trick and bias-variance-diversity/ambiguity-effect decomp
 
 Note that the first term in the ambiguity-effect decomposition \ref{thm:ambig-effect-decomp} is the average loss of the ensemble members. One can now decompose the loss of an individual ensemble member into bias- and variance-effect just like in \ref{thm:bias-variance-effect-decomp}.
@@ -103,13 +105,8 @@ Note that the first term in the ambiguity-effect decomposition \ref{thm:ambig-ef
 \end{theorem}
 
 
-\subsection{Diversity is a measure of model fit}
 
-"Sweet spot" of diversity. Review of previous experiments. Will need to go somewhere else.
-% cf obsidian "sweet spot for diversity" and other notes
-
-
-\section{Bregman Divergences} \label{sec:bregman-divergences}
+\section{Diversity for Bregman Divergences} \label{sec:bregman-divergences}
 
 % TODO super interesting: bregman information, is just sample variance for squared loss, mutual information for KL-divergence, also interpretable for Itakura-Saito -- so here it sort of also appears in the purity measures
 % https://jmlr.csail.mit.edu/papers/volume6/banerjee05b/banerjee05b.pdf
@@ -248,6 +245,12 @@ This yields a generalised bias-variance-diversity decomposition for bregman dive
 
 % TODO note on how we require special ensemble combiner according to dual expectation for this to hold
 % give table for combiners for squared-error KL-divergence etc
+
+
+\section{Diversity is a measure of model fit}
+
+"Sweet spot" of diversity. Review of previous experiments. Will need to go somewhere else.
+% cf obsidian "sweet spot for diversity" and other notes
 
 
 % TODO wood23 "MC-dropout"

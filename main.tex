@@ -194,11 +194,7 @@
 % TODO more
 
 
-\section{Preliminaries}
-
-In this section, we will define some basic concepts that we later use throughout the thesis.
-
-\subsection{Statistics}
+\section{Statistics}
 
 We want to reason about algorithms which act on data in a broadly applicable manner. We use statistical language for this. Consider for example a data point $X$ that is used as input for an algorithm. Our intention is to say that this $X$ could be essentially \textit{any} data point from some kind of data source. In other words, we can consider $X$ to be \textit{random}, that is, $X$ is a random variable (a symbol) that can take different values. 
 Which values exactly it can take depends on the data source -- the \textit{distribution} of the data. If our data source is a fair $6$-sided die, $X$ can take values in $\Omega = \{ 1, \dots, 6 \}$ and the distribution of values is constant where each outcome has probability $\frac{1}{6}$, i.e. $\prob{}{1} = \dots  = \prob{}{6} = \frac{1}{6}$.
@@ -253,11 +249,31 @@ Further, we not only want to reason about the behaviour of an algorithm with res
 
 \begin{itemize}
 	\item Note that a function \(g(X)\) of a random variable \(X\) is a random variable itself and $\mathbb{E}[g(X)] = {\int g(x)f_X(x) \, dx}$. % law of the unconscious statistician
-	\item A basic property of expected values is that they are \textit{linear}: For any two random variables $X$, $Y$ and a constant $\alpha$ it holds that $\mathbb{E}\left[ X + Y \right] = \mathbb{E}\left[ X \right] + \mathbb{E}_{}\left[ Y \right]$ and $\mathbb{E}_{}\left[ \alpha X \right] = \alpha \mathbb{E}_{}\left[ X \right]$.
 	\item To emphasize the random
   variable the function is dependent on, we sometimes mention it in the
   subscript and write $\mathbb{E}_X[g(X)]$.
 \end{itemize}
+
+
+\begin{lemma}
+  \label{thm:expected-value-properties}
+The following facts apply to expected values.
+\begin{itemize}
+	\item A basic property of expected values is that they are \textit{linear}: For any two random variables $X$, $Y$ and a constant $\alpha$ it holds that $\mathbb{E}\left[ X + Y \right] = \mathbb{E}\left[ X \right] + \mathbb{E}_{}\left[ Y \right]$ and $\mathbb{E}_{}\left[ \alpha X \right] = \alpha \mathbb{E}_{}\left[ X \right]$.
+  \item The rule of iterated expectations states that, for any function \(r\):
+    \(\mathbb{E}[r(X,Y)] = \mathbb{E}\left[\mathbb{E}[r(X,Y) | X]\right]\) and,
+    in particular, \(\mathbb{E}[X] = \mathbb{E}[\mathbb{E}[X|Y]]\)
+  \item Jensen's Inequality: Let $X$ be a random variable such that
+    $\mathbb{P}(a \leq X \leq b)=1$. If $g: \mathbb{R} \to
+    \mathbb{R}$ is convex on $[a, b]$, then
+    $
+    g(\mathbb{E}\left[ X \right]) \leq \mathbb{E}\left[ g(X) \right]
+    $.
+  \item If \(X\) and \(Y\) are independent, then \(\mathbb{E}\left[XY\right] =
+    \mathbb{E}\left[X\right] \mathbb{E}\left[Y\right]\)
+\end{itemize}
+\end{lemma}
+
 
 A random variable is \textit{discrete} if its set of outcomes is a countable set $\{ x_{i}, \dots, x_{n} \}$ with probabilities $\{ p_{i}, \dots, p_{n} \}$. The probability density function then is $f_X(x_i) = \mathbb{P}(X = x_i) = p_i$. The expected value of a discrete random variable is given by a sum.
 $$
@@ -270,7 +286,7 @@ $$
 $$
 
 
-\subsection{Supervised Learning}
+\section{Supervised Learning}
 \label{sec:supervised-learning}
 
 Our goal is to find an algorithm that is able to map objects from $\mathcal{X}$ to outcomes in $\mathcal{Y}$. Objects
@@ -318,10 +334,128 @@ the \textit{expected risk}, also known as \textit{generalisation error}:
 $$
 \text{GE}(\mathcal{A}) \defeq \mathbb{E}_{D}\left[ \text{Risk}(q_{D}) \right]  = \mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}(X)) \right] 
 $$
-In the following, we will analyse this quantity and how and why some specific learning algorithms minimise it.
-% TODO maybe glossary and index?
 
-\subsection{Margins}
+\section{Bias, Variance and their Effects}
+ \label{sec:bias-variance-effects}
+
+Since we are ultimately interested in the generalisation error of an ensemble, the question arises what forces influence it. To this end, one can strive to mathematically express the generalisation error in terms of specific meaningful quantities. A classical decomposition is the \textit{bias-variance-decomposition}. 
+
+
+\begin{marginfigure} \label{fig:bias-variance-tradeoff}
+    \includegraphics[width=\textwidth]{bias-variance/bias_variance_decomposition_with_decision_trees.png}
+    \caption{foo!}
+    % TODO
+\end{marginfigure}
+
+% % TODO bias and variance are measures independent of particular data sample, can use to compare (on same data*set*)
+
+\begin{marginfigure} \label{fig:variance-trees}
+    \includegraphics[width=\textwidth]{bias-variance/test_error_of_individual_trees.png}
+    \caption{
+    Visualising the variance of \textcolor{blue}{Decision Tree} and \textcolor{orange}{Random Forest} models. Each glyph corresponds to the test error of one model trained on a random subset of the full available data. The variation of the test error around the mean test error across many dataset samples is exactly the variance.
+    Not only do Random Forests show lower test errors on average, they seem to also have lower variance. We will explain this observation in \ref{todo}
+    % TODO because, in fact, ensemble improvement is solely due to reduction in variance
+    %   since var(qbar) = mean(var(qi)) - div/div-eff
+    % i.e. the difference between mean tree variances and ensemble variance is exactly the ambiguity/diversity-effect
+    }
+\end{marginfigure}
+
+Informally, the generalisation error can be decomposed as
+$$
+\text{(error)} = \text{(noise)} + \text{(bias)} + \text{(variance)}
+$$
+The first quantity, \textit{noise} describes inherent noise in the outcomes. It is intrinsic to the given data and can not be influenced by the choice of learner. The second quantity, \textit{bias} is a measure of precision of the learning algorithm \sidenote{Note that we are measuring the \textit{learning algorithm} and not a produced model.}. Intuitively, it describes how precise, on average, a model typically produced by the learning algorithm is. The third quantity, \textit{variance} describes the spread of the learning algorithm. That is, it describes how different the models produced by the learner will be when given different realisations of the input random variable $D$ -- most prominently, different training data sets. 
+
+This decomposition is an essential tool to understand learning algorithms in general and ensembles such as Random Forests in particular. For the purpose of this thesis, it is important to understand the decomposition and its motivation in detail. 
+We will begin by considering the widely known bias-variance-decomposition for regression using the squared-error loss $\ell(y, y') \defeq (y- y')^2$. We will then proceed to generalise the decomposition to arbitrary loss functions.
+For sake of clarity, we will from now on take the dependence of $q_{D}(X)$ on $X$ as understood and write only $q_{D}$.
+
+% TODO always hyphen, i.e. "squared-error" loss
+The variance of $q_{D}$ with respect to the squared-error loss is commonly defined as the variance of the regressor around its expected value. This is the expected squared error between a random value ($q_{D}$) and the closest non-random value ($\mathbb{E}_{D}\left[q_{D}\right]$). 
+$$
+\Var{D}{q_{D}} \defeq \mathbb{E}_{_{D}}\left[ (q_{D}- \mathbb{E}_{_{D}}\left[ q_{D} \right] )^2 \right]  = \min_{z} \mathbb{E}_{D}\left[ (q_{D} - z)^2 \right] 
+$$
+% TODO #todo already use colours here?
+As such, $\mathbb{E}_{D}\left[ q_{D} \right]$ is a centroid to the different realisations of $q_{D}$ with respect to the loss function $\ell(y,y') = (y-y')^2$.
+This non-random centroid will turn out to be particularly interesting. For a random variable $Z$, let us denote its centroid with respect to $Y$ as
+$$
+Z^\star \defeq \arg \min_{z} \mathbb{E}_Y\left[ (Y - z)^2 \right]
+$$
+
+Let's consider two centroids: One with respect to the label distribution and one with respect to the model outputs.
+\begin{itemize}
+\item $y^\star(X) = \arg\min_{z} \mathbb{E}_{Y}\left[ (Y - z(X))^2 \right] = \mathbb{E}_{Y|X}\left[ Y \right]$ is the \textit{expected label} % TODO clarify
+\item $q^\star(X) = \arg \min_{z} \mathbb{E}_{D}\left[ (q_{D}(X) - z(X))^2 \right]$ is the \textit{expected model}.
+\end{itemize}
+
+% As such, for the squared-error loss, we can write
+% $$
+% \Var{q_{D}} = \mathbb{E}_{D}\left[ L(q_{D}, q^\star) \right] 
+% $$
+Using this notation, the well-known bias-variance decomposition for the squared-error loss is given as follows.
+Note that each variance term is the expected distance in terms of loss to a certain centroid.
+\begin{align} \label{thm:sqerr-bias-variance-decomp}
+\mathbb{E}_{(X,Y), D}\left[ (Y-q_{D}(X))^2 \right]  
+% &= 
+%   \mathbb{E}_{(X,Y)}\left[ (Y-y^\star(X))^2 \right]  
+% + \mathbb{E}_{X, D}\left[ (y^\star(X) - q_{D}(X))^2 \right]  \\
+&= \underbrace{\mathbb{E}_{(X,Y)}\left[ (Y-y^\star(X))^2 \right]   }_{\Var{}{Y} ~~ \text{("noise")}}
++ \underbrace{\mathbb{E}_{X, D}\left[ (q^\star(X) - q_{D}(X))^2 \right]   }_{\Var{}{q} ~~ \text{("learner variance")}}
++ \underbrace{ \mathbb{E}_{X}\left[  (y^\star(X) - q^\star(X))^2\right] 
+  }_{\BiasSq{Y, q} ~~ \text{("learner bias")}}
+\end{align}
+% #todo change BiasSq to just "Bias" -- square is only artifact of squared error
+This decomposition is usually derived by expanding the square \cite{todo}. The cross-terms then vanish due to that $  q^\star = \mathbb{E}_{_{D}}\left[ q_{D} \right]$ and $y^\star = \mathbb{E}_{Y|X}\left[ Y \right]$.
+This is but a special case of a more general structure applying to a certain class of losses. We will provide a more general proof in lemmas \ref{thm:bregman-collapse-bias} and \ref{thm:bregman-collapse-variances}.
+
+The first term, $\Var{}{Y}$ is independent of $D$ and $q_{D}$. This means we have no means of influencing it with our choice of $q_{D}$.
+$\Var{}{Y}$ is also referred to as \textit{noise}, \textit{bayes error} or \textit{irreducible error}. 
+The second term, $\Var{}{q}$ measures the variance of our model around its non-random centroid with respect to different realisations of the random training dataset $D$. This can be understood as a measure of spread of the learning algorithm with respect to different realisations of $D$.
+The third term, $\BiasSq{q_{D}, Y}$ is the distance in terms of loss between the expected classifier and the expected label. This can be thought of as a measure of precision of our learning algorithm. 
+
+Note that we developed two things:
+One the one hand, we derived quantities that measure the notions of bias and variance. On the other hand, by virtue of these quantities appearing in the error decomposition \ref{thm:sqerr-bias-variance-decomp}, we have quantified the \textit{effect} these quantities have on the generalisation error.
+This distinction is often overlooked because, like here, for many commonly used losses the quantities and their effects coincide. However, in general this is not necessarily true. We are particularly interested in the \zeroone-loss for classification and a decomposition of it that is independent of the target has been proven to not exist \cite{todo}. We will see that, while we cannot give a bias-variance decomposition for any loss, we can give a more general bias-variance-\textit{effect} decomposition for which the former is a special case.
+
+The variance-effect is the expected change in loss caused by using $q_{D}$ instead of the non-random centroid $q^\star$. Likewise, the bias-effect is the expected change in loss caused by using the expected model instead of the expected label. 
+\sidenote{In the original publication \cite{james_GeneralizationsBiasVariance_}, bias-effect is called the \textit{systematic effect}, i.e. the effect of the systematic components. However, it is clearer to call this \textit{bias-effect}, particularly when we begin to introduce notions of diversity in \ref{sec:measures-ensemble-diversity}.}
+Formally:
+\begin{align*}
+\text{Variance-Effect} &\defeq \mathbb{E}_{D,Y}\left[ \ell(Y, q_{D}) - \ell(Y, q^\star) \right] \\
+\text{Bias-Effect} &\defeq \mathbb{E}_{D,Y}\left[ \ell(Y, q^\star) - \ell(Y, y^\star) \right] 
+\end{align*}
+
+To shorten notation, and to give the equations a shape suggestive for later, we define:
+\begin{definition} (Loss-Effect) For a loss functon $\ell$, and random variables $Y, Z, Z'$, we define the change in loss between $Z$ and $Z'$ in relation to $Y$ as:
+  $$
+  \LE{Z}{Z'} \defeq \ell(Y, Z) - \ell(Y, Z')
+  $$
+  \label{def:loss-effect}
+\end{definition}
+
+Putting this together, we can state a generalised bias-variance decomposition. The classical bias-variance decomposition for squared error (\ref{thm:sqerr-bias-variance-decomp}) is a special case of this (\ref{lemma:the-trick}).
+
+% TODO widepar messes up spacing?
+\begin{theorem} (Bias-Variance-Effect-Decomposition \cite{james_GeneralizationsBiasVariance_})
+For any loss function $L$, it holds that
+% TODO make ystar lowercase in other places aswell (really, it also is a function dependent on x (the bayes classifier?))
+% TODO emphasize how this is really about changes in *loss*, directly comparing *predictions* only comes for bregman diverges -- see e.g. arguments on variance reduction
+\begin{align*}
+\mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}) \right]  
+&= 
+\underbrace{\mathbb{E}_{Y}\left[ \ell(Y, y^\star) \right]  }_{\text{noise}}
++ \underbrace{\mathbb{E}_{(X,Y)}\left[ \LE{q^\star, y^\star} \right] }_{\text{bias-effect}}
++ \underbrace{\mathbb{E}_{(D,Y)}\left[ \LE{q_D, q^\star} \right] }_{\text{variance-effect}}  \\
+\\ 
+\text{for} \hspace{1em}
+& \LE{q^\star}{y^\star} = \ell(Y, q^\star) - \ell(Y, y^\star) \\ \\
+&\LE{q_{D}}{q^\star} = \ell(Y, q_{D}) - \ell(Y, q^\star)
+\end{align*}
+\end{theorem}
+This decomposition holds for \textit{any} loss function $\ell$ since, by linearity of expectation, the individual terms on the right-hand-side simply cancel out. Further, this decomposition is independent of the definitions of $y^\star$ and $q^\star$.
+
+
+\section{Classifier Margins}
 
 A basic tool in the analysis of classifiers is the notion of margins.  The margin can be thought to represent the classifier's confidence in its prediction. $\prob{}{k|x}$ describes the probability estimated by the classifier that $X$ is of class $k$.
 
@@ -329,7 +463,7 @@ A basic tool in the analysis of classifiers is the notion of margins.  The margi
 % TODO disallow page breaks in these boxes
 \begin{definition} (Classifier margins \cite{tibshirani_ElementsStatisticalLearning_2017}) The margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
 $$
-m(x,y) \defeq \prob{}{y|X} - \max_{j\not=k} \prob{}{j|X}
+m(x,y) \defeq \prob{}{y|X} - \max_{j\not=y} \prob{}{j|X}
 $$
 \begin{itemize}
     \item The vector $m(x) = [m_{1}(x), \dots, m_{K}(x)]^\top$, where $K$ is the total number of classes, is called a \textit{margin vector} iff its components sum to zero. 
@@ -345,7 +479,7 @@ Similarly, we can define a notion of margin for classification ensembles decidin
 \begin{definition} (Ensemble margins for majority voting \cite{breiman})
 The margin for class $y$ of an example $x$ is the difference between the number of member votes for class $Y$ and the number of votes for the next-best class.
 	$$
-\mr(x,y) \defeq \Mavg \ind{q_{i} = y} - \max_{j \neq Y} \Mavg \ind{q_{i} = j}
+\mr(x,y) \defeq \Mavg \ind{q_{i} = y} - \max_{j \neq y} \Mavg \ind{q_{i} = j}
 $$
 % TODO maybe express with expectations instead
 \label{def:ensemble-margin}
@@ -355,7 +489,7 @@ If ensemble members are parameterised by $\Theta$, from the statistical point of
 $$
 \mr(x,y) = \prob{\Theta}{q_{\Theta} = y} - \max_{j \not=y} \prob{\Theta}{q=j}
 $$
-For binary classification under the \zeroone-loss, the ensemble margin is linearly related to the ratio of incorrect members $\Mavg \Lzo{y}{q_{i}(x)} \approx \prob{\Theta}{q \not= y}$.
+where the probabilities are conditioned on $x$. For binary classification under the \zeroone-loss, the ensemble margin is linearly related to the ratio of incorrect members $\Mavg \Lzo{y}{q_{i}(x)} \approx \prob{\Theta}{q \not= y}$.
 $$
 \begin{align*}
 \mr(x,y) &= \prob{\Theta}{q=y}  - \prob{\Theta}{q \not= y} \\
@@ -386,7 +520,7 @@ So, $\mr(x,y) = 1 - 2 \Mavg\Lzo{y}{q_{i}(x)}$.
 % $$
 
 
-\subsection{Bregman Divergences and Centroids}
+\section{Bregman Divergences and Centroids}
 
 To measure the difference between predicted and ground-truth outcomes, we use a loss function $\ell$. The choice of loss function depends on the data domain, the learning task and computational considerations. 
 
@@ -499,10 +633,23 @@ $$
 \textit{Ensemble Learning} is the method of training $M$ individual models $q_{1}, \dots, q_{M}$ for a given task and aggregating their output by an aggregation function $\bar{q}$ to form an ensemble prediction \cite{zhou_EnsembleMethodsFoundations_2012}. The individual models $q_{1}, \dots, q_{M}$ are referred to as \textit{members}. When all members are constructed using the same learning algorithm, we call it a \textit{homogeneous} ensemble. The learning algorithm is then also referred to as the \textit{base learner}. Otherwise the ensemble is \textit{heterogeneous}. 
 When analysing the generalisation error, we refer to $\bar{q}$ as the \textit{ensemble model}. When considering how to actually combine ensemble predictions, we also refer to $\bar{q}$ as the \textit{combiner}. 
 
+\section{Notation}
+\label{sec:ensemble-learning-notation}
 In the concrete approximation setting, i.e. given an actual ensemble of learners, we consider $\bar{q}$ and $q_{1}, \dots, q_{M}$ to be functions $\mathcal{X} \to \mathcal{Y}$. In the statistical setting, $\bar{q}, q_{1}, \dots, q_{M}$ are random variables dependent on a random variable $X$ that represents the query example. Further, combiner and members depend on the input $D$ to the ensemble construction algorithm. For sake of brevity, this dependence is implicit in the notation and we write $q_{i} \defeq q_{i}(X;D)$.
-% TODO still need to properly lay down the D, Theta stuff
 
-\section{Ensemble Learning Methods}
+In the original supervised learning setup (see section \ref{sec:supervised-learning}), we considered $D$ to be input to the learning algorithm, particularly including any training data or randomness. Now we are considering multiple learning algorithms. Each of these individual learners receives its own input. For instance, each learner may be trained on a random subset of the available training data (this is \textit{bootstrapping}, see section \ref{sec:bootstrapping}). To this end, we consider $D$ to be a random vector of random variables $(D_{i}, \dots, D_{M})$. 
+Due to the law of total expectation, one can write
+$$
+\mathbb{E}_{D}\left[ \ell(y, q(x; D_{i})) \right]  = \mathbb{E}_{D_{i}}\left[ \ell(y, q(x; D_{i})) \right] 
+$$
+even if there are dependencies between the components of $D$. This means that for an individual member $q_{i}$, an expectation over $D$ reduces to an expectation over $D_{i}$. This justifies considering expectations over $D$ in general.
+In some cases, it is clearer to distinguish between input training data and other random parametrisation of the individual learner. In this case, we take $D$ to be the training data and $\Theta$ to be a random variable representing other parameters. One can then write $\bar{q} = \mathbb{E}\left[q(x; \Theta)\right]$.
+
+
+% Ultimately, we are interested in the generalisation error of the ensemble given by $\mathbb{E}_{(X,Y),D}\left[ \ell(Y, \bar{q}_{D}(X)) \right]$ where the subscript indicates that the ensemble model depends on the random variable $D$. Since $\bar{q}$ is produced by aggregating the member outputs $q_{1}, \dots, q_{M}$ the essential question is how the member models have to behave in order for ensemble techniques to be effective. 
+
+\section{Methods}
+\label{sec:ensemble-learning-methods}
 There are three main variants of ensemble learning \cite{mienye_SurveyEnsembleLearning_2022}:
 \begin{itemize}
 \item \textit{Parallel}: All members are trained independently. The outputs of all members are then aggregated to form the ensemble prediction.
@@ -516,23 +663,49 @@ In this thesis, we will focus on the Random Forest learner and variations of it.
 \section{Motivation}
 \label{sec:ensemble-learning-motivation}
 
-Recap of generalisation error. State bias-variance decomposition for sqerr. -- how does this one relate to ensemble members?
-Side note on how expectation over D is to be understood.
+We will now review some arguments that motivate ensemble learning. We do this to provide context to the results in section \ref{later}, which also clearly show when and how ensemble learning is beneficial.
+
+
+The arithmetic mean combiner can be seen as approximating an expectation over member models, i.e. $\bar{q} = \mathbb{E}_{\Theta} \left[q_{\Theta}\right]$.
+This motivated \citeauthoryear{abe} to invoke Jensen's inequality
+\marginnote{Jensen's inequality, in a probabilistic setting, states that, for a function $\phi:\mathbb{R} \to \mathbb{R}$ and a random variable $X$
+$$
+\phi \text{~convex} \rightarrow \phi\left(\mathbb{E}_{}\left[ X \right] \right) \leq \mathbb{E}_{}\left[ \phi(X) \right] 
+$$
+}
+. For a loss function $\ell$ that is convex in its first argument, it holds that
+$$
+\underbrace{
+\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X)\right] , Y  ) 
+}_{\text{"ensemble loss"}}
+~ ~ \leq ~ ~ 
+\mathbb{E}_{\Theta}\left[ 
+\underbrace{
+\ell(q_{\Theta}(X), Y)  
+}_{\text{"member loss"}}
+\right]
+$$
+and thus
+$$
+\mathbb{E}_{{\Theta}}\left[ \ell (q_{\Theta}(X),Y) \right]  -
+\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right] ,Y ) \geq 0
+$$
+This shows that, for convex loss functions and the arithmetic mean combiner, the ensemble loss is always smaller-equal than the average member error.
+\citeauthoryear{abe} interpret this \textit{Jensen gap}, i.e. the difference between these quantities, as a measure of ensemble improvement. 
 
 % TODO would probably also be nice to put Jensen argument here
 
-We will now review some arguments that motivate ensemble learning. We review two arguments, one for squared-error regression and one for classification. We do this to provide context to the results in section \ref{later}, which also clearly show when and how ensemble learning is beneficial.
-
+\paragraph{Variance reduction for squared-error regression} 
 A common motivation for using ensembles over single models is that the combination of models reduces the variance as compared to the expected variance of a single model. Further, the bias is not affected, i.e. the ensemble bias is the same as the bias of any member.
-
-\paragraph{Variance reduction for squared-error regression} In the regression setting, under the squared-error loss and the arithmetic mean combiner%
-\sidenote{
-	As we will see in \ref{section:div}, the choice of loss function actually determines the definition of combiner $\bar{q}$.
-}, this can be seen as follows~\cite{stackexchange}. Assume $q_{1}, \dots, q_{M}$ are identically and idependently distributed with equal variance $\sigma^2$.
+In the regression setting, under the squared-error loss and the arithmetic mean combiner%
+% \sidenote{
+% 	As we will see in \ref{section:div}, the choice of loss function actually determines the definition of combiner $\bar{q}$.
+% }
+, this can be seen as follows~\cite{stackexchange}. Assume $q_{1}, \dots, q_{M}$ are identically and independently distributed with equal variance $\sigma^2$.
 $$
 	\Var{}{\bar{q}} = \Var{}{\Mavg q_{i}} = \frac{1}{M^2} \sum_{i=1}^M \Var{}{q_{i}} = \frac{1}{M} \sigma^2
 $$
-As the number of members $M$ increase, the variance is reduced. Further, one can also see that the interactions between members determine the variance reduction. Assume ensemble members have equal pairwise covariance. Then 
+As the number of members $M$ increases, the ensemble variance is reduced. Further, one can also see that the interactions between members determine the variance reduction. Assume ensemble members have equal pairwise covariance. Then 
 $$
 \rho \defeq \frac{\text{Cov}(q_{i}, q_{j})}{\sigma^2} ~ ~ \leftrightarrow \text{Cov}(q_{i}, q_{j}) = \rho \sigma^2
 $$
@@ -551,7 +724,7 @@ $$
 $$
 One can show that $\rho \geq 0$ \cite{louppe_UnderstandingRandomForests_2015}. This illustrates that ensemble variance is smallest if the members are not correlated, i.e. $\rho \approx 0$. 
 
-\paragraph{Variance reduction for classification margins} For classification, a classical analysis is the bound given by \citeauthor{breiman_RandomForests_2001} in \cite{breiman_RandomForests_2001}, in which Random Forests are first introduced. The basic idea is to consider variances with respect to the ensemble margin margin (see \ref{def:ensemble-margin}).
+\paragraph{Variance reduction for classification margins} For classification, a classical analysis is the bound given by \citeauthor{breiman_RandomForests_2001} in \cite{breiman_RandomForests_2001}, in which Random Forests are first introduced. The basic idea is to consider variances with respect to the ensemble margin margin (see def. \ref{def:ensemble-margin}).
 % TODO recap in margin
 % TODO need to define notion of "margin" for RFs
 % TODO definition of error in terms of margins > 0
@@ -560,15 +733,14 @@ We open with Chebychev's inequality to bound the generalisation error in terms o
 $$
 \mathbb{E}\left[ \ell(Y, \bar{q}(X)) \right]  = \prob{}{\mr(X, Y; D) < 0 }  ~ ~ \leq ~ ~ \frac{\Var{}{\mr(X, Y; D)  }}{\mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]^2}
 $$
-Here, we can already see that we have an interaction between the performance of the individual members, as reflected in the ensemble margin $\mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$ and what we will shortly show to be indicative of the diversity of the ensemble. The generalisation error is in part determined by the ratio of these two quantities.
+We can already see that we have an interaction between the performance of the individual members, as reflected in the ensemble margin $\mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$ and what we will shortly show to be indicative of the diversity of the ensemble. The generalisation error is in part determined by the ratio of these two quantities.
 
 $s \defeq \mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$ is also called the \textit{strength} of the ensemble.
 $s$ is assumed to be non-negative. For binary classification, this is equivalent 
 % TODO make sure
 to the weak-learner assumption (see \ref{def:weak-learner}).
 
-% TODO move this to preliminaries and recap here.
-Before, however, note that
+Note that
 $$
 \mr(X, Y;D) = \mathbb{E}_{\Theta}\left[ 
 \underbrace{
@@ -581,16 +753,12 @@ $$
 where $K$ is the next-best class and we define the \textit{raw margin function} $\rmg(X, Y, \Theta)$ to be the inner part of that expectation. So, 
 $\mr(X, Y;D) = \mathbb{E}_{\Theta}\left[ 
 \rmg(X, Y, \Theta) 
-~|~(X,Y), D \right]$. Notably, $\mr$ is the \textit{ensemble} margin reflecting on the ratio of incorrect members and $\rmg$ corresponds to the \textit{classifier} reflecting on the ratio of incorrectly classfied examples by one member.
-\marginnote{
-  % TODO
-  recap/ref defs ensemble margin, classifier margin
-}
+~|~(X,Y), D \right]$. Notably, $\mr$ is the \textit{ensemble} margin measuring the ratio of incorrect members and $\rmg$ corresponds to the \textit{classifier} margin, measuring the ratio of incorrectly classfied examples by a member.
 
 \begin{theorem} (\cite{breiman_RandomForests_2001})
-The variance of the ensemble margin can be expressed in terms of the covariance between the "raw" member margins of two members parameterised by \textit{i.i.d} $\Theta, \Theta'$.
+The variance of the ensemble margin can be expressed in terms of the covariance between the raw member margins of two members parameterised by \textit{i.i.d} $\Theta, \Theta'$.
 	$$
-	\Var{X,Y}{\mr(X,Y;D)} = \mathbb{E}_{\Theta, \Theta'}\left[ \text{Cov}_{Z}(\rmg(\Theta), \rmg(\Theta') ) \right] 
+	\Var{X,Y}{\mr(X,Y;D)} = \mathbb{E}_{\Theta, \Theta'}\left[ \text{Cov}_{(X,Y)}(\rmg(\Theta), \rmg(\Theta') ) \right] 
 	$$
 \end{theorem}
 \begin{proof}
@@ -605,7 +773,7 @@ By the definition of variance, have
 &= \mathbb{E}_{Z}\left[ \mr(Z)^2 \right] - \mathbb{E}_{Z}\left[ \mr(Z) \right] ^2 \\
 \end{align*}
 
-For the left term, it holds that
+For the left term, by the rule of iterated expectation and the fact that $Z$ and $\Theta$ are independent (see lemma \ref{thm:expected-value-properties}), it holds that
 $$
 \mathbb{E}_{Z}\left[ \mr(Z) ^2 \right]  = \mathbb{E}_{Z}\left[ \mathbb{E}_{\Theta}\left[ \rmg(\Theta) \mid Z \right] ^2  \right] = \mathbb{E}_{Z, \Theta}\left[ \rmg(\Theta)^2 \right] % by law of total \exp ectation
 = \mathbb{E}_{\Theta}\left[ \mathbb{E}_{Z}\left[ \rmg(\Theta) ^2 \right]  \right] 
@@ -623,7 +791,7 @@ $$
 % \end{align}
 % $$
 
-Likewise, for the right term:
+For the right-hand-side term, we can make use of the fact that, for a function $f$, it holds that $\mathbb{E}_{\Theta}\left[ f(\Theta)^2 \right] = \mathbb{E}_{\Theta, \Theta'}\left[ f(\Theta) f(\Theta') \right]$ where $\Theta$ and $\Theta'$ are independent and identically distributed. Then we apply the rule of iterated expectation and exploit that $Z$ and $\Theta$ are independent.
 \begin{align*}
 \mathbb{E}_{Z}\left[ \mr(Z) \right] ^2 &= \mathbb{E}_{Z}\left[ \mathbb{E}_{\Theta}\left[ \rmg(\Theta) \mid Z \right] \cdot \mathbb{E}_{\Theta'}\left[ \rmg(\Theta') \mid Z  \right]  \right] % by lemma   \\ \\ \\
 \\ 
@@ -688,11 +856,11 @@ Plugging these equalities in the decomposition of variance above proves the stat
 
 This
 % TODO better ref an eq
-is the expected covariance between the classification margins of two individual members. As we have seen before for the regression case, the generalisation error is lower if individual members are uncorrelated. Unfortunately, this is only an upper bound. In section \ref{later}, we will be able to make the same observation from an exact decomposition of the generalisation error.
+is the expected covariance between the classification margins of two individual members. As we have seen before for the regression case, the generalisation error is lower if individual members are uncorrelated. Unfortunately, this is only an upper bound. In section \ref{sec:bias-variance-covariance}, we will be able to make the same observation from an exact decomposition of the generalisation error.
 
 
-\paragraph{Ensemble bias equals member bias}
-Further, it can be shown that the bias of such an ensemble is equal to the average bias of the ensemble members \cite{louppe_UnderstandingRandomForests_2015}. We will give an illustrative argument for the arithmetic mean combiner here.
+\paragraph{Ensemble bias equals average member bias}
+It can be shown that the bias of a homogeneous ensemble with the arithmetic mean combiner is equal to the average bias of the ensemble members \cite{louppe_UnderstandingRandomForests_2015}. We will give an illustrative argument for the arithmetic mean combiner here.
 We will show this in detail in a more general and inuitive way in section \ref{todo}.
 
 Consider individual learner inputs $D = (D_{1}, \dots, D_{M})$. Each member depends on some $D_{i}$ and the combiner $\bar{q}$ depends wholly on $D$. Assuming that $D_{1}, \dots, D_{M}$ are independent and identically distributed, we can write
@@ -700,7 +868,7 @@ Consider individual learner inputs $D = (D_{1}, \dots, D_{M})$. Each member depe
 $$
 \mathbb{E}_{D, \Theta}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ \Mavg q_{D_{i}} \right] = \Mavg \mathbb{E}_{D_{i}}\left[ q_{D_{i}} \right] = \mathbb{E}_{D'}\left[ q_{D'} \right]
 $$
-where $D'$ is distributed as any $D_{i}$. Due to \ref{considerations regard D}, we can conclude $\mathbb{E}_{D}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ q_{D} \right]$.
+where $D'$ is distributed as any $D_{i}$. We can conclude $\mathbb{E}_{D}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ q_{D} \right]$ (see section \ref{sec:ensemble-learning-notation}).
 This implies
 % TODO pull this out into lemma, also using this somewhere else
 % need to reorder a bit anyway, havent even introduced star notation yet
@@ -714,13 +882,26 @@ $$
 $$
 This argument depends on the linearity of expectations, the arithmetic mean combiner and the fact that the ensemble members are constructed following the same parameter distribution. In other words, the ensemble is \textit{homogeneous}. We will later show this more directly for any loss function and any combiner (see \ref{sec:unchanged-bias}).
 
-This implies that the ensemble improvement is solely due to variance reduction.
+This implies that the ensemble improvement for homogeneous ensembles under the arithmetic mean combiner is solely due to variance reduction.
 
 \section{Bias, Variance and Covariance}
-...
-% doesnt really belong in the diversity chapter...
-% but overwise to put this here, would have to talk about bias/variance before maybe also something in prelims
-% have to do so anyway, otherwise "variance reduction" in motivation doesnt make sense
+\label{sec:bias-variance-covariance}
+
+In section \ref{sec:ensemble-learning-motivation}, we have already seen hints that the covariance between members is an essential factor to ensemble performance. Indeed, the notion of covariance and uncorrelatedness has been a guiding thought in the literature \cite{didaci_DiversityClassifierEnsembles_2013, brown_ManagingDiversityRegression_2005, buschjager_GeneralizedNegativeCorrelation_2020}.
+We will now introduce an exact decomposition of the ensemble error for the squared-error loss that includes the average covariance between member predictions.
+\begin{theorem} (Bias-Variance-Covariance decomposition \ref{ueda, brownManaging})
+It holds that
+$$
+\begin{align}
+\mathbb{E}_{(X,Y),D}\left[ (y - \bar{q})^2 \right]  &= \overtext{bias}^2 + \frac{1}{M} \overtext{var} + \left( 1 - \frac{1}{M} \right) \overtext{covar} \\ \\ 
+\text{for} ~ ~ & \overtext{bias} =_{\text{def}} \Mavg (\mathbb{E}_{D}\left[ q_{i}  \right] - y) \\
+& \overtext{var} =_{\text{def}} \Mavg \mathbb{E}_{D}\left[ (q_{i} - \mathbb{E}_{D}\left[ q_{i} \right])^2  \right]  \\
+& \overtext{covar} =_{\text{def}} \frac{1}{M(M-1)} \sum_{i \not= j} \mathbb{E}_{D}\left[ (q_{i} - \mathbb{E}_{D}\left[ q_{i} \right] ) (q_{j} - \mathbb{E}_{D}\left[ q_{j} \right] ) \right] 
+\end{align}
+$$
+\end{theorem}
+This can be interpreted as a decomposition into characteristics of individual learners (mean bias and variance), plus a quantity describing the interactions between diferent learners. Again, one can see that ensemble performance profits if members are uncorrelated.
+However, this decomposition is only given for the squared error and the arithmetic mean combiner. 
 
 \section{Applications}
 ...
@@ -754,9 +935,14 @@ Maybe here also review on existing methods, or otherwise relate and motivate whe
 
 \subsection{"Boosting" rationale for example weighting in classifier ensembles}
 
-would be good to put here to explain "spike". 
+re. spike: not super surprising, if there are only 1, 2, 3 trees, weights as ratio of incorrect trees are super extreme -- motivation to dampen
+
+would be good to put here to explain "spike". Can such a spike be observed in boosting methods?
 
 initial increase in bias also observed for classical boosting models? (wood23 p26)
+
+% TODO weighted bootstrapping actually *too* extreme? all happens in first handful of trees. super hard increase in bias. might be better if slower. (cf learning rate for boosting)
+% can (probably) dampen weights by inputting them to a linear function (see sketch)
 
 
 \subsection{Outlook: Generalising to other losses}
@@ -791,7 +977,7 @@ If this quantity is low (min $0$), then there is high member error but also high
 
 \paragraph{Leaf refinement} Another common approach to influence decision tree outcomes is re-adjusting the leaf outcomes once the tree is constructed \cite{others}. This can be done e.g. via gradient descent \cite{buschj-negative-correlation-forests}. While this is a valid approach, ours has the benefit that \textit{(a)} it does not require an extra stage of optimisation, \textit{(b)} it has the ability to (actually, it works solely through) influencing the tree structure. It would certainly be thinkable, however, to adapt an approach like \cite{buschj-ncl-forests} to the ideas presented here.
 
-\paragraph{Splitting functions} Another possible approach would be to re-define the splitting criterion to not only optimise local purity but also (the right kind of) diversity (impurity) across the ensemble. (computationall much cheaper?)
+\paragraph{Splitting functions} Another possible approach would be to re-define the splitting criterion to not only optimise local purity but also (the right kind of) diversity (impurity) across the entire ensemble. (computationall much cheaper?)
 % TODO this would then be simila to work of späh!
 
 \section{Generalized Negative Correlation Learning}
@@ -899,6 +1085,8 @@ advantages of boosting but without the risk of overfitting?
 relationship pairwise comparisons and comparison to centroid -- covariance approach vs mean dists approach
 
 properties of metric losses
+
+generalised k-means as splitting function -- i'm sure someone tried this with standard k-means already. would then also need to relate to spaeh.
 
 ...
 

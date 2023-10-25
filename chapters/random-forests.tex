@@ -265,6 +265,7 @@ Hence we see that the Gini index splitting criterion greedily optimises classifi
 \subsection{Splitting criteria as $2$-means clustering}
 
 % TODO so "loss gain" / "purity gain" somethign there is really k-means objective?
+% so: decision tree construction = boosting for greedy opt of that? in some sense
 
 If indeed a centroid is chosen as leaf combiner, as is the case in standard random forests, common splitting functions can be seen to be equivalent to a generalised $k$-means for $k=2$. \cite{banerjee} generalise $k$-means to bregman divergences. The derivation is analogous to the classical case for squared error. 
 
@@ -325,7 +326,12 @@ Thus, a random forest additionally requires the following parameters:
 
 % TODO for the following subsections: default params/implementation, review on their effects
 
-\subsection{Bootstrapping \& Bagging}
+\subsection{Bagging}
+\label{sec:bagging}
+
+A vital ingredient to Random Forests is the \textit{Bagging} procedure, which stands for \textit{bootstrapping and aggregating}. Bagging is an ensemble learning technique not specific to Random Forests. In Bagging, each member is constructed not on the full training dataset but a \textit{bootstrap sample} of it. The bootstrap sample is usually determined by drawing $n$ out of $n$ examples uniformly with replacement \cite{breiman,others}. We will refer to this as \textit{uniform bootstrapping}. One can also determine the bootstrap sample by drawing $n$ out of $n$ points with replacement according to a probability distribution $\{p_1, ..., p_n\}$, which we call \textit{weighted bootstrapping}. Bootstrapping means that each member will be trained on a different dataset. 
+
+In uniform bootstrapping,if we draw $n$ samples from $n$ available points, the probability of an example being selected in a single draw is $\frac{1}{n}$. Conversely, the probability of an example not being selected in a single draw is $1-\frac{1}{n}$. We draw $n$ times. Hence, the probability of an observation not being selected in any of the draws is $(1-\frac{1}{n})^n$. The probability of an example indeed being selected in at least one of the draws then is $1 - (1 - \frac{1}{n})^n$.  For large $n$, one can approximate $\lim_{ n \to \infty }1-(1-\frac{1}{n})^n = 1- e^{-1} \approx 0.632$ \cite{todo}.
 
 % randomization
 
@@ -339,12 +345,15 @@ Thus, a random forest additionally requires the following parameters:
 
 \subsection{Random Forests converge}
 
-Thm **Random Forests converge** ( breiman Thm 1.2) / #Def **Margin function of a random forest** $\mr(\vec{X}, Y)$ (Def 2.1)
+
 As the number of trees increases, for almost surely all sequences $(\Theta_{1}, \dots)$, the generalisation error $PE^\star$ converges:
 $$
-PE^\star \to \prob{\vec{X}, Y}{\left(\prob{\Theta}{q(\vec{X}, \Theta)=Y} - \max_{j \neq Y} \prob{\Theta}{q(X; \Theta) = j } \right) < 0
-} 
-= \prob{\vec{X}, Y}{
+% TODO uhh doesnt really make sense, check reference
+\mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}(X)) \right]  \to
+% PE^\star \to 
+% \prob{\vec{X}, Y}{\left(\prob{\Theta}{q(\vec{X}, \Theta)=Y} - \max_{j \neq Y} \prob{\Theta}{q(X; \Theta) = j } \right) < 0
+% } = 
+\prob{\vec{X}, Y}{
 \mr(\vec{X}, Y)  < 0
 }
 $$
