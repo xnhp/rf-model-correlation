@@ -50,7 +50,7 @@ We can divide the expectation over $X$ into cases.  $X_{+}$ where the ensemble i
 \begin{theorem} (\cite{kuncheva})
 $$
 \mathbb{E}_{X}\left[   
-L(Y, \bar{q}) 
+L(y, \bar{q}) 
 \right]
 =
 \mathbb{E}_{X}\left[    \Mavg \Lzo{Y}{q_{i}}  \right]
@@ -87,6 +87,7 @@ Further, we can express both good and bad diversity in terms of the average memb
 
 % TODO could sound reasonable to actively try not upweighting negative ones, or introduce sort of a slope in between
 
+% TODO y always first in losses
 \begin{align*}
 \mathbb{E}_{X_{+}}\left[ \Mavg \Lzo{q_{i}}{\bar{q}} \right] &=
 \mathbb{E}_{X_{+}}\left[ \avgmemberloss \right]   \\
@@ -191,7 +192,7 @@ We compare different variants of the weighting scheme introduced in section \ref
 \paragraph{Compared learners} In summary, we compare the following learning algorithms. For a learner, any configuration is similar to the one mentioned before unless otherwise specified. Since for the weighted variants the construction of the next tree depends on the performance of the ensemble so far, trees are constructed in sequence.
 
 % TODO somewhere. these hyperparams are not necessarily the best for the dataset, in particular the number of features.
-\textit{standard-rf-classifier}: Standard Random Forest implementation based on \textit{sklearn}. The tree hyperparameters are such that trees are grown until each leaf contains one data point. The number of randomly sampled candidate dimensions to search for the best split is set to $\sqrt{d}$ where $d$ is the total number of dimensions. The impurity measure is the Gini impurity as defined in section \ref{sec:gini-index}. Each tree is grown on a bootstrap sample determined by sampling $n$ out of $n$ data points uniformly, with replacement.
+\textit{standard-rf-classifier}: Standard Random Forest implementation based on \textit{sklearn}. The tree hyperparameters are such that trees are grown until each leaf contains one data point. The number of randomly sampled candidate dimensions to search for the best split is set to $\sqrt{d}$ where $d$ is the total number of dimensions. The impurity measure is the Gini impurity as defined in section \ref{sec:gini-impurity}. Each tree is grown on a bootstrap sample determined by sampling $n$ out of $n$ data points uniformly, with replacement.
 
 \textit{drf-weighted-bootstrap-classifier}: Each tree is grown on a bootstrap sample determined by sampling $n$ out of $n$ points according to the DRF weighting scheme (see \ref{def:drf-weighting-scheme}). To yield a valid probability distribution, the weights are normalised via $w'(x_i) \gets \frac{w(x_i)}{\sum_{j=1}^n w(x_j)}$.
 
@@ -290,6 +291,8 @@ We describe and analyse the results here and provide several plots. The full res
 %     \label{fig:digits-ens}
 % \end{marginfigure}
 
+% TODO reference diversity tradeoff
+
 %
 We can see that weighted bootstrapping and weighted tree construction (see \ref{sec:guiding-ensemble-constr}) behave quite differently. The case for the \spambase dataset is given in \reffig{fig:cover-bvd}. 
 
@@ -386,7 +389,7 @@ This might be an intuitive explanation why weighted bootstrapping shows a strong
 
 \paragraph{Comparison to \cite{bernard-drf}} 
 
-\citeauthor{bernard-drf} evaluated only the following approach: They would perform both weighted bootstrapping and weighted tree construction. Further, weights would be determined only on out-of-bag-trees (see section \ref{sec:experiment-setup}). Additionally, unrelated to the question at hand, they also employed a different way to determine candidate split features. Unlike in standard random forests, where a fixed number of candidate split features is sampled from all available features, the number of sampled candidate features was left fully random here. It was left unanswered which of these compenents actually affect the ensemble to what extent. Further, they did not provide any explanation or empirical analysis in terms of diversity.
+\citeauthor{bernard-drf} evaluated only the following approach: They would perform both weighted bootstrapping and weighted tree construction. Further, weights would be determined only on out-of-bag-trees (see section \ref{sec:experiment-setup}). Additionally, unrelated to the question at hand, they also employed a different way to determine candidate split features. Unlike in standard random forests, where a fixed number of candidate split features is sampled from all available features, the number of sampled candidate features was left fully random here. It was left unanswered which of these components actually affect the ensemble to what extent. Further, they did not provide any explanation or empirical analysis in terms of diversity.
 Looking at our results, the following points seem likely:
 \begin{itemize}
     \item An improvement in generalisation error is still obtained with standard candidate split feature sampling.
@@ -427,5 +430,9 @@ Looking at our results, the following points seem likely:
 
 \paragraph{Ambiguity-effect decomp plots} ...
 % TODO actually understand what is going on here.
+
+\paragaraph{Scatter Plots} ...
+% TODO where each member is a point and axes are diversity (ie. LE to centroid) and member error
+% -- like in Zhou2012 p. 110, because people did that with other measures
 
 \end{document}

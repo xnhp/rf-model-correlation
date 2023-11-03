@@ -1,15 +1,10 @@
 \documentclass[../main.tex]{subfiles}
 \begin{document}
 
-chapter introduction. We will now introduce a way to understand ensemble diversity. 
-
-\section{Measures of ensemble diversity} \label{sec:measures-ensemble-diversity}
-
-Review.  Maybe a table with all these measures? Would look nice. But probably not too relevant. 
 
 
 % TODO write somewhere that bayes error can also be considered a variance (see Adlam22 eq (5)
-\section{Ambiguity} 
+\section{Generalising Ambiguity} 
 
 % TODO cite 
 %- krog_NeuralNetworkEnsembles
@@ -25,10 +20,11 @@ If we consider the members to be constructed according to a parameter $\Theta$, 
 What can we hope to gain from using an ensemble $\bar{q}$, which combines the output of individual members $q_{1}, \dots, q_{M}$ over just using a single member model? 
 The \textit{ensemble improvement} for finite ensembles is 
 \marginnote{At this point, it is not yet clear whether the ensemble improvement is even nonnegative, i.e. that ensembling does not hurt performance. We will address this in \ref{sec:todo}.}
+% TODO wording, cannot use "at this point not yet clear, cannot assume reader goes linearly from start to end
 $$
-\Mavg L(Y, q_{i}) - L(Y, \bar{q})
+\Mavg L(Y, q_{i}) - L(Y, \bar{q}) = \LE{\bar{q}}{q_i}
 $$
-Conveniently, this is also the \textit{effect of ensembling} on the error. Due to this, we will refer to this quantity as \textit{ambiguity-effect}.
+Conveniently, this is also the \textit{effect of ensembling} on the error. We will refer to this quantity as \textit{ambiguity-effect}.
 % TODO some sentence on how this was defined as ambiguity-effect in krogh or sth
 
 \marginfigfromsource{fig:ambiguity-spread}{symlinks/illustrations/ambiguity/rf-ambiguity}
@@ -48,6 +44,8 @@ $$
 % TODO use LE notation
 \end{theorem}
 
+This is a generalisation of the ambiguity decomposition described in \ref{sec:diversity-measures}
+
 %\begin{theorem} \label{thm:ambiguity-decomp} (Ambiguity decomposition \cite{todo:krogh}) For any of the loss functions of \ref{thm:the-trick}, the ambiguity-effect term reduces to the target-independent \textit{ambiguity}
 %\begin{align*}
 %L(Y, \bar{q}) &= \Mavg L(Y, q_{i}) - \left(\Mavg L(Y, q_{i}) - L(Y, \bar{q})\right) \\
@@ -64,10 +62,18 @@ Variance measures the spread of training error across models trained with differ
 
 %TODO need to argue more that this is indeed centroid? should come from generalised / bregman etc.?
 \section{The Diversity-Effect decomposition} \label{sec:bias-variance-diversity-decomp}
-% TODO double decomposition trick and bias-variance-diversity/ambiguity-effect decomp
 
-Note that the first term in the ambiguity-effect decomposition \ref{thm:ambig-effect-decomp} is the average loss of the ensemble members. One can now decompose the loss of an individual ensemble member into bias- and variance-effect just like in \ref{thm:bias-variance-effect-decomp}.
-% TODO elaborate a bit more?
+The ambiguity decomposition divides the ensemble error into the average member error and the variance among members. How does this relate to the well-known bias-variance decomposition? Indeed, nothing prevents us from applying the bias-variance decomposition of theorem \ref{thm:bias-variance-effect} to the error of a single member, resulting in a decomposition into \textit{average} bias, \textit{average} variance and expected ambiguity, which is also referred to as \textit{diversity} \cite{wood23}.
+$$
+\begin{align}
+\mathbb{E}_{}\left[ \ell(y, \bar{q} ) \right]  &=  
+\mathbb{E}_{}\left[ \Mavg \ell(y, q_{i} ) \right]  
++  
+\mathbb{E}_{}\left[ \Mavg \LE{\bar{q}}{q_{i}} \right]  \\
+&= \mathbb{E}_{}\left[ \Mavg \LE{q_{i}^\star}{y^\star } \right]  + \mathbb{E}_{}\left[ \Mavg \LE{q_{i}^\star}{q_{i}} \right] + \mathbb{E}_{}\left[ \Mavg \LE{\bar{q}}{q_{i}} \right] 
+\end{align}
+$$
+In summary, the decomposition is given in the following theorem. Note that it holds for \textit{any} loss function. 
 
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/spambase-openml/bvd-individual/standard-rf-classifier}
@@ -79,30 +85,51 @@ Note that the first term in the ambiguity-effect decomposition \ref{thm:ambig-ef
     % TODO here, it would actually be good to increase x axis range to show that the entire thing stabilises
 \end{marginfigure}
 
-% TODO maybe write like ... = (noise) + (average bias) + ...; where (average bias) = ..., probably easier to read
-
 \begin{theorem} (Bias-Variance-Diversity-Effect decomposition)
+    % TODO repeat what star, bar, Y is
 \begin{align*}
-    \mathbb{E}_{D,Y}\left[ L(Y, \bar{q}) \right] &= 
-    \underbrace{ \mathbb{E}_{y}\left[ l(y, y^\star) \right] }_{\text{noise}} \\
+    % TODO write E_(X,Y),D instead
+    \mathbb{E}_{D,Y}\left[ \ell(Y, \bar{q}) \right] &= 
+    \underbrace{ \mathbb{E}_{y}\left[ \ell(y, y^\star) \right] }_{\text{noise}} \\
     &+
     % \mathbb{E}_{\Theta, Y}\left[ L(Y, q_{\Theta}^\star) - L(Y, y^\star)\right] % avg bias-effect
     \underbrace{
-        \frac{1}{M} \sum_{i=1}^M \mathbb{E}_Y\left[L_{0 / 1}\left(Y, q_i^*\right)-L_{0 / 1}\left(Y, Y^*\right)\right]
+        \frac{1}{M} \sum_{i=1}^M \mathbb{E}_Y\left[\ell\left(Y, q_i^*\right)-\ell\left(Y, Y^*\right)\right]
     }_{\overline{\text{bias-effect}}} \\
     &+
     \underbrace{
-        \frac{1}{M} \sum_{i=1}^M \mathbb{E}_D\left[\mathbb{E}_Y\left[L_{0 / 1}\left(Y, q_i\right)-L\left(Y, q_i^*\right)\right]\right]
+        \frac{1}{M} \sum_{i=1}^M \mathbb{E}_D\left[\mathbb{E}_Y\left[\ell\left(Y, q_i\right)-\ell\left(Y, q_i^*\right)\right]\right]
     }_{\overline{\text{variance-effect}}} \\
     % \mathbb{E}_{\Theta, D, Y}\left[ L(Y, q_{\Theta}) - L(Y, q_{\Theta}^\star) \right]  % avg variance-effect
     &- % minus!!
     % \mathbb{E}_{D, Y, \Theta}\left[ L(Y, q_{\Theta} - L(Y, \bar{q})) \right] % avg div-effect
     \underbrace{
-    \mathbb{E}_D\left[\mathbb{E}_Y\left[\frac{1}{M} \sum_{i=1}^M\left[L_{0 / 1}\left(Y, q_i\right)-L(Y, \bar{q})\right]\right]\right]
+    \mathbb{E}_D\left[\mathbb{E}_Y\left[\frac{1}{M} \sum_{i=1}^M\left[\ell\left(Y, q_i\right)-\ell(Y, \bar{q})\right]\right]\right]
     }_{\text{diversity-effect}}
 \end{align*}
 % TODO use LE notation
 \end{theorem}
+
+
+In the general case, diversity cannot be expressed independently of the outcome variable $Y$. If $\ell$ is a metric, then diversity-effect can be bounded from above by a target-independent term that is reminiscent of the diversity term for Bregman divergences introduced in theorem \ref{thm:bregman-diversity-decomp}.
+\sidenote{
+For a metric $d:X \times X \to \mathbb{R}$ and $a,b,c \in X$, due to the triangle inequality, it holds that
+\begin{align*}
+& d(a,b) - d(b,c)  \\
+& \leq d(a,c) + d(c,b) - d(b,c) \\
+&= d(a,c)
+\end{align*}
+}
+$$
+\text{$\ell$ metric}  ~~\rightarrow~~ \mathbb{E}_{(X,Y), D}\left[ \Mavg \ell(Y, q_{i}) - \ell(Y, \bar{q}) \right] 
+\leq \mathbb{E}_{(X,Y),D}\left[ \Mavg \ell(\bar{q}, q_{i}) \right] 
+$$
+
+% TODO what about note in wood23 that \mathbb{V} and L are not necessarily the same?
+
+% TODO diversity is expected value of ambiguity
+
+% TOOD trying to derive a decomp for 01-loss, KohaviWolpert complain that variance should be nonnegative -- well, we have that here
 
 
 
@@ -146,9 +173,10 @@ We will now define a class of losses for which the effects reduce to the quantit
 
 Bregman divergences have the one key property that their loss-effect terms collapse. That is, with bregman divergences, we have, for the the proper choice of $Z, Z'$:
 $$
-\LE{Z}{Z'} = \ell(Z, Z')
+\mathbb{E}\left[\LE{Z}{Z'}\right] = \Breg{Z'}{Z}
 $$
 This is given by the following two lemmas. 
+% TODO highlight how we are losing one expectation, and which one that is
 % TODO motivate more on why centroids
 
 % #TODO its not really harder, just need to understand Thm 0.1 of Pfau13 (and maybe mention that this is essentially a statement about effect terms, but wasnt explicitly considered)
@@ -221,6 +249,7 @@ This yields a generalised bias-variance-diversity decomposition for bregman dive
 % \end{theorem}
 
 \begin{theorem} (Bias-Variance-Diversity decomposition for Bregman divergences)
+    \label{thm:bregman-diversity-decomp}
     % TODO define qstar and qbar in terms of (dual) expectations (left/right centroids)
 \begin{align*}
 \mathbb{E}_{(X,Y), D}\left[ \Breg{Y}{q} \right]  
@@ -246,11 +275,10 @@ This yields a generalised bias-variance-diversity decomposition for bregman dive
 % TODO note on how we require special ensemble combiner according to dual expectation for this to hold
 % give table for combiners for squared-error KL-divergence etc
 
+\paragraph{The ensemble combiner for Bregman divergences} ...
+% TODO primal averaging can *hurt* performance, cf. adlam22
 
-\section{Diversity is a measure of model fit}
 
-"Sweet spot" of diversity. Review of previous experiments. Will need to go somewhere else.
-% cf obsidian "sweet spot for diversity" and other notes
 
 
 % TODO wood23 "MC-dropout"

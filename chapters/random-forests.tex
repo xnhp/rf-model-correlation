@@ -15,13 +15,13 @@ As described in section \ref{sec:supervised-learning}, we are interested in lear
 
 % \marginnote{TODO decision tree construction pseudocode}
 
-One intuitive approach is to consider the examples in the training data that are, in some sense, "close" or "similar" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the similar points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neigbours, $k$-Means, etc.
+One intuitive approach is to consider the examples in the training data that are "close" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the close points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neigbours, $k$-Means, etc.
 % TODO some examples other than k--
 
 % TODO decision tree always lowercase
 Constructing a decision tree means recursively partitioning the input space $\mathcal{X}$, guided by the training data $D$. Then, given a query $X$, we check the partition cell that $X$ belongs to and all the training examples that are in it. These are the examples we consider "close" to $X$. The tree's prediction will be an aggregation of the outcomes of all training points in that cell. 
 
-Because we are recursively partitioning the input space, we have at hand a tree structure of decision rules. The cells of the resulting partition are the leaves of the tree. The non-leaf nodes are also referred to as \textit{decision nodes}, but there is no inherent difference between leaf and non-leaf nodes. We will use the terms \textit{leaf} and \textit{cell} interchangeably, depending which aspect we want to emphasize.
+Because we are recursively partitioning the input space, we have at hand a tree structure of decision rules. The cells of the resulting partition are the leaves of the tree. The non-leaf nodes are also referred to as \textit{decision nodes}, but there is no inherent difference between leaf and non-leaf nodes. We will use either of the terms \textit{leaf} and \textit{cell}, depending which aspect we want to emphasize.
 
 
 % \marginfigfromsource{fig:decision-tree-structure}{symlinks/illustrations/decision-trees/tree-structure}
@@ -45,7 +45,7 @@ In summary, there are the following main components to the implementation of a d
 \end{itemize}
 
 
-\subsection{Centroids are good leaf combiners} 
+\subsection{Centroids as leaf combiners} 
 
 % TODO don't talk about "points"
 
@@ -74,20 +74,12 @@ This rigorously motivates the specific choice of leaf aggregation function. The 
 % defin leaf aggregations
 
 \subsection{Splitting criteria greedily minimise loss functions}
+\label{sec:splitting-criteria-greedily-minimise-loss-functions}
 
 In the best possible case, all training examples in a given cell correspond to the same (classification) or very similar (regression) outcomes. If a query point then falls within that cell, i.e. it has similar features, one can say with high confidence that the query point should have the same (similar) outcome. In the spirit of greedy optimisation, we aim to split cells such that the resulting child cells are more \textit{pure} with respect to their outcomes. 
 
-% TODO move something of these paragraphs to the margin? 
-Note that the notion of local purity is linked to the training error: If a leaf cell is perfectly pure, all training examples in that cell correspond to the same outcome. Hence, the leaf aggregation function, which us usually implemented as some kind of mean, will produce exactly that outcome for any query point that belongs to this cell, in particular any training points. Consequently, for a suitable definition of "error", perfectly pure cells have zero training error.
-
 \marginnote{
-% TODO rather, as clustering. see post-it.
-The splitting function can be understood as a very simple classifier. Standard decision trees, are restricted to axis-aligned splits that divide the data points by a certain threshold value in a certain feature dimension.
-% TODO motivation for that; that this is enough, and also more efficient
-Extensions have been proposed to construct oblique (non-axis-aligned) splits or to use more sophisticated classifers instead \cite{todo}. 
-% TODO also mention spaeh
-In this work, we focus on axis-aligned splits but note that results and insights should transfer to other splitting functions. 
-% TODO which, how, why.
+    Note that the notion of local purity is linked to the training error: If a leaf cell is perfectly pure, all training examples in that cell correspond to the same outcome. Hence, the leaf aggregation function, which us usually implemented as some kind of mean, will produce exactly that outcome for any query point that belongs to this cell, in particular any training points. Consequently, for a suitable definition of "error", perfectly pure cells have zero training error.
 }
 
 % TODO diagram with tables, how a split makes the outcomes more pure
@@ -106,8 +98,8 @@ H(P) - \left(  \frac{n_{L}}{n} H(L_{\Theta}) + \frac{n_{R}}{n}H(R_{\Theta}) \rig
 Note that this is different from the gain in \textit{loss} achieved due to a split. 
 
 
-We now proceed to define two commonly used splitting criteria. These are the Gini Index for classification and Variance Reduction (also known as \textsc{Cart}) for regression \cite{tibshirani_ElementsStatisticalLearning_2017}.
-Obviously, a reasonable impurity measure should also also lead to a positive loss gain. Often, this is intuitively clear but a comprehensive explanation appears to be hard to find in the literature, particularly for the case of Gini impurity. We clarify this in the following.
+We now proceed to define two commonly used splitting criteria. These are the Gini impurity for classification and Variance Reduction (also known as \textsc{Cart}) for regression \cite{tibshirani_ElementsStatisticalLearning_2017}.
+For a splitting function criterion to produce useful decision trees, a reasonable impurity measure should also imply a positive loss gain. Often, this is intuitively clear but particularly for the case of Gini impurity, a comprehensive explanation appears to be hard to find in the literature. We clarify this in the following.
 
 \subsubsection{Variance Reduction}
 \marginnote{In binary classification, i.e. if outcomes are in $\{0,1\}$, the squared error reduces to the \zeroone-loss. As such, the mean \zeroone-loss, i.e. the error rate, trivially also is a measure of variance.
@@ -158,8 +150,9 @@ $$
 $$
 By lemma \ref{lemma:loss-gain-nonnegative}, we can directly conclude that the loss gain is positive for any split if the arithmetic mean is used as a leaf combiner.
 
-\subsubsection{Gini Index}
-\label{sec:gini-index}
+\subsubsection{Gini Impurity}
+\label{sec:gini-impurity}
+
 
 % TODO references:
 % - leistner2009 3.1 for def of margin vector, relation to empirical node error
@@ -172,12 +165,12 @@ Let $p_{k} = \prob{P}{k|X}$ be the probability of drawing an example of class $k
 % TODO ($\prob{.}{.}$ is the estimated density in the node $P$ and alos the leaf combiner)
 The probability of drawing one example of class $k$ and one of a different class is $p_{k}(1-p_{k})$.
 % TODO parameterise, make region explicit?
-The probability of drawing two examples of \textit{any} two different classes then is the \textit{Gini index}
+The probability of drawing two examples of \textit{any} two different classes then is the \textit{Gini impurity}
 $$
-G \defeq \sum_{k}p_{k}(1-p_{k})
+G \defeq \sum_{k}p_{k}(1-p_{k}) = 1 - \sum_k p_k^2
 $$
 % TODO proper definition, box?
-We will now argue that a reduction in the Gini index in fact pushes values $p_{k}$ to the extremes of the probability simplex. 
+We will now argue that a reduction in the Gini impurity in fact pushes values $p_{k}$ to the extremes of the probability simplex. 
 We perform a slight shift in perspective and consider the classification \textit{margin} (see \ref{def:classifier-margin}) instead of the estimated probabilites. 
 \marginnote{
     \textit{Recap}: The classifier margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
@@ -190,12 +183,12 @@ $$
 
 
 
-We will argue that the Gini index split criterion, which finds a split such that the Gini index is reduced, in fact maximises the classification margins.
+We will argue that the Gini impurity split criterion, which finds a split such that the Gini impurity is reduced, in fact maximises the classification margins.
 
 % TODO something like these stars to distinguish which I derived myself?
-\begin{lemma} $\star$ ~ Let $p$ be a probability distribution and $u$ an arbitrary vector
+\begin{lemma} $\star$ ~ Let $p$ be a probability distribution and $u$ an arbitrary vector.
    % TODO not fully arbitrary,needs to be a valid argument for breg 
-    Let $G =\sum_{k} p_{k}(1-p_{k})$ be the Gini index. Then $-G$ is the generator for the Bregman divergence
+    Let $G =\sum_{k} p_{k}(1-p_{k})$ be the Gini impurity. Then $-G$ is the generator for the Bregman divergence
 $$
 \sBreg{-G}{p}{u} = \sum_{k}(p_{k}-u_{k})^2
 $$
@@ -214,9 +207,9 @@ Let $\phi(q) \defeq (-1) \sum_{k} p_{k}(1-p_{k})$. Then, the first equality foll
 \end{proof}
 
 
-Note further that maximising the value of the generator function with respect to one parameter $\phi(p)$ while leaving the other fixed also maximises the divergence $\Breg{p}{u}$.\sidenote{TODO explain, at least with intuition. Convexity of $\Breg{.}{.}$ etc}
+Note further that maximising the value of the generator function $\phi$ with respect to $p$ while leaving the the other parameter $u$ fixed also maximises the divergence $\Breg{p}{u}$.\sidenote{TODO explain, at least with intuition. Convexity of $\Breg{.}{.}$ etc}
 The sign of the generator value and the sign of the divergence are related in that  $\sBreg{-\phi}{p}{u} = - \Breg{p}{u}$.
-This means that minimising the Gini index during splitting maximises component-wise sum of squared errors between $p$ and $u$.
+This means that minimising the Gini impurity during splitting maximises component-wise sum of squared errors between $p$ and $u$.
 $$
 \min G \rightarrow \min \sBreg{G}{p}{u} \rightarrow \max \sBreg{-G}{p}{u} = \sum_{k}\left( p_{k} - u_k \right)^2
 $$
@@ -258,7 +251,23 @@ L(P) &= \frac{1}{|P|}\sum_{i \in P} \sum_{k} \ind{y_{i}=k} ~ ~ \cdot ~ ~  \ell  
 \ell(m_{k}(x_{i})) \\
 &= \sum_k p_k(x_i) \ell(m_k(x_i))
 \end{align*}
-Hence we see that the Gini index splitting criterion greedily optimises classification margins and thus margin-maximising losses such as the Hinge loss.
+Hence we see that the Gini impurity splitting criterion greedily optimises classification margins and thus margin-maximising losses.
+
+\subsubsection{Information Gain}
+
+Another common impurity measure is the \textit{Shannon entropy}. 
+$$
+H \defeq -\sum_{k} p_{k} \log p_{k}
+$$
+The purity gain with respect to the entropy is referred to as \textit{information gain}.
+Seeing that the negative entropy is the Bregman generator of the KL-divergence (see table \ref{tab:bregman-examples}), one can apply a similar argument as given for the Gini impurity to see that constructing a tree using the entropy impurity measure corresponds to greedily optimising for a KL-divergence whose second argument is a uniform distribution -- which is also known as \textit{relative entropy} or \textit{cross-entropy}.
+% TODO check definitions, got this from a LLM
+
+% TODO maybe margin note on tsallis entropies
+% TODO cite these two
+% information gain and entropy https://stats.stackexchange.com/a/95459/178468
+% also note that it doesnt make too much difference: https://stats.stackexchange.com/a/20205/178468
+
 
 % TODO: i.e. each tree level is sort of a margin boosting step, cf margin analysis of boosting; ADF etc.
 
@@ -267,23 +276,25 @@ Hence we see that the Gini index splitting criterion greedily optimises classifi
 % TODO so "loss gain" / "purity gain" somethign there is really k-means objective?
 % so: decision tree construction = boosting for greedy opt of that? in some sense
 
-If indeed a centroid is chosen as leaf combiner, as is the case in standard random forests, common splitting functions can be seen to be equivalent to a generalised $k$-means for $k=2$. \cite{banerjee} generalise $k$-means to bregman divergences. The derivation is analogous to the classical case for squared error. 
 
-% The Bregman information is the basic measure to generalise $k$-means clustering \cite{banerjee}. For instance, for clustering with discrete assignments (hard clustering), each cluster (partition cell) is represented by a centroid. The task is to find a set of $k$ centroids such that the loss in Bregman information due to quanitisation is minimised. 
+As established in section \ref{sec:splitting-criteria-greedily-minimise-loss-functions}, splitting criteria aim to find a binary partition of the examples in the parent node. The quality of a partition is evaluated according to the purity of the labels. Note that the example features are not considered at all here. If indeed a centroid is chosen as leaf combiner, the notion of impurity is very similar to the objective function of $k$-means clustering.
 
-Let $I_{\phi}$ be the Bregman information as defined in definition \ref{def:bregman-information}. Let $X$ be a random variable representing data points. Let $M$ be a random variable taking values in $\mathcal{M}$ representing the set of cluster representatives. Then the objective for generalised $k$-means hard clustering is to minimise the loss in Bregman information due to the quantisation induced by $M$:
+Let $I_{\phi}$ be the Bregman information as defined in definition \ref{def:bregman-information}. Let $X$ be a random variable representing data points. Let $M$ be a random variable taking values in $\mathcal{M}$ representing the set of cluster centroids. Then the objective for generalised $k$-means hard clustering \cite{banerjee} is to minimise the loss in Bregman information due to the quantisation induced by $M$:
 $$
  \ell_{\phi}(M) \defeq I_{\phi}(X) - I_{\phi}(M)
 $$
 One can show \cite{banerjee} that
 $$
-\ell_{\phi}(M) = \mathbb{E}_{\pi}\left[ I_{\phi}(X_{h}) \right]  \approx \sum_{h=1}^k \sum_{x_{i} \in \mathcal{X_{h}}} \mathcal{v}_{i} \Breg{x_{i}}{\mu_{h}}
+\ell_{\phi}(M) = \mathbb{E}_{\pi}\left[ I_{\phi}(X_{k}) \right]  \approx \sum_{h=1}^K \sum_{x_{i} \in \mathcal{X_{k}}} \mathcal{v}_{i} \Breg{x_{i}}{\mu_{h}}
+% TODO what is pi?
 $$
-where $k$ is the number of clusters, $\mathcal{X}_{h}$ are the cells of the clustering, $\mathcal{v}_{i}$ is the distribution of the $x_{i}$ and $\mu_{h}$ is the right Bregman centroid of $\mathcal{X}_{h}$.
+where $K$ is the number of clusters, $\mathcal{X}_{k}$ are the cells of the clustering, $\mathcal{v}_{i}$ is the distribution of the $x_{i}$ and $\mu_{k}$ is the right Bregman centroid of $\mathcal{X}_{k}$.
 
-Classical $k$-means is a special case of this for the squared-error divergence. The KL-divergence implies the mutual information as a variance and yields \textit{information-theoretic clustering} \cite{todo}. The Ikura-Saito divergence yields the LBG algorithm \cite{todo}.
+Classical $k$-means is a special case of this for the squared-error divergence. The KL-divergence implies the mutual information as a variance and yields \textit{information-theoretic clustering} \cite{todo}. The Ikura-Saito divergence yields the \textit{LBG algorithm} \cite{todo}.
 
 Particularly relevant for decision trees is the following insight: The choice of Bregman divergence implies a measure of variance (see \ref{def:bregman-information} for examples). Optimising for this measure of variance implies the splitting criterion \sidenote{The leaf combiner, which corresponds to the right Bregman centroid is independent on the chosen divergence, see \ref{def:bregman-centroids}.}. This gives a theoretical rationale for choosing splitting function and leaf combiner in decision trees.
+
+% TODO note that ambiguity-effect could then be a generalised variance for 0/1-loss
 
 \subsection{Stopping Criteria \& Tree depth}
 
@@ -319,6 +330,7 @@ The basic idea is to introduce randomness into the decision tree construction. T
 Thus, a random forest additionally requires the following parameters:
 \begin{itemize}
 \item number of trees...
+% see e.g. scornet
 \end{itemize}
 
 % TODO default params are good choice
@@ -362,6 +374,60 @@ $$
 
 \subsection{Random Forests are consistent}
 
+\subsection{Tree and Forest Partitions}
+\label{sec:tree-and-forest-partitions}
+
+The generalisation error, and consequently individual terms of any decomposition of it have been defined point-wise. That is, they are measured by an expectation over possible realisations of example-outcome pairs $(X,Y)$. They further depend on a random variable $D$ representing the training input to the learner. In order to estimate such an expectation for a given model (a realisation of $D$), one has to sample realisations of $(X,Y)$. In practise, these example-outcome pairs typically come from a validation dataset that was withheld from training.
+We have seen in \ref{todo} that for some losses, diversity can be expressed independently of the outcome variable $Y$. 
+To approximate an actual value, we would still need to sample realisations of $X$.
+
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{figma-illustrations/tree-partition.pdf}
+    \label{fig:tree-partition}
+    \caption{A decision tree partitioning the data space. For a query example, the corresponding leaf node is determined by traversing the tree downwards from the root node and applying the learned decision criteria.}
+% TODO I think this fig does not really provide any value here
+\end{marginfigure}
+
+Decision Trees, particularly if grown deeply, can be considered to \textit{approximate} the training data, i.e. they are a lossy representation of the training data. A grown decision tree model contains two kinds of parameters, both derived from the training data $D$.
+\begin{itemize}
+\item The tree structure, i.e. the decision boundaries. These are used for determining the leaf node for a query example.
+\item The output value of a leaf node. This is the predicted value for a query example falling into that leaf. The leaf predictions depend on the decision boundaries but are not solely determined by them. 
+\end{itemize}
+% TODO plot of approximated polynomial
+This leads to the question whether characteristics of a Random Forest model could be expressed solely in terms of its tree parameters, and not in terms of predictions on query points.
+% In the case of a forest of trees, one would expect that if the trees have different decision boundaries, the forest is more diverse. 
+% Further, this would provide a way to express diversity \textit{in terms of model parameters} and not in terms of predictions on query points.
+% In the case of a forest of trees, one would expect that if the trees have different decision boundaries, the forest is more diverse. 
+
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{figma-illustrations/forest-partition.pdf}
+    \label{fig:forest-partition}
+    \caption{The data space $\mathcal{X}$ (gray) and partitions $P_1$ (purple) and $P_2$ (red) of it induced by two decision trees. The intersections of any cell of $P_1$ and any cell of $P_2$ form the \textit{forest partition}. One such intersection is highlighted in yellow.
+    }
+\end{marginfigure}
+Each level of a decision tree induces a partition of the space of examples $\mathcal{X}$. Because each example is associated with an outcome, we can also think of it as a partition of $(\mathcal{X}, \mathcal{Y})$. We call such a partition a \textit{tree partition} and a cell a \textit{tree cell}.
+Decision trees produce predictions via an aggregate of the queried leaf node's outcomes. Thus, the predictions of a decision tree over a single cell are constant.
+An ensemble of trees also induces a partition: the partition obtained by intersecting all tree partitions. We call these \textit{forest cells}. Formally, if $T_{1}, \dots, T_{M}$ are tree partitions, the forest partition is given as
+$$
+\{ c_{1} \cap \dots \cap c_{M} ~|~ c_{1} \in T_{1}, \dots, c_{M} \in T_{M}\}
+$$
+Each forest cell is associated with $M$ tree cells whose intersection constitutes it.
+For any query point that falls within a certain tree cell, the forest prediction is given by an aggregate over the associated tree cells. Thus, the predictions of a random forest are constant over a single forest cell.
+This means that also a loss, as well as any decomposition constituents of the loss are constant over forest cells.
+
+However, exploiting that partitions are cell-wise constant, we can apply a special case of the law of total expectation to express it in terms of cells.
+\sidenote{
+% TODO move to lemma in prelims
+Let $X_{1} \dot\cup \dots \dot\cup X_{M}$ be a disjoint, countable partition of the sample space of $X$. Then
+$$
+\mathbb{E}_{X}\left[ X \right] = \sum_{i=1}^M  \mathbb{E}_{X}\left[ X ~|~X_{i} \right] \cdot \prob{}{X_{i}}
+$$
+}
+Consider a forest partition $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ of $Z=(X,Y)$. Using the linearity of expectations and the law of total expectation, we can write the generalisation error of the forest as follows. 
+$$
+\mathbb{E}_{Z,D}\left[ \ell(y,\bar{q}) \right] = \mathbb{E}_{D}\left[ \sum_{p=1}^P \prob{}{Z_{p}} \cdot \mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]   \right] 
+$$
+While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In section \ref{sec:later} we will see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
 
 \subsection{Practical advantages}
 parallelisable, oob estimation, feature importance, proximity, ...
