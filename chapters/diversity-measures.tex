@@ -4,6 +4,13 @@
 % While the ambiguity decomposition has already been published in \citeyear{krogh_NeuralNetworkEnsembles_1995}, the decomposition into average bias, average variance and expected ambiguity is very recent \cite{wood23}. 
 % Numerous other measures of ensemble "diversity" have been developed. In this section, we will review some of these measures with a focus on binary classification. 
 
+For a suitable diversity measure, the following properties are desirable.
+\begin{itemize}
+  \item The measure captures the differences between member models.
+  \item There is a relationship between the diversity measure and the ensemble generalisation error.
+  \item The diversity measure is independent of the outcome variable.
+\end{itemize}
+
 Naturally, many diversity measures are based on some notion of spread of the member models. This can, for instance, be a measure of disagreement, variance, impurity, entropy, or covariance.
 
 \subsection{Disagreement}
@@ -32,10 +39,11 @@ $Q_{ij} = 0$ if $q_{i}$ and $q_{j}$ are independent, positive if the members mak
 \subsection{Ambiguity}
 
 \cite{krogh1995} propose a decomposition of the ensemble generalisation error into two terms: One describing the average error of ensemble members and a so-called \textit{ambiguity} term. 
+% TODO wrap this in theorem
 $$
 \mathbb{E}_{}\left[ \ell(y, \bar{q}) \right] = \Mavg \ell(y, q_{i}) - \Mavg \ell(\bar{q}, q_{i})
 $$
-This perfectly divides the ensemble error into error founded on characteristics of the individual member models and error founded on interactions between members. Note that the contribution of the ambiguity term here is negative, that is, ambiguity is a beneficial influence. 
+This perfectly divides the ensemble error into error due to characteristics of the individual member models and error due to interactions between member predictions. Note that the contribution of the ambiguity term here is negative, that is, ambiguity is a beneficial influence. 
 This decomposition was originally given for the squared-error loss \cite{krogh_NeuralNetworkEnsembles_1995} and the KL-divergence \cite{todo}. We will treat this quantity in detail in the rest of this chapter. Right now, note that the ambiguity term can be interpreted as a measure of \textit{variance} where individual distances are measured by the loss $\ell$. For the squared-error loss and the arithmetic mean combiner, this is exactly the "statistical" variance over the members $\Mavg \left(q_{i} - \Mavg q_{i}\right)^2$. For other loss functions, this yields other well-known quantities (see definition \ref{def:bregman-information}).
 
 \subsection{Impurity} 
@@ -57,7 +65,9 @@ $$
 \text{var}'_{x} \defeq 1 - \sum_{\tilde{y}} \prob{\Theta}{q = \tilde{y} ~ |~ x}^2
 $$
 Averaging this over the entire training dataset, this can be understood as a measure of diversity. More precisely, it is the impurity as measured by the Gini impurity of the predictions of the ensemble members.
+% TODO ref to def to gini imp
 % TODO I feel like this is related to diversity-effect for 0/1 via ensemble margins (all the 2 times, and 1-)
+% TODO can this be related to good/bad diversity?
 
 \subsection{Entropy}
 % TODO what is diversity term for KL-divergence? entropy? or rather, mutual information? (see section on bregman information)

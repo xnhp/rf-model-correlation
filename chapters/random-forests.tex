@@ -262,6 +262,7 @@ $$
 The purity gain with respect to the entropy is referred to as \textit{information gain}.
 Seeing that the negative entropy is the Bregman generator of the KL-divergence (see table \ref{tab:bregman-examples}), one can apply a similar argument as given for the Gini impurity to see that constructing a tree using the entropy impurity measure corresponds to greedily optimising for a KL-divergence whose second argument is a uniform distribution -- which is also known as \textit{relative entropy} or \textit{cross-entropy}.
 % TODO check definitions, got this from a LLM
+% TODO reconcile with marginnote above
 
 % TODO maybe margin note on tsallis entropies
 % TODO cite these two
@@ -272,6 +273,7 @@ Seeing that the negative entropy is the Bregman generator of the KL-divergence (
 % TODO: i.e. each tree level is sort of a margin boosting step, cf margin analysis of boosting; ADF etc.
 
 \subsection{Splitting criteria as $2$-means clustering}
+% TODO different heading that suggests the core statement
 
 % TODO so "loss gain" / "purity gain" somethign there is really k-means objective?
 % so: decision tree construction = boosting for greedy opt of that? in some sense
@@ -293,6 +295,7 @@ where $K$ is the number of clusters, $\mathcal{X}_{k}$ are the cells of the clus
 Classical $k$-means is a special case of this for the squared-error divergence. The KL-divergence implies the mutual information as a variance and yields \textit{information-theoretic clustering} \cite{todo}. The Ikura-Saito divergence yields the \textit{LBG algorithm} \cite{todo}.
 
 Particularly relevant for decision trees is the following insight: The choice of Bregman divergence implies a measure of variance (see \ref{def:bregman-information} for examples). Optimising for this measure of variance implies the splitting criterion \sidenote{The leaf combiner, which corresponds to the right Bregman centroid is independent on the chosen divergence, see \ref{def:bregman-centroids}.}. This gives a theoretical rationale for choosing splitting function and leaf combiner in decision trees.
+% TODO put down this practical advise more prominently!
 
 % TODO note that ambiguity-effect could then be a generalised variance for 0/1-loss
 
@@ -343,7 +346,7 @@ Thus, a random forest additionally requires the following parameters:
 
 A vital ingredient to Random Forests is the \textit{Bagging} procedure, which stands for \textit{bootstrapping and aggregating}. Bagging is an ensemble learning technique not specific to Random Forests. In Bagging, each member is constructed not on the full training dataset but a \textit{bootstrap sample} of it. The bootstrap sample is usually determined by drawing $n$ out of $n$ examples uniformly with replacement \cite{breiman,others}. We will refer to this as \textit{uniform bootstrapping}. One can also determine the bootstrap sample by drawing $n$ out of $n$ points with replacement according to a probability distribution $\{p_1, ..., p_n\}$, which we call \textit{weighted bootstrapping}. Bootstrapping means that each member will be trained on a different dataset. 
 
-In uniform bootstrapping,if we draw $n$ samples from $n$ available points, the probability of an example being selected in a single draw is $\frac{1}{n}$. Conversely, the probability of an example not being selected in a single draw is $1-\frac{1}{n}$. We draw $n$ times. Hence, the probability of an observation not being selected in any of the draws is $(1-\frac{1}{n})^n$. The probability of an example indeed being selected in at least one of the draws then is $1 - (1 - \frac{1}{n})^n$.  For large $n$, one can approximate $\lim_{ n \to \infty }1-(1-\frac{1}{n})^n = 1- e^{-1} \approx 0.632$ \cite{todo}.
+In uniform bootstrapping, if we draw $n$ samples from $n$ available points, the probability of an example being selected in a single draw is $\frac{1}{n}$. Conversely, the probability of an example not being selected in a single draw is $1-\frac{1}{n}$. We draw $n$ times. Hence, the probability of an observation not being selected in any of the draws is $(1-\frac{1}{n})^n$. The probability of an example indeed being selected in at least one of the draws then is $1 - (1 - \frac{1}{n})^n$.  For large $n$, one can approximate $\lim_{ n \to \infty }1-(1-\frac{1}{n})^n = 1- e^{-1} \approx 0.632$ \cite{todo}.
 
 % randomization
 
@@ -427,6 +430,7 @@ Consider a forest partition $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ of $Z=(X,Y
 $$
 \mathbb{E}_{Z,D}\left[ \ell(y,\bar{q}) \right] = \mathbb{E}_{D}\left[ \sum_{p=1}^P \prob{}{Z_{p}} \cdot \mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]   \right] 
 $$
+% TODO maybe more precise derivation
 While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In section \ref{sec:later} we will see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
 
 \subsection{Practical advantages}
