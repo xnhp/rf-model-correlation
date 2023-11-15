@@ -115,6 +115,56 @@ In summary, the decomposition is given in the following theorem. Note that it ho
 % TODO use LE notation
 \end{theorem}
 
+\paragraph{Unchanged bias and reduction in variance}
+\label{sec:unchanged-bias}
+
+In section \ref{sec:ensemble-learning-motivation} we gave arguments for how in specific cases, the ensemble bias equals the bias of any member. We now have the tools to show this in a more general manner \cite{wood23}.
+
+For the ensemble bias, application of the ambiguity-effect decomposition (see \ref{todo}) to a set of centroid models $q_{i}^\star$ yields:
+% TODO also use LE (loss-effect) notation in other places -- but make sure we're not confusing anything
+$$
+\underbrace{
+\LE{y}{\bar{q}^\star} 
+}_{\text{ens. bias}}
+= 
+\underbrace{
+\Mavg \LE{y}{q_{i}^\star}
+}_{\text{avg. bias}}
+- 
+\underbrace{
+\Mavg\LE{\bar{q}^\star}{q_{i}^\star}
+}_{\Delta}
+$$
+For the ensemble variance, application of the diversity-effect decomposition (see \ref{todo}) while substituting $y \gets \bar{q}^\star$:
+$$
+\underbrace{
+\mathbb{E}_{D}\left[ \LE{\bar{q}^\star}{\bar{q}} \right]
+}_{\text{ens. var.}}
+ = 
+\underbrace{
+\Mavg \LE{\bar{q}^\star}{q_{i}^\star} 
+}_{\Delta}
++ 
+\underbrace{
+\Mavg \mathbb{E}_{D}\left[ \LE{q_{i}^\star}{q_{i}} \right] 
+}_{\text{avg. var.}}
+- 
+\underbrace{
+\mathbb{E}_{D}\left[ \Mavg \LE{\bar{q}}{q_{i}} \right] 
+}_{\text{diversity}}
+$$
+Due to Lemma (\ref{qstars-same}) which states that in homogeneous ensembles $q_{i}^\star = q_{j}^\star = \bar{q}^\star$, we can conclude that $\Delta = 0$. 
+\begin{corollary} For homogeneous ensembles, we can conclude the following:
+\begin{itemize}
+    \item The ensemble bias is equal to the average member bias:
+$$
+\Delta = 0 ~ ~ \rightarrow ~ ~ \LE{y}{\bar{q}^\star} = \Mavg \LE{y}{q_{i}^\star}
+$$
+\item \textit{Diversity is a component of ensemble variance}. The other component is the average member variance. In other words, \textit{ensemble variance reduction is measured exactly by diversity}. 
+\item Diversity is bounded from above by the average member variance.
+\end{itemize}
+\end{corollary}
+
 
 
 % TODO what about note in wood23 that \mathbb{V} and L are not necessarily the same?
@@ -275,6 +325,35 @@ This yields a generalised bias-variance-diversity decomposition for bregman dive
 
 \paragraph{The ensemble combiner for Bregman divergences} ...
 % !! TODO primal averaging can *hurt* performance, cf. adlam22
+
+% TODO variance reduction cf adlam22
+
+\paragraph{Ensemble improvement for Bregman Divergences}
+
+In section \ref{sec:ensemble-learning-motivation}, we have used Jensen's inequality to show that the ensemble improvement is non-negative for some cases.
+$$
+\mathbb{E}_{{\Theta}}\left[ \ell (q_{\Theta}(X),Y) \right]  -
+\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right] ,Y ) \geq 0
+$$
+It is evident, that the Jensen gap is but a special case of ambiguity-effect (\ref{thm:ambiguity-effect-decomp}) for $\bar{q} \defeq \Mavg q_{i}$ and convex loss functions. 
+This shows that the ensemble loss is always smaller-equal than the expected member loss, but \textit{only} if the ensemble output is actually produced by an arithmetic mean. 
+
+However, it can not be assumed from the outset that the arithmetic mean is the best ensemble combiner. Indeed, for the cross-entropy loss, \citeauthor{abe} proceed to note that the Jensen gap corresponds to a form that is "not immediately recognizable". Although they do find an interpretation of it, it is still necessarily dependent on the outcome $Y$ 
+\marginnote{
+	In fact, for the case of cross-entropy, \cite{wood23} show that the ambiguity term is still nonnegative, i.e. that the arithmetic mean combiner does not hurt performance. 
+}.
+As illustrated in \ref{sec:bregman-divergences} on Bregman divergences, 
+it seems reasonable to define the ensemble combiner in accordance to the Bregman divergence, i.e. to be the \textit{dual} expectation $\mathcal{E}_{\Theta}\left[ q_{\Theta} \right]$. 
+% TODO actually talk about these combiners somewhere
+Non-negativity is then easily shown since in that case ambiguity-effect reduces to ambiguity (see \ref{above})
+$$
+\Breg{\bar{q}}{q} = \mathbb{E}_{}\left[ \Breg{Y}{\bar{q}} - \Breg{Y}{q} \right]
+\hspace{1em} \text{for $\bar{q} = \mathcal{E}_\Theta\left[q_\Theta\right]$}
+$$ and the value of any Bregman divergence is always non-negative. Further, ambiguity is now independent of the outcome.
+
+This shows that for any Bregman divergence, ensembling using the combiner implied by the divergence can not hurt performance. Second, we obtain an intuitive measure of ensemble improvement. Third, this ensemble improvement appears in an exact decomposition of the ensemble generalisation error.
+% TODO can potentially shorten this
+% TODO wrap in corollary?
 
 
 

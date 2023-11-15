@@ -835,7 +835,7 @@ Similarly to definition \ref{def:classifier-margin}, we can define a notion of m
 \begin{definition} (Ensemble margins for majority voting \cite{breiman})
 The margin for class $y$ of an example $x$ is the difference between the number of member votes for class $Y$ and the number of votes for the next-best class.
 	$$
-\mr(x,y) \defeq \Mavg \ind{q_{i} = y} - \max_{j \neq y} \Mavg \ind{q_{i} = j}
+\mr(x,y) \defeq \Mavg \ind{q_{i} = y} - \max_{j \neq y} \Mavg \ind{q_{i} = j} \in [-1, 1]
 $$
 % TODO maybe express with expectations instead
 \label{def:ensemble-margin}
@@ -995,7 +995,9 @@ $$
 where $K$ is the next-best class and we define the \textit{raw margin function} $\rmg(X, Y, \Theta)$ to be the inner part of that expectation. So, 
 $\mr(X, Y;D) = \mathbb{E}_{\Theta}\left[ 
 \rmg(X, Y, \Theta) 
-~|~(X,Y), D \right]$. Notably, \textit{mr} is the \textit{ensemble} margin measuring the ratio of incorrect members and \textit{rmg} corresponds to the \textit{classifier} margin, measuring the ratio of incorrectly classfied examples by a member (see definitions \ref{def:ensemble-margin} and \ref{def:classifier-margin}).
+~|~(X,Y), D \right]$. Notably, \textit{mr} is the \textit{ensemble} margin measuring the ratio of incorrect members and \textit{rmg} corresponds to the \textit{classifier} margin
+% TODO only if we took rmg in expectation over (X,Y)
+, measuring the ratio of incorrectly classfied examples by a member (see definitions \ref{def:ensemble-margin} and \ref{def:classifier-margin}).
 
 \begin{theorem} (\cite{breiman_RandomForests_2001})
 The variance of the ensemble margin can be expressed in terms of the covariance between the raw member margins of two members parameterised by \textit{i.i.d} $\Theta, \Theta'$.
@@ -1143,6 +1145,8 @@ For homogeneous ensembles under the arithmetic mean combiner, ensemble improveme
 \section{Applications}
 ...
 
+% TODO see https://www.maths.usyd.edu.au/u/pengyi/publication/EnsembleBioinformatics-v6.pdf
+
 \chapter{Random Forests}
 \subfile{chapters/random-forests.tex}
 
@@ -1170,7 +1174,6 @@ It is evident that the interactions between members are a driving force behind m
 \subfile{chapters/diversity-diversity-effect.tex}
 
 
-\section{Ensemble Improvement}
 \subfile{chapters/ensemble-improvement.tex}
 
 
@@ -1179,6 +1182,8 @@ It is evident that the interactions between members are a driving force behind m
 % TODO result that generally not possible to express for 0/1-loss indep of Y
 % -> div-effect seems godo approach
 
+ % TODO mention bregman divergences
+ % TODO mention theisen bounds
 In the general case, diversity cannot be expressed independently of the outcome variable $Y$. If $\ell$ is a metric, then diversity-effect can be bounded from above by a target-independent term that is reminiscent of the diversity term for Bregman divergences introduced in theorem \ref{thm:bregman-diversity-decomp}.
 \begin{lemma} $\star$ Under a metric loss, diversity-effect is bounded from above by diversity. 
 $$
@@ -1222,6 +1227,7 @@ We claim that the search for a diversity measure that is directly correlated wit
 \section{Diversity in Neural Networks}
 
 ...
+% TODO cf theisen sec 5 -- may show how diversity makes more sense for tree than for NN ensembles
 
 \subsection{Adversarial Robustness}
 
@@ -1250,8 +1256,6 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 % TODO weighted bootstrapping actually *too* extreme? all happens in first handful of trees. super hard increase in bias. might be better if slower. (cf learning rate for boosting)
 % can (probably) dampen weights by inputting them to a linear function (see sketch)
 
-\subsection{Outlook: Relationship to Competence}
-...
 
 \subsection{Outlook: Generalising to other losses}
 
@@ -1294,6 +1298,8 @@ If it is high, then the diversity relative to the average member error is low
 % and one can potentially improve performance by increasing diversity without *equally* affecting avg member error?
 % TODO is that so?
 % -> low weights
+
+% TODO this would essentially be ensemble improvement rate of theisen?
 
 % We can see that this is a generalisation of the DRF weighting scheme given in definition \ref{def:drf-weighting-scheme}. For the \zeroone-loss, we have
 
@@ -1354,6 +1360,8 @@ Similarly, we can express the average member error in terms of tree cells. Due t
 }_{\defeq  \text{err}(Z_{p}) }
 \end{align*}
 
+% TODO mention that there are "good" and "bad" flowers
+
 \paragraph{A diversity-aware splitting criterion} Imagine growing $M$ trees simultaneously as follows: In each iteration, one split is determined for each tree. Which node is being split is left to the choice of the splitting criterion. 
 %When trees are grown independently of each other, splitting one node never influences the predictions of other nodes, since they form a disjoint partition. 
 One could then attempt to derive a splitting criterion that optimises not only for a split that is pure (improves the prediction performance of the tree), but also one that implies predictions different to those of other trees (improves diversity). Each split of a tree node yields a new forest partition $Z_{1}, \dots, Z_{P}$. 
@@ -1377,9 +1385,6 @@ Continuing from here, probably many other simplificiations could be made on how 
 \subfile{chapters/negative-correlation-learning.tex}
 
 
-\section{Outlook: Theoretical analysis}
-
-Individual learners no longer independent! But: can consider this from the perspective of boosting.
 
 
 \chapter{Conclusion}
@@ -1474,12 +1479,14 @@ generalised k-means as splitting function -- i'm sure someone tried this with st
 
 variance-effect as impurity criterion? what would this reduce to? in general, that as template, ref bregman info
 
-theisen:
-For
-example, Figure 2 suggests that the relationship between EIR and DER can be even more finely characterized. Is it
+theisen say:
+"For example, Figure 2 suggests that the relationship between EIR and DER can be even more finely characterized. Is it
 possible to refine our analysis further to incorporate information about the data and/or model architecture? Second,
 can we formalize the connection between ensemble effectiveness and the interpolation point, and relate it to similar
-ideas in the literature?
+ideas in the literature?"
+
+Outlook: Theoretical analysis -- 
+Individual learners no longer independent! But: can consider this from the perspective of boosting.
 
 %----------------------------------------------------------------------------------------
 

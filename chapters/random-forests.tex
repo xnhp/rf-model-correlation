@@ -19,7 +19,9 @@ One intuitive approach is to consider the examples in the training data that are
 % TODO some examples other than k--
 
 % TODO decision tree always lowercase
-Constructing a decision tree means recursively partitioning the input space $\mathcal{X}$, guided by the training data $D$. Then, given a query $X$, we check the partition cell that $X$ belongs to and all the training examples that are in it. These are the examples we consider "close" to $X$. The tree's prediction will be an aggregation of the outcomes of all training points in that cell. 
+Constructing a decision tree means recursively partitioning the input space $\mathcal{X}$, guided by the training data $D$. Then, given a query $X$, we check the partition cell that $X$ belongs to
+% TODO clarify how that is determined
+ and all the training examples that are in it. These are the examples we consider "close" to $X$. The tree's prediction will be an aggregation of the outcomes of all training points in that cell. 
 
 Because we are recursively partitioning the input space, we have at hand a tree structure of decision rules. The cells of the resulting partition are the leaves of the tree. The non-leaf nodes are also referred to as \textit{decision nodes}, but there is no inherent difference between leaf and non-leaf nodes. We will use either of the terms \textit{leaf} and \textit{cell}, depending which aspect we want to emphasize.
 
@@ -79,7 +81,8 @@ This rigorously motivates the specific choice of leaf aggregation function. The 
 In the best possible case, all training examples in a given cell correspond to the same (classification) or very similar (regression) outcomes. If a query point then falls within that cell, i.e. it has similar features, one can say with high confidence that the query point should have the same (similar) outcome. In the spirit of greedy optimisation, we aim to split cells such that the resulting child cells are more \textit{pure} with respect to their outcomes. 
 
 \marginnote{
-    Note that the notion of local purity is linked to the training error: If a leaf cell is perfectly pure, all training examples in that cell correspond to the same outcome. Hence, the leaf aggregation function, which us usually implemented as some kind of mean, will produce exactly that outcome for any query point that belongs to this cell, in particular any training points. Consequently, for a suitable definition of "error", perfectly pure cells have zero training error.
+    % TODO this is somewhat superfluous with "loss gain" since that is evaluated on the training data.
+    The notion of local purity is linked to the training error: If a leaf cell is perfectly pure, all training examples in that cell correspond to the same outcome. Hence, the leaf aggregation function, which us usually implemented as some kind of mean, will produce exactly that outcome for any query point that belongs to this cell, in particular any training points. Consequently, for a suitable definition of "error", perfectly pure cells have zero training error.
 }
 
 % TODO diagram with tables, how a split makes the outcomes more pure
@@ -434,6 +437,6 @@ $$
 While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In section \ref{sec:later} we will see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
 
 \subsection{Practical advantages}
-parallelisable, oob estimation, feature importance, proximity, ...
+parallelisable, oob estimation, feature importance, proximity, directly allow more-than-binary classification
 
 \end{document}

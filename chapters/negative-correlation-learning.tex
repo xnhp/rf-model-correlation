@@ -86,7 +86,7 @@ $$
 % TODO consistent notation for KL-divergence
 where $\bar{q}$ is the geometric mean combiner (see \ref{todo}). The proof is not trivial and does not give insight into whether such a decomposition might also exist for other loss functions.
 
-\cite{buschjaeger} approached the problem by attempting to derive a generalised decomposition of the ensemble error. The basic idea is to consider a Taylor approximation around the ensemble combiner, which is assumed to be the arithmetic mean combiner. $\bar{q} \defeq \mathbb{E}_{\Theta}\left[ q_{\Theta} \right] \approx \frac{1}{M}\sum_{i=1}^M q_i$.
+\cite{buschjaeger} approached the problem by attempting to derive a generalised decomposition of the ensemble error that incorporates diversity. The basic idea is to consider a Taylor approximation around the ensemble combiner, which is assumed to be the arithmetic mean combiner. $\bar{q} \defeq \mathbb{E}_{\Theta}\left[ q_{\Theta} \right] \approx \frac{1}{M}\sum_{i=1}^M q_i$.
 \begin{align*}
 \mathbb{E}_{}\left[ \ell(y, q) \right]  &= 
 \mathbb{E}_{}\left[ \ell(\bar{q}) \right] 
