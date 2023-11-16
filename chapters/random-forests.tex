@@ -175,16 +175,21 @@ $$
 % TODO proper definition, box?
 We will now argue that a reduction in the Gini impurity in fact pushes values $p_{k}$ to the extremes of the probability simplex. 
 We perform a slight shift in perspective and consider the classification \textit{margin} (see \ref{def:classifier-margin}) instead of the estimated probabilites. 
-\marginnote{
-    \textit{Recap}: The classifier margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
-$$
-m_{k}(X) \defeq \prob{}{k|X} - \max_{j\not=k} \prob{}{j|X}
-$$
-    For a pair $(X,y)$ of example and true outcome, the model's prediction is correct iff $m_y(X) > 0$ 
-    The vector $m(x) = [m_{1}(x), \dots, m_{K}(x)]^\top$, where $K$ is the total number of classes, is called a \textit{margin vector} iff its components sum to zero. 
-}
+ The margin can be thought to represent the classifier's confidence in its prediction. $\prob{}{k|x}$ describes the probability estimated by the classifier that $X$ is of class $k$.
 
-
+% TODO code snippet illustration plot of margin vector -- should be simple
+% TODO disallow page breaks in these boxes
+\begin{definition} (Classifier margins \cite{tibshirani_ElementsStatisticalLearning_2017}) The margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
+$$
+m(x,y) \defeq \prob{}{y|x} - \max_{j\not=y} \prob{}{j|x}
+$$
+\begin{itemize}
+    \item The vector $m(x) = [m_{1}(x), \dots, m_{K}(x)]^\top$, where $K$ is the total number of classes, is called a \textit{margin vector} iff its components sum to zero. 
+    \item For a pair $(X,y)$ of example and true outcome, the model's prediction is correct iff $m_y(x) > 0$ 
+\end{itemize}
+\label{def:classifier-margin}
+\end{definition}
+% margin reflects notion of classifier confidence: here, yes, but not necessarily for RF margin
 
 We will argue that the Gini impurity split criterion, which finds a split such that the Gini impurity is reduced, in fact maximises the classification margins.
 

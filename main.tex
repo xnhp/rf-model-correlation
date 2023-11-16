@@ -21,6 +21,15 @@
 
 \usepackage{tikz}
 
+\usepackage{xcolor}
+
+
+
+\definecolor{ctp-latte-peach}{RGB}{254, 100, 11}
+\definecolor{ctp-latte-yellow}{RGB}{223, 142, 29}
+\definecolor{ctp-latte-mauve}{RGB}{136, 57, 239}
+\definecolor{ctp-latte-rosewater}{RGB}{220, 138, 120}
+
 % Load packages for testing
 \usepackage{blindtext}
 %\usepackage{showframe} % Uncomment to show boxes around the text area, margin, header and footer
@@ -31,7 +40,12 @@
 \addbibresource{minimal.bib} % Bibliography file
 
 % Load mathematical packages for theorems and related environments
-\usepackage[framed=true]{kaotheorems}
+\usepackage[
+  framed=true,
+  % theorembackground=ctp-latte-peach!15!white,
+  % definitionbackground=ctp-latte-mauve!10!white,
+  % lemmabackground=ctp-latte-rosewater!15!white
+  ]{kaotheorems}
 
 % Load the package for hyperreferences
 \usepackage{kaorefs}
@@ -44,7 +58,6 @@
 
 \begin{document}
 
-\begin{titlepage}
 \pagelayout{wide}
 \begin{titlepage}
   \pagelayout{wide} % No margins
@@ -549,6 +562,22 @@ While the bias-variance decomposition for the squared-error loss is widely accep
   \label{def:loss-effect}
 \end{definition}
 
+\begin{definition}
+\label{def:central-model}
+(Central model) Given a model $q$, it's central model is the centroid with respect to $D$:
+$$
+q^\star \defeq \arg\\min_{z} \mathbb{E}_{D}\left[ \ell(z, q_{D}) \right] 
+$$
+\end{definition}
+
+\begin{definition}
+\label{def:central-label}
+(Central label) The central label is 
+$$
+y^\star \defeq \mathbb{E}_{Y|X}\left[ Y \right] 
+$$
+\end{definition}
+
 The \textit{variance-effect} is the expected change in loss caused by using $q_{D}$ instead of the non-random centroid $q^\star(X)$. Likewise, the \textit{bias-effect} is the expected change in loss caused by using the expected model instead of the expected label. In the following, to lighten notation, we will omit explicitly stating the dependence on $X$.
 \sidenote{In the original publication \cite{james_GeneralizationsBiasVariance_}, bias-effect is called the \textit{systematic effect}, i.e. the effect of the systematic components. However, it is clearer to call this \textit{bias-effect}, particularly when we begin to introduce notions of diversity in \ref{sec:measures-ensemble-diversity}.}
 Formally:
@@ -610,23 +639,7 @@ For any loss function $L$, it holds that
 This decomposition holds for \textit{any} loss function since, by linearity of expectation, the individual terms on the right-hand-side simply cancel out. Further, this decomposition is independent of the definitions of $y^\star$ and $q^\star$.
 
 
-\section{Classifier Margins}
 
-A basic tool in the analysis of classifiers is the notion of margins.  The margin can be thought to represent the classifier's confidence in its prediction. $\prob{}{k|x}$ describes the probability estimated by the classifier that $X$ is of class $k$.
-
-% TODO code snippet illustration plot of margin vector -- should be simple
-% TODO disallow page breaks in these boxes
-\begin{definition} (Classifier margins \cite{tibshirani_ElementsStatisticalLearning_2017}) The margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
-$$
-m(x,y) \defeq \prob{}{y|x} - \max_{j\not=y} \prob{}{j|x}
-$$
-\begin{itemize}
-    \item The vector $m(x) = [m_{1}(x), \dots, m_{K}(x)]^\top$, where $K$ is the total number of classes, is called a \textit{margin vector} iff its components sum to zero. 
-    \item For a pair $(X,y)$ of example and true outcome, the model's prediction is correct iff $m_y(x) > 0$ 
-\end{itemize}
-\label{def:classifier-margin}
-\end{definition}
-% margin reflects notion of classifier confidence: here, yes, but not necessarily for RF margin
 
 
 
@@ -680,7 +693,7 @@ where $\inner{\cdot}{\cdot}$ is the inner product, $\nabla \phi(\vec{q})$ is the
 % TODO relate centroids to bregman information etc in banerjee_ClusteringBregmanDivergences_2004
 
 % TODO repeating a bit here, maybe remove first few paragraphs
-The "statistical" variance $(X - \mathbb{E} \left[ X \right])^2$ is the expected distance around the centroid as measured by the squared-error loss. Other loss functions imply different notions of variance.
+% The "statistical" variance $(X - \mathbb{E} \left[ X \right])^2$ is the expected distance around the centroid as measured by the squared-error loss. Other loss functions imply different notions of variance.
 %
 % A common measure is the "statistical" variance $(X - \mathbb{E} \left[ X \right])^2$. One can see that $\mathbb{E}_{}\left[ X \right]$ is in fact the minimizer of the expected squared distances to realisations of $X$:
 % $$
@@ -700,14 +713,18 @@ The "statistical" variance $(X - \mathbb{E} \left[ X \right])^2$ is the expected
 In order to talk about variances with respect to Bregman divergences, we need a notion of a centroid with respect to a Bregman divergence. Bregman divergences are in general not symmetric and hence there is a \textit{left} and \textit{right} centroid.
 
 \begin{lemma} (Left and right Bregman centroids, \cite{pfau_GeneralizedBiasVarianceDecomposition_})
+  \label{thm:bregman-centroids}
     Let $B_{\phi}$ be a Bregman divergence of generator $\phi: \mathcal{S} \to \mathbb{R}$. For a random variable $Y$ taking values in $\mathcal{S}$, it holds that
 \begin{itemize}
     \item the \textit{right Bregman centroid} is $$\arg \min_z \mathbb{E}_{X}\left[ \Breg{X}{z}  \right] = \mathbb{E}_{}\left[ X \right]$$
-    \item the \textit{left Bregman centroid} is $$\arg\min_{z}  \mathbb{E}_{z}\left[ \Breg{z}{X}\right] = (\nabla \phi)^{-1} \mathbb{E}_{}\left[ \nabla \phi(X) \right]$$
+    \item the \textit{left Bregman centroid} is $$\arg\min_{z}  \mathbb{E}_{X}\left[ \Breg{z}{X}\right] = (\nabla \phi)^{-1} \mathbb{E}_{}\left[ \nabla \phi(X) \right] \defeq \mathcal{E}\left[X\right]$$
+\end{itemize}
+  If $B_\phi$ is symmetric, i.e. $\Breg{Y}{Y'} = \Breg{Y'}{Y}$ then $\mathbb{E}\left[X\right] = \mathcal{E}\left[X\right]$.
+\end{lemma}
+\begin{definition} (Dual expectation \cite{pfau})
   The left Bregman centroid is the expected value in the dual space implied by $\nabla\phi$. Due to this, we define the dual expectation as  
   $$\mathcal{E}\left[X\right] \defeq (\nabla \phi)^{-1}\mathbb{E}_{}\left[ \nabla \phi(X) \right]$$ 
-\end{itemize}
-\end{lemma}
+\end{definition}
 
 % The left Bregman centroid will be important for considering the variance of a learner around its parametrisation $\Theta$.
 % TODO a visual here
@@ -775,6 +792,12 @@ In this thesis, we will focus on the Random Forest learner and variations of it.
 
 In the supervised learning setting with a single model, we have defined the model as a function $q_{D}(X)$. In ensemble learning, $M$ individual models are constructed and their outputs are aggregated via an ensemble combiner $\bar{q}$ to form an ensemble output. The individual models are referred to as \textit{members}. 
 
+\begin{marginfigure}
+  \includegraphics[width=\textwidth]{figma-illustrations/ensemble-learning.pdf}
+  \caption{
+    Illustration of parallel ensemble learning.
+  }
+\end{marginfigure}
 Analysing ensembles means analysing differences between the members. There are two dimensions in which ensemble members can differ. First, in terms of provided training data. 
 \sidenote{For instance, each learner may be trained on a random subset of the available training data (see section \ref{sec:bootstrapping})}
 Second, in terms of other randomness used in model construction.
@@ -791,19 +814,34 @@ $$
 \mathbb{E}_{D}\left[ q_{i} \right] = \mathbb{E}_{D_{j \not= i}}\left[ \mathbb{E}_{D_{i}}\left[ q_{i} \right]   \right]  = \mathbb{E}_{D_{i}}\left[ q_{i} \right] 
 $$
 and likewise for $\Theta$. 
-The ensemble combiner of a set of members constructed given $D$ and $\Theta$ is the dual expectation over the member parameters $\Theta$.
-\begin{marginfigure}
-  \includegraphics[width=\textwidth]{figma-illustrations/ensemble-learning.pdf}
-  \caption{
-    Illustration of parallel ensemble learning.
-  }
-\end{marginfigure}
-\begin{definition} (Ensemble combiner) The ensemble combiner $\bar{q} : \mathcal{X} \to \mathcal{Y}$ is defined as 
+
+
+
+The output of an ensemble is produced by aggregating the outputs of the member models using a combiner function. 
+\marginnote{
+  For the \zeroone-loss for a $k$-class classification problem, the implied combiner is the plurality vote:
+  $$
+  \bar{q} = \arg\min_{z \in [k]} \mathbb{E}_{\Theta}\left[ \Lzo{z}{q_{\Theta}} \right]  
+  $$
+  For Bregman divergences, i.e. $\ell = B_\phi$, the combiner implied by $\ell$ is the dual expectation:
+  \begin{align*}
+  \bar{q} &= \mathcal{E}_{\Theta}\left[ q_{\Theta, D} \right] \\
+  &= (\nabla \phi)^{-1} \mathbb{E}_\Theta \left[\nabla \phi (q_\Theta)\right]
+  \end{align*}
+  The squared-error loss is a symmetric Bregman divergence and hence the ensemble combiner is the arithmetic mean:
+  \begin{align*}
+    \bar{q} &= \mathcal{E}_\Theta \left[X\right] = \mathbb{E}_\Theta \left[X\right] \approx \Mavg q_i
+  \end{align*}
+}
+\begin{definition} (Ensemble combiner) The ensemble combiner $\bar{q} : \mathcal{X} \to \mathcal{Y}$ for a given loss function $\ell$ is the centroid with respect to model parameters $\Theta$: 
 % TODO would sort of need to motivate that we already use dual exp here
 $$
-\bar{q}_{D} \defeq \mathcal{E}_{\Theta}\left[ q_{\Theta, D} \right]
+\bar{q} \defeq \arg\min_z \mathbb{E}_\Theta \left[ \ell(z, q_\Theta) \right]
 $$
 \end{definition}
+Note that this is the central model with respect to $\Theta$ (compare definition \ref{def:central-model}).
+For Bregman divergences, this shows to be the dual expectation (def. \ref{def:dual-expectation}). This definition agrees with combiners commonly used in practise (plurality vote, arithmetic mean). It links combiners to loss functions. Further, it suggests combiners for other loss functions. In each case, using a combiner as defined here enables a very general and expressive theory of ensemble diversity and a decomposition of the ensemble generalisation error exactly measuring ensemble improvement due to diversity.
+
 An ensemble is homogeneous iff $\Theta_{1}, \dots, \Theta_{M}$ are identically and independently distributed. This is the case if the member models are constructed according to the same base learner and do not influence each other. 
 \begin{lemma}  $\star$ In homogeneous ensembles, the central models of any two members and the combiner are the same. That is, for any $i, j \in \{ 1, \dots, M \}$ it holds that
 $$
@@ -816,7 +854,6 @@ $$
 q_{i}^\star = \mathbb{E}_{D}\left[ q_{D_{i}, \Theta_{i}} \right]  = \mathbb{E}_{D_{i}}\left[ q_{D_{i}, \Theta_{i}} \right]  
 = \mathbb{E}_{D_{j}}\left[ q_{D_{j}, \Theta_{i}} \right] = q_{j}^\star
 $$
-Both properties also hold for dual expectations for Bregman divergences defined in definition \ref{def:bregman-centroids}.
 
 % TODO verify that in cases such as sqerr, nabla phi = id??
 For the ensemble combiner, it holds that
@@ -826,12 +863,12 @@ For the ensemble combiner, it holds that
 &= \mathcal{E}_{\Theta}\left[ \mathcal{E}_{D}\left[ q_{D, \Theta} \right]  \right] = \mathcal{E}_{\Theta}\left[ q_{\Theta}^\star \right] 
 \end{align*}
 Due to the result above, $q_{\Theta}^\star$ is constant over $\Theta$ and thus $\mathcal{E}_{\Theta}\left[ q_{\Theta}^\star \right] = q_{\Theta}^\star$.
+
+Both properties also hold for dual expectations for Bregman divergences defined in definition \ref{def:bregman-centroids}.
 \end{proof}
 
-
-Similarly to definition \ref{def:classifier-margin}, we can define a notion of margin for classification ensembles deciding by majority voting. 
-% TODO what does "strenght" > 0 mean here? (better than random guessing)
-
+A basic measure for classification ensembles under the \zeroone-loss is the winning margin of the majority vote.
+% TODO resolve ambiguous terms majority/plurality
 \begin{definition} (Ensemble margins for majority voting \cite{breiman})
 The margin for class $y$ of an example $x$ is the difference between the number of member votes for class $Y$ and the number of votes for the next-best class.
 	$$
@@ -841,6 +878,7 @@ $$
 \label{def:ensemble-margin}
 \end{definition}
 
+% TODO not sure if we'll ever need this
 If ensemble members are parameterised by $\Theta$, from the statistical point of view, we can also write
 $$
 \mr(x,y) = \prob{\Theta}{q_{\Theta} = y} - \max_{j \not=y} \prob{\Theta}{q=j}
