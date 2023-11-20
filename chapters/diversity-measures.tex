@@ -1,7 +1,7 @@
 \documentclass[../main.tex]{subfiles}
 \begin{document}
 
-% While the ambiguity decomposition has already been published in \citeyear{krogh_NeuralNetworkEnsembles_1995}, the decomposition into average bias, average variance and expected ambiguity is very recent \cite{wood23}. 
+% While the ambiguity decomposition has already been published in \citeyear{krogh_NeuralNetworkEnsembles_1995}, the decomposition into average bias, average variance and expected ambiguity is very recent \cite{wood_UnifiedTheoryDiversity_2023}. 
 % Numerous other measures of ensemble "diversity" have been developed. In this section, we will review some of these measures with a focus on binary classification. 
 
 For a suitable diversity measure, the following properties are desirable.
@@ -22,10 +22,10 @@ Naturally, many diversity measures are based on some notion of spread of the mem
         $q_j = +1$ & $n_{(+,+)}$ & $n_{(+,-)}$ \\ \hline
         $q_j = -1$ & $n_{(-,+)}$ & $n_{(-,-)}$ \\ \hline
     \end{tabular}
-    \label{tab:nplusminus}
     \caption{Notation for entries of the contingency table.}
+    \label{tab:nplusminus}
 \end{margintable}
-We will begin with two simple measures based on the contingency table \cite{zhou}. To shorten notation, we will refer to its entries as given in table \ref{tab:nplusminus}.
+We will begin with two simple measures based on the contingency table \cite{zhou_EnsembleMethodsFoundations_2012}. To shorten notation, we will refer to its entries as given in table \ref{tab:nplusminus}.
 The \textit{Disagreement Measure} is the proportion of examples on which two members make different predictions.
 $$
 \frac{1}{n} (n_{(+,-)} + n_{(-,+)})
@@ -38,7 +38,7 @@ $Q_{ij} = 0$ if $q_{i}$ and $q_{j}$ are independent, positive if the members mak
 
 \subsection{Ambiguity}
 
-\cite{krogh1995} propose a decomposition of the ensemble generalisation error into two terms: One describing the average error of ensemble members and a so-called \textit{ambiguity} term. 
+\cite{krogh_NeuralNetworkEnsembles_1995} propose a decomposition of the ensemble generalisation error into two terms: One describing the average error of ensemble members and a so-called \textit{ambiguity} term. 
 % TODO wrap this in theorem
 $$
 \mathbb{E}_{}\left[ \ell(y, \bar{q}) \right] = \Mavg \ell(y, q_{i}) - \Mavg \ell(\bar{q}, q_{i})
@@ -60,7 +60,7 @@ $$
 \end{align}
 $$
 Note that the variance and noise terms are of the form of the Gini impurity (see \ref{sec:gini-impurity}) and can be interpreted as measures of impurity.
-\citeauthor{kunchevaWhittaker} take inspiration from this variance term and proceed as follows. Instead of considering the impurity over positive or negative labels, they instead consider the impurity over labels for which the ensemble is correct ($\tilde{y} = +1$) or incorrect ($\tilde{y} = -1$), respectively. As such, the probability is not with respect to the distribution of labels but the distribution $\Theta$ of members in the ensemble. Let the number of correct classifiers on an example be $m_{+}(x) \defeq \sum_{j}^M \ind{q_{j}(x) = y(x)}$ where $y(x)$ is the true label of $x$. This yields
+\citeauthor{kuncheva_MeasuresDiversityClassifier_2003} take inspiration from this variance term and proceed as follows. Instead of considering the impurity over positive or negative labels, they instead consider the impurity over labels for which the ensemble is correct ($\tilde{y} = +1$) or incorrect ($\tilde{y} = -1$), respectively. As such, the probability is not with respect to the distribution of labels but the distribution $\Theta$ of members in the ensemble. Let the number of correct classifiers on an example be $m_{+}(x) \defeq \sum_{j}^M \ind{q_{j}(x) = y(x)}$ where $y(x)$ is the true label of $x$. This yields
 $$
 \text{var}'_{x} \defeq 1 - \sum_{\tilde{y}} \prob{\Theta}{q = \tilde{y} ~ |~ x}^2
 $$
@@ -71,12 +71,12 @@ Averaging this over the entire training dataset, this can be understood as a mea
 
 \subsection{Entropy}
 % TODO what is diversity term for KL-divergence? entropy? or rather, mutual information? (see section on bregman information)
-\citeauthor{CunninghamCarney2000} propose the entropy between member predictions as a diversity measure. For a single point, it is given as
+\citeauthor{cunningham_DiversityQualityClassification_2000} propose the entropy between member predictions as a diversity measure. For a single point, it is given as
 $$
 \sum_{y \in \{ -1, +1 \}} - \prob{\Theta}{y ~|~x} \log \prob{\Theta}{y~|~x}
 $$
 where, for an ensemble, $\prob{\Theta}{y~|~x} \approx \Mavg \ind{q_{i}(x) = y}$.
-\citeauthor{ShippKuncheva2002} propose a target-dependent measure that is reminiscent of the entropy. With $m_{+}(x) = \sum_{j=1}^M \ind{q_{i}(x) = y(x)}$:
+\citeauthor{shipp_RelationshipsCombinationMethods_2002} propose a target-dependent measure that is reminiscent of the entropy. With $m_{+}(x) = \sum_{j=1}^M \ind{q_{i}(x) = y(x)}$:
 $$
 \frac{1}{M - \ceil{\frac{M}{2}}} \min \{ m_{+}(x), M-m_{+}(x) \}
 $$
@@ -87,7 +87,7 @@ $$
 \paragraph{Covariance of members}
 In section \ref{sec:ensemble-learning-motivation}, we have already seen evidence that the covariance between members is an essential factor to ensemble performance. Indeed, the notion of covariance and uncorrelatedness has been a guiding thought in the literature \cite{didaci_DiversityClassifierEnsembles_2013, brown_ManagingDiversityRegression_2005, buschjager_GeneralizedNegativeCorrelation_2020}.
 We will now introduce an exact decomposition of the ensemble error for the squared-error loss that includes the average covariance between member predictions.
-\begin{theorem} (Bias-Variance-Covariance decomposition \ref{ueda, brownManaging})
+\begin{theorem} (Bias-Variance-Covariance decomposition \ref{ueda_GeneralizationErrorEnsemble_1996, brown_ManagingDiversityRegression_2005})
   \label{thm:bias-variance-covariance}
 It holds that
 $$
@@ -100,7 +100,7 @@ $$
 $$
 \end{theorem}
 \begin{proof}
-We begin by applying the bias-variance decomposition (theorem  \ref{todo}) to the ensemble model $\bar{q}$.
+We begin by applying the bias-variance decomposition (theorem  \ref{thm:bias-variance-effect}) to the ensemble model $\bar{q}$.
 \begin{align*}
 \mathbb{E}_{}\left[ \ell(y, \bar{q})  \right]  
 &= \mathbb{E}_{}\left[ \ell(Y, y^\star) \right]  + \mathbb{E}_{}\left[ \ell(\bar{q}^\star, y^\star) \right] + \mathbb{E}_{}\left[ \ell(\bar{q}^\star, \bar{q}) \right]  \\
@@ -142,7 +142,8 @@ However, this decomposition is only given for the squared error and the arithmet
 
 
 \paragraph{A covariance decomposition for classification}
-\citeauthor{Didaci2013} builds on the decomposition given by \citeauthor{KohaviWolpert} (see equation \ref{todo}) and, similar to the derivation of the covariance decomposition for the squared-error loss, derive average bias, average variance and covariance terms.  They decompose the bias and variance terms of the ensemble as follows, writing $P\left[y_i\right]\defeq P\left[Y=y_i \mid \mathbf{x}\right]$ and $\hat{P}_{q}\left[y_i\right] \defeq P[q=\left.y_i\right]$. 
+% TODO not sure whether this should be included
+\citeauthor{didaci_DiversityClassifierEnsembles_2013} builds on the decomposition given by \citeauthor{kohavi_BiasVarianceDecomposition_} and, similar to the derivation of the covariance decomposition for the squared-error loss, derive average bias, average variance and covariance terms.  They decompose the bias and variance terms of the ensemble as follows, writing $P\left[y_i\right]\defeq P\left[Y=y_i \mid \mathbf{x}\right]$ and $\hat{P}_{q}\left[y_i\right] \defeq P[q=\left.y_i\right]$. 
 % TODO use PP
 \begin{align*}
 \operatorname{bias}(\bar{q}) & =\frac{1}{2} \sum_{y_i}\left(P\left[y_i\right]-\frac{1}{\sqrt{N}} \sum_j \hat{P}_{q_{j}}\left[y_i\right]+\frac{1}{\sqrt{N}} \sum_j \hat{P}_{q_{j}}\left[y_i\right]-\hat{P}_{\bar{q}}\left[y_i\right]\right)^2 \\
@@ -160,7 +161,7 @@ Ambiguity as a generalised notion of variance, and the well-known covariance dec
 We have now seen two approaches to expressing the ensemble generalisation error:
 \begin{itemize}
 \item In terms of \textit{covariance} as in the bias-variance-covariance decomposition of theorem \ref{thm:bias-variance-covariance}. A very similar notion also appears in when considering ensemble margins as in \ref{thm:breiman}
-\item In terms of variation around a centroid with respect to some loss function as in the diversity decomposition of theorems \ref{thm:diversity-effect-decomp} and \ref{thm:diversity-decomp}. For the squared-error loss, this is exactly the variance. The generalisations to Bregman divergences and arbitrary loss functions can be understood as generalised measures of variance. 
+\item In terms of variation around a centroid with respect to some loss function as in the diversity decomposition of theorems \ref{thm:bias-variance-diversity-effect-decomp}. For the squared-error loss, this is exactly the variance. The generalisations to Bregman divergences and arbitrary loss functions can be understood as generalised measures of variance. 
 \sidenote{
 For any loss function:
 $$
@@ -179,7 +180,7 @@ $$
 Inspecting the proofs of theorems \ref{thm:bias-variance-covariance} and \ref{thm:breiman}, one can observe that in both cases, one begins with a measure of variance. Based on this, a covariance expression is then extracted, enabled by the definition of variance involving a square, producing cross-terms.
 In other words, \textit{the covariance term is an artifact of the squared-error loss}. The notion of variance is more general.
 
-For the case of squared-error loss, \cite{brownManaging} relate the ambiguity decomposition (see \ref{todo}) and the bias-variance-covariance decomposition (theorem \ref{todo}) directly. 
+For the case of squared-error loss, \cite{brown_ManagingDiversityRegression_2005} relate the ambiguity decomposition (\ref{thm:ambig-effect-decomp}) and the bias-variance-covariance decomposition (theorem \ref{thm:bias-variance-covariance}) directly. 
 \begin{align*}
 \mathbb{E}_{}\left[ \Mavg (y - q_{i})^2 - \Mavg (\bar{q} - q_{i})^2 \right]  = \overline{\text{bias} }^2 + \frac{1}{M} \overline{\text{var} } + \left( 1 - \frac{1}{M} \right) \overline{\text{covar} }
 \end{align*}

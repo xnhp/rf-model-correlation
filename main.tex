@@ -1,38 +1,20 @@
 %--- Load the kaobook class
 \documentclass[
-    a4paper, % Page size
-	fontsize=10pt, % Base font size
 	twoside=false, % Use different layouts for even and odd pages (in particular, if twoside=true, the margin column will be always on the outside)
 	%open=any, % If twoside=true, uncomment this to force new chapters to start on any page, not only on right (odd) pages
 	% secnumdepth=1, % How deep to number headings. Defaults to 1 (sections)
 ]{kaobook}
 
-\usepackage{subfiles} % Best loaded last in the preamble
 
 % Choose the language
 \usepackage[english]{babel} % Load characters and hyphenation
 \usepackage[english=british]{csquotes}	% English quotes
-
 \usepackage{mycommands}
-
 \usepackage{mathtools}
-
 \usepackage{preamble}
-
 \usepackage{tikz}
+\usepackage[super]{nth}
 
-\usepackage{xcolor}
-
-
-
-% \definecolor{ctp-latte-peach}{RGB}{254, 100, 11}
-% \definecolor{ctp-latte-yellow}{RGB}{223, 142, 29}
-% \definecolor{ctp-latte-mauve}{RGB}{136, 57, 239}
-% \definecolor{ctp-latte-rosewater}{RGB}{220, 138, 120}
-
-\definecolor{def}{HTML}{F8EBFF}
-\definecolor{thm}{HTML}{FFF7D9}
-\definecolor{cor}{HTML}{EEFFE0}
 
 % Load packages for testing
 \usepackage{blindtext}
@@ -41,8 +23,12 @@
 
 % Load the bibliography package
 \usepackage{kaobiblio}
-\addbibresource{minimal.bib} % Bibliography file
+\addbibresource{symlinks/zotero-library-automatic-export.bib} % Bibliography file
 
+\usepackage{xcolor}
+\definecolor{def}{HTML}{F8EBFF}
+\definecolor{thm}{HTML}{FFF7D9}
+\definecolor{cor}{HTML}{EEFFE0}
 % Load mathematical packages for theorems and related environments
 \usepackage[
   framed=true,
@@ -55,12 +41,14 @@
 
 % Load the package for hyperreferences
 \usepackage{kaorefs}
-\usepackage[super]{nth}
 
 \graphicspath{{images/}{./}{symlinks/illustrations}} % Paths where images are looked for
 
-\makeindex[columns=3, title=Alphabetical Index, intoc] % Make LaTeX produce the files required to compile the index
+% \makeindex[columns=3, title=Alphabetical Index, intoc] % Make LaTeX produce the files required to compile the index
 
+\usepackage{subfiles} % Best loaded last in the preamble
+
+\setcounter{tocdepth}{1}
 
 \begin{document}
 
@@ -140,44 +128,6 @@
 
 \frontmatter % Denotes the start of the pre-document content, uses roman numerals
 
-%----------------------------------------------------------------------------------------
-%	COPYRIGHT PAGE
-%----------------------------------------------------------------------------------------
-
-% \makeatletter
-% \uppertitleback{\@titlehead} % Header
-
-% \lowertitleback{
-% 	\textbf{Disclaimer} \\
-% 	You can edit this page to suit your needs. For instance, here we have a no copyright statement, a colophon and some other information. This page is based on the corresponding page of Ken Arroyo Ohori's thesis, with minimal changes.
-	
-% 	\medskip
-	
-% 	\textbf{No copyright} \\
-% 	\cczero\ This book is released into the public domain using the CC0 code. To the extent possible under law, I waive all copyright and related or neighbouring rights to this work.
-	
-% 	To view a copy of the CC0 code, visit: \\\url{http://creativecommons.org/publicdomain/zero/1.0/}
-	
-% 	\medskip
-	
-% 	\textbf{Colophon} \\
-% 	This document was typeset with the help of \href{https://sourceforge.net/projects/koma-script/}{\KOMAScript} and \href{https://www.latex-project.org/}{\LaTeX} using the \href{https://github.com/fmarotta/kaobook/}{kaobook} class.
-	
-% 	\medskip
-	
-% 	\textbf{Publisher} \\
-% 	First printed in May 2019 by \@publishers
-% }
-% \makeatother
-
-%----------------------------------------------------------------------------------------
-%	DEDICATION
-%----------------------------------------------------------------------------------------
-
-% \dedication{
-% 	The harmony of the world is made manifest in Form and Number, and the heart and soul and all the poetry of Natural Philosophy are embodied in the concept of mathematical beauty.\\
-% 	\flushright -- D'Arcy Wentworth Thompson
-% }
 
 %----------------------------------------------------------------------------------------
 %	OUTPUT TITLE PAGE AND PREVIOUS
@@ -229,7 +179,6 @@
 
 \mainmatter % Denotes the start of the main document content, resets page numbering and uses arabic numbers
 
-
 %wider contents, more narrow margins
 \renewcommand{\marginlayout}{%
  \newgeometry{
@@ -243,9 +192,7 @@
 }
 \pagelayout{margin}
 
-
 \setchapterstyle{plain} % Choose the default chapter heading style
-% \pagelayout{wide} % No margins
 
 \chapter{Introduction}
 
@@ -345,6 +292,7 @@ To emphasize the random
 \end{lemma}
 
 \begin{lemma} (Law of total expectation)
+  \label{thm:law-of-total-expectation}
   For a function $g$:
 $$
 \mathbb{E}_{(X,Y)}\left[ g(X,Y) \right] = \mathbb{E}_{X}\left[ \mathbb{E}_{Y}\left[ g(X,Y) ~|~ X \right]  \right] 
@@ -462,7 +410,8 @@ Since we are ultimately interested in the generalisation error of an ensemble, t
 It is an essential tool to understand learning algorithms in general and ensembles such as Random Forests in particular. For the purpose of this thesis, it is important to understand the decomposition and its motivation in detail. 
 We will begin by considering the widely known bias-variance-decomposition for regression using the squared-error loss $\ell(y, y') \defeq (y- y')^2$. We will then proceed to generalise the decomposition to arbitrary loss functions.
 
-\begin{marginfigure} \label{fig:bias-variance-tradeoff}
+\begin{marginfigure} 
+  \label{fig:bias-variance-tradeoff}
     \includegraphics[width=\textwidth]{bias-variance/bias_variance_decomposition_with_decision_trees.png}
     \caption{foo!}
     % TODO
@@ -474,7 +423,8 @@ We will begin by considering the widely known bias-variance-decomposition for re
     \includegraphics[width=\textwidth]{bias-variance/test_error_of_individual_trees.png}
     \caption{
     Visualising the variance of \textcolor{blue}{Decision Tree} and \textcolor{orange}{Random Forest} models. Each glyph corresponds to the test error of one model trained on a random subset of the full available data. The variation of the test error around the mean test error across many dataset samples is exactly the variance.
-    Not only do Random Forests show lower test errors on average, they seem to also have lower variance. We will explain this observation in \ref{todo}
+    Not only do Random Forests show lower test errors on average, they seem to also have lower variance.
+    %  We will explain this observation in \ref{todo}
     % TODO because, in fact, ensemble improvement is solely due to reduction in variance
     %   since var(qbar) = mean(var(qi)) - div/div-eff
     % i.e. the difference between mean tree variances and ensemble variance is exactly the ambiguity/diversity-effect
@@ -552,7 +502,15 @@ Note that we developed two things:
 One the one hand, we derived quantities that measure the notions of bias and variance. On the other hand, by virtue of these quantities appearing in the error decomposition, we have expressed the \textit{effect} these quantities have on the generalisation error.
 % This distinction is often overlooked because, like here, for many commonly used losses the quantities and their effects coincide. However, in general this is not necessarily true. 
 
-While the bias-variance decomposition for the squared-error loss is widely accepted, there are many competing decompositions for a range other other loss functions \cite{todo}. For instance, we are particularly interested in the \zeroone-loss for classification. A decomposition of it where the model variance is independent of the outcome variable as in term \ref{eq:variance-term} is been proven to not exist \cite{todo}. We will now argue that approaching the matter from the perspective of such \textit{loss-effects} allows us to state a general bias-variance decomposition that holds for any loss function. The decomposition for the squared-error loss is a special case of it.
+While the bias-variance decomposition for the squared-error loss is widely accepted, there are many competing decompositions for a range other other loss functions 
+\cite{
+  kohavi_BiasVarianceDecomposition_,
+  hansen_GeneralBiasVariance_2000,
+  wood_BiasVarianceDecompositionsMargin_2022,
+  didaci_DiversityClassifierEnsembles_2013,
+  domingos_UnifiedBiasVarianceDecomposition_,
+  pfau_GeneralizedBiasVarianceDecomposition_
+  }. For instance, we are particularly interested in the \zeroone-loss for classification. A decomposition of it where the model variance is independent of the outcome variable as in term \ref{eq:variance-term} is been proven to not exist \cite{wood_UnifiedTheoryDiversity_2023}. We will now argue that approaching the matter from the perspective of such \textit{loss-effects} allows us to state a general bias-variance decomposition that holds for any loss function. The decomposition for the squared-error loss is a special case of it.
 
 \marginnote{
   Note that the arguments of loss-effect appear in inverse order in the difference. This is to give the expression a suggestive shape since in section \ref{sec:bregman-divergences}, we will show that, for a Bregman divergence $B_\phi$, it holds that
@@ -585,7 +543,7 @@ $$
 \end{definition}
 
 The \textit{variance-effect} is the expected change in loss caused by using $q_{D}$ instead of the non-random centroid $q^\star(X)$. Likewise, the \textit{bias-effect} is the expected change in loss caused by using the expected model instead of the expected label. In the following, to lighten notation, we will omit explicitly stating the dependence on $X$.
-\sidenote{In the original publication \cite{james_GeneralizationsBiasVariance_}, bias-effect is called the \textit{systematic effect}, i.e. the effect of the systematic components. However, it is clearer to call this \textit{bias-effect}, particularly when we begin to introduce notions of diversity in \ref{sec:measures-ensemble-diversity}.}
+\sidenote{In the original publication \cite{james_GeneralizationsBiasVariance_}, bias-effect is called the \textit{systematic effect}, i.e. the effect of the systematic components. However, it is clearer to call this \textit{bias-effect}, particularly when we begin to introduce notions of diversity in \ref{sec:diversity-measures}.}
 Formally:
 \begin{align*}
 \text{Bias-Effect} &\defeq \mathbb{E}_{D,Y}\left[ \ell(Y, q^\star) - \ell(Y, y^\star) \right] \\
@@ -594,11 +552,11 @@ Formally:
 
 
 \begin{marginfigure}
-  \label{fig:margin-decomp-geometry}
   \includegraphics[width=\textwidth]{figma-illustrations/effect-decomp.pdf}
   \caption{
     Illustration how the bias-variance-effect decomposition decomposes the loss $\ell(Y, q)$ into meaningful segments.
   }
+  \label{fig:margin-decomp-geometry}
 \end{marginfigure}
 
 This allows us to state a decomposition of the generalisation error simply in terms of loss-effects.
@@ -621,10 +579,8 @@ $$
 $$
 Thus, the bias-variance decomposition for the squared-error loss is a special case of this.
 
-
-% TODO widepar messes up spacing?
 \marginnote{
-  Note that while for the squared error the variance \ref{eq:term-variance} compares \textit{model predictions}, the variance-effect is based solely on the \textit{change in loss}. In section \ref{sec:bregman-divergences}, we will see that the former is in fact only a special property of a specific family of loss functions.
+  Note that while for the squared error the variance compares \textit{model predictions}, the variance-effect is based solely on the \textit{change in loss}. In section \ref{sec:bregman-divergences}, we will see that the former is in fact only a special property of a specific family of loss functions.
 % TODO see e.g. arguments on "variance" reduction
 }
 \begin{theorem} (Bias-Variance-Effect-Decomposition \cite{james_GeneralizationsBiasVariance_})
@@ -658,7 +614,7 @@ Often, learners are analysed with respect to a specific loss function, such as t
 We will now define a family of loss functions, called \textit{Bregman divergences}, that encompasses many widely used loss functions in supervised learning (see table \ref{tab:bregman-examples}). 
 % We are interested in when and how one can improve the generalisation error by combining multiple models into an ensemble. We will consider generally for arbitrary loss functions, and then identify Bregman divergences of an important special case.
 
-\begin{marginfigure} \label{fig:bias-variance-tradeoff}
+\begin{marginfigure} \label{fig:bregman-div-intuition}
     \includegraphics[width=\textwidth]{figma-illustrations/bregman-div-intuition}
     \caption{Given a strictly convex generator $\phi$, the Bregman divergence for points $p, q$ is the difference between the linear approximation around $p$ and $\phi$ at the point $q$. }
 \end{marginfigure}
@@ -674,7 +630,10 @@ where $\inner{\cdot}{\cdot}$ is the inner product, $\nabla \phi(\vec{q})$ is the
 
 \begin{table*}[hb]
     \centering
-    \caption{Examples of commonly used loss functions that are Bregman divergences \cite{clustering with bregman divergences, wood23} }
+    \caption{
+      Examples of commonly used loss functions that are Bregman divergences 
+      \cite{banerjee_ClusteringBregmanDivergences_2004, wood_UnifiedTheoryDiversity_2023} 
+    }
     % TODO formatting of table
     \begin{tabular}{|l|l|l|l|}
     \hline
@@ -727,7 +686,8 @@ In order to talk about variances with respect to Bregman divergences, we need a 
 \end{itemize}
   If $B_\phi$ is symmetric, i.e. $\Breg{Y}{Y'} = \Breg{Y'}{Y}$ then $\mathbb{E}\left[X\right] = \mathcal{E}\left[X\right]$.
 \end{lemma}
-\begin{definition} (Dual expectation \cite{pfau})
+\begin{definition} (Dual expectation \cite{pfau_GeneralizedBiasVarianceDecomposition_})
+  \label{def:dual-expectation}
   The left Bregman centroid is the expected value in the dual space implied by $\nabla\phi$. Due to this, we define the dual expectation as  
   $$\mathcal{E}\left[X\right] \defeq (\nabla \phi)^{-1}\mathbb{E}_{}\left[ \nabla \phi(X) \right]$$ 
 \end{definition}
@@ -755,7 +715,7 @@ $$
 \Breg{p}{q} =~\mid\mid p-q\mid\mid^2 ~ ~ \rightarrow ~ ~ 
 I_{\phi}(X) = \frac{1}{n} \sum_{i=1}^n (X_{i} - \mathbb{E}_{}\left[ X \right] )^2
 $$
-For the KL-divergence, the bregman information is the \textit{mutual information}. Consider a random variable $X$ over probability distributions with probability measure $p$ \cite{banerjee_ClusteringBregmanDivergences_2004}.
+For the KL-divergence, the Bregman information is the \textit{mutual information}. Consider a random variable $X$ over probability distributions with probability measure $p$ \cite{banerjee_ClusteringBregmanDivergences_2004}.
 $$
 \Breg{u}{v} = \sum_{j=1}^d u_{j} \log \left( \frac{u_{j}}{v_{j}} \right) 
 ~ ~ \rightarrow ~ ~  I_{\phi}(X) = 
@@ -790,7 +750,17 @@ There are three main variants of ensemble learning \cite{mienye_SurveyEnsembleLe
 \end{itemize}
 % TODO diagrams
 Random Forests \cite{breiman_RandomForests_2001} are an example of parallel ensemble construction. $M$ decision trees are constructed independently and the tree's predictions are aggregated by a kind of mean (see section \ref{sec:decision-trees}). A classical example for sequential ensemble construction is \textit{Boosting} \cite{schapire_BoostingFoundationsAlgorithms_2012}. In boosting algorithms, the ensemble combiner $\bar{q}$ is not a mean but a (weighted) sum $\bar{q} = \sum_{i=1}^M \alpha_{i}q_{i}$. The first member $q_{1}$ provides a base prediction. Successive members are then trained to predict not an output value but \textit{increments} (\textit{pseudo-targets}) to the base prediction such that the sum $\alpha_{1}q_{1} + \alpha_{2}q_{2} + \dots$ moves towards a more precise prediction. 
-In this thesis, we will focus on the Random Forest learner and variations of it. Although it can be seen as a parallel ensemble construction method, we will see that it can also be understood as a boosting algorithm (see \ref{todo}).
+In this thesis, we will focus on the Random Forest learner and variations of it. 
+% TODO reintroduce if we get to actually putting that down
+% Although it can be seen as a parallel ensemble construction method, we will see that it can also be understood as a boosting algorithm (see \ref{todo}).
+
+
+\section{Applications}
+
+% https://www.maths.usyd.edu.au/u/pengyi/publication/EnsembleBioinformatics-v6.pdf
+% from there:
+% - https://www.pnas.org/doi/full/10.1073/pnas.0709868104
+% - https://www.pnas.org/doi/full/10.1073/pnas.0230559100
 
 \section{Notation}
 \label{sec:ensemble-learning-notation}
@@ -805,7 +775,7 @@ In the supervised learning setting with a single model, we have defined the mode
   }
 \end{marginfigure}
 Analysing ensembles means analysing differences between the members. There are two dimensions in which ensemble members can differ. First, in terms of provided training data. 
-\sidenote{For instance, each learner may be trained on a random subset of the available training data (see section \ref{sec:bootstrapping})}
+\sidenote{For instance, each learner may be trained on a random subset of the available training data (see section \ref{sec:random-forest-scheme})}
 Second, in terms of other randomness used in model construction.
 \sidenote{For instance, random numbers used in decision tree construction (see section \ref{sec:decision-trees}).}
 To distinguish these two sources, we sometimes denote the training data as a random vector $D = (D_{1}, \dots, D_{M})$ and other parameters as $\Theta = (\Theta_{1}, \dots, \Theta_{M})$. 
@@ -815,7 +785,7 @@ q_{D_{i}, \Theta_{i}}(X)
 $$
 To shorten notation, we also write $q_{i} \defeq  q_{D_{i}, \Theta_{i}}(X)$.
 \end{definition}
-Due to that the $i$-th member then depends only on $D_{i}$ and $\Theta_{i}$ and is independent of $D_{j}$ and $\Theta_{j}$ for $j \not= i$, using the law of total expectation (see lemma \ref{thm:total-expectation}), we can write
+Due to that the $i$-th member then depends only on $D_{i}$ and $\Theta_{i}$ and is independent of $D_{j}$ and $\Theta_{j}$ for $j \not= i$, using the law of total expectation (see lemma \ref{thm:law-of-total-expectation}), we can write
 $$
 \mathbb{E}_{D}\left[ q_{i} \right] = \mathbb{E}_{D_{j \not= i}}\left[ \mathbb{E}_{D_{i}}\left[ q_{i} \right]   \right]  = \mathbb{E}_{D_{i}}\left[ q_{i} \right] 
 $$
@@ -839,7 +809,9 @@ The output of an ensemble is produced by aggregating the outputs of the member m
     \bar{q} &= \mathcal{E}_\Theta \left[X\right] = \mathbb{E}_\Theta \left[X\right] \approx \Mavg q_i
   \end{align*}
 }
-\begin{definition} (Ensemble combiner) The ensemble combiner $\bar{q} : \mathcal{X} \to \mathcal{Y}$ for a given loss function $\ell$ is the centroid with respect to model parameters $\Theta$: 
+\begin{definition}
+   \label{def:ensemble-combiner}
+   (Ensemble combiner) The ensemble combiner $\bar{q} : \mathcal{X} \to \mathcal{Y}$ for a given loss function $\ell$ is the centroid with respect to model parameters $\Theta$: 
 % TODO would sort of need to motivate that we already use dual exp here
 $$
 \bar{q} \defeq \arg\min_z \mathbb{E}_\Theta \left[ \ell(z, q_\Theta) \right]
@@ -849,7 +821,10 @@ Note that this is the central model with respect to $\Theta$ (compare definition
 For Bregman divergences, this shows to be the dual expectation (def. \ref{def:dual-expectation}). This definition agrees with combiners commonly used in practise (plurality vote, arithmetic mean). It links combiners to loss functions. Further, it suggests combiners for other loss functions. In each case, using a combiner as defined here enables a very general and expressive theory of ensemble diversity and a decomposition of the ensemble generalisation error exactly measuring ensemble improvement due to diversity.
 
 An ensemble is homogeneous iff $\Theta_{1}, \dots, \Theta_{M}$ are identically and independently distributed. This is the case if the member models are constructed according to the same base learner and do not influence each other. 
-\begin{lemma}  $\star$ In homogeneous ensembles, the central models of any two members and the combiner are the same. That is, for any $i, j \in \{ 1, \dots, M \}$ it holds that
+
+\begin{lemma}
+ \label{thm:qstars-same} 
+  $\star$ In homogeneous ensembles, the central models of any two members and the combiner are the same. That is, for any $i, j \in \{ 1, \dots, M \}$ it holds that
 $$
 q_{i}^\star = q_{j}^\star = \bar{q}^\star
 $$
@@ -870,12 +845,12 @@ For the ensemble combiner, it holds that
 \end{align*}
 Due to the result above, $q_{\Theta}^\star$ is constant over $\Theta$ and thus $\mathcal{E}_{\Theta}\left[ q_{\Theta}^\star \right] = q_{\Theta}^\star$.
 
-Both properties also hold for dual expectations for Bregman divergences defined in definition \ref{def:bregman-centroids}.
+Both properties also hold for dual expectations for Bregman divergences defined in definition \ref{thm:bregman-centroids}.
 \end{proof}
 
 A basic measure for classification ensembles under the \zeroone-loss is the winning margin of the majority vote.
 % TODO resolve ambiguous terms majority/plurality
-\begin{definition} (Ensemble margins for majority voting \cite{breiman})
+\begin{definition} (Ensemble margins for majority voting \cite{breiman_RandomForests_2001})
 The margin for class $y$ of an example $x$ is the difference between the number of member votes for class $Y$ and the number of votes for the next-best class.
 	$$
 \mr(x,y) \defeq \Mavg \ind{q_{i} = y} - \max_{j \neq y} \Mavg \ind{q_{i} = j} \in [-1, 1]
@@ -943,10 +918,10 @@ So, $\mr(x,y) = 1 - 2 \Mavg\Lzo{y}{q_{i}(x)}$.
 \section{Motivation}
 \label{sec:ensemble-learning-motivation}
 
-We will now review some arguments that motivate ensemble learning. We do this to provide context to the results in section \ref{later}, which also clearly show when and how ensemble learning is beneficial.
+We will now review some classical arguments that motivate ensemble learning. We do this to provide context to the results in chapter \ref{sec:diversity}, which also show when and how ensemble learning is beneficial.
 
-\paragraph{Ensemble improvement is non-negative} The arithmetic mean combiner can be seen as approximating an expectation over member models, i.e. $\bar{q} = \mathbb{E}_{\Theta} \left[q_{\Theta}\right]$.
-This motivated \cite{abe} to invoke Jensen's inequality
+\paragraph{Ensemble improvement is non-negative} The arithmetic mean combiner can be seen as approximating an expectation over member models, i.e. $\bar{q} = \mathbb{E}_{\Theta} \left[q_{\Theta}\right] \approx \Mavg q_i$.
+This motivated \cite{abe_PathologiesPredictiveDiversity_2023} to invoke Jensen's inequality
 \marginnote{Jensen's inequality, in a probabilistic setting, states that, for a function $\phi:\mathbb{R} \to \mathbb{R}$ and a random variable $X$
 $$
 \phi \text{~convex} \rightarrow \phi\left(\mathbb{E}_{}\left[ X \right] \right) \leq \mathbb{E}_{}\left[ \phi(X) \right] 
@@ -955,7 +930,7 @@ $$
 . For a loss function $\ell$ that is convex in its first argument, it holds that
 $$
 \underbrace{
-\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X)\right] , Y  ) 
+\ell(Y, \mathbb{E}_{\Theta}\left[ q_{\Theta}(X)\right] ) 
 }_{\text{"ensemble loss"}}
 ~ ~ \leq ~ ~ 
 \mathbb{E}_{\Theta}\left[ 
@@ -973,19 +948,53 @@ $$
   For convex loss functions and using the arithmetic mean combiner, ensembling can never hurt performance: The ensemble loss is always smaller-equal than the average member error.
 \end{corollary}
 % This shows that, for convex loss functions and the arithmetic mean combiner, the ensemble loss is always smaller-equal than the average member error.
-\cite{abe} interpret the difference between these quantities, as a measure of ensemble improvement. 
+\cite{abe_PathologiesPredictiveDiversity_2023} interpret the difference between these quantities, as a measure of ensemble improvement. 
+
+\paragraph{Ensemble bias equals average member bias}
+It can be shown that the bias of a homogeneous ensemble is equal to the average bias of the ensemble members. We will give an illustrative argument for the arithmetic mean combiner here.
+We will show this in detail in a more general and inuitive way in chapter \ref{sec:diversity}.
+
+\begin{lemma} (Ensemble bias equals average member bias under arithmetic mean combiner \cite{louppe_UnderstandingRandomForests_2015})
+  \label{thm:ensemble-bias-equals-average-bias}
+$$
+\mathbb{E}_{X}\left[ \ell(y^\star(X), \bar{q}^\star(X)) \right] 
+= \mathbb{E}_{X}\left[ \ell(y^\star(X), q^\star(X)) \right] 
+% TODO also need exp over D
+$$
+\end{lemma}
+\begin{proof}
+Consider individual learner inputs $D = (D_{1}, \dots, D_{M})$. Each member depends on some $D_{i}$ and the combiner $\bar{q}$ depends only on $D$. Assuming that $D_{1}, \dots, D_{M}$ are independent and identically distributed, we can write
+$$
+\mathbb{E}_{D, \Theta}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ \Mavg q_{D_{i}} \right] = \Mavg \mathbb{E}_{D_{i}}\left[ q_{D_{i}} \right] = \mathbb{E}_{D'}\left[ q_{D'} \right]
+$$
+where $D'$ is distributed as any $D_{i}$. We can conclude $\mathbb{E}_{D}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ q_{D} \right]$ (see section \ref{sec:ensemble-learning-notation}).
+This implies
+% TODO pull this out into lemma, also using this somewhere else
+% need to reorder a bit anyway, havent even introduced star notation yet
+% TODO recap/ref definition of q^star
+$$
+\bar{q}^\star = \mathbb{E}_{D}\left[ \bar{q} \right]  = \mathbb{E}_{D}\left[ q_{D} \right]  = q^\star
+$$
+and thus the bias of the ensemble is the same as the bias of a member model $q$.
+\end{proof}
+This argument depends on the linearity of expectations, the arithmetic mean combiner and the fact that the ensemble is homogeneous. We will later show this more directly for any loss function and any combiner (see \ref{sec:unchanged-bias}).
+
+\begin{corollary}
+For homogeneous ensembles under the arithmetic mean combiner, ensemble improvement is solely due to variance reduction.
+% TODO clarify! what is ensemble improvement?
+\end{corollary}
+% TODO and later see that variance reduction is exactly measured by diversity -- summarise that clearly somewhere -- maybe even put it in a theorem
+% really in this thesis, we're the first to provide a comprehensive picture onto all this from the lens of the diversity decomp
+
+
 
 \paragraph{Variance reduction for squared-error regression} 
-A common motivation for using ensembles over single models is that the combination of models reduces the variance as compared to the expected variance of a single model. Further, the bias is not affected, i.e. the ensemble bias is the same as the bias of any member.
-In the regression setting, under the squared-error loss and the arithmetic mean combiner%
-% \sidenote{
-% 	As we will see in \ref{section:div}, the choice of loss function actually determines the definition of combiner $\bar{q}$.
-% }
-, this can be seen as follows~\cite{stackexchange}. Assume $q_{1}, \dots, q_{M}$ are identically and independently distributed with equal variance $\sigma^2$.
+Consider the regression setting under the squared-error loss and the arithmetic mean combiner.
+Assume $q_{1}, \dots, q_{M}$ are identically and independently distributed with equal variance $\sigma^2$.
 $$
 	\Var{}{\bar{q}} = \Var{}{\Mavg q_{i}} = \frac{1}{M^2} \sum_{i=1}^M \Var{}{q_{i}} = \frac{1}{M} \sigma^2
 $$
-As the number of members $M$ increases, the ensemble variance is reduced. Further, one can also see that the interactions between members determine the variance reduction. Assume ensemble members have equal pairwise covariance. Then 
+As the number of members $M$ increases, the ensemble variance is reduced. Further, one can also see that the interactions between members determine the variance reduction. Assume ensemble members have equal pairwise covariance $\rho$. Then 
 $$
 \rho \defeq \frac{\text{Cov}(q_{i}, q_{j})}{\sigma^2} ~ ~ \leftrightarrow \text{Cov}(q_{i}, q_{j}) = \rho \sigma^2
 $$
@@ -1039,11 +1048,13 @@ $$
 where $K$ is the next-best class and we define the \textit{raw margin function} $\rmg(X, Y, \Theta)$ to be the inner part of that expectation. So, 
 $\mr(X, Y;D) = \mathbb{E}_{\Theta}\left[ 
 \rmg(X, Y, \Theta) 
-~|~(X,Y), D \right]$. Notably, \textit{mr} is the \textit{ensemble} margin measuring the ratio of incorrect members and \textit{rmg} corresponds to the \textit{classifier} margin
-% TODO only if we took rmg in expectation over (X,Y)
-, measuring the ratio of incorrectly classfied examples by a member (see definitions \ref{def:ensemble-margin} and \ref{def:classifier-margin}).
+~|~(X,Y), D \right]$. 
+% Notably, \textit{mr} is the \textit{ensemble} margin measuring the ratio of incorrect members and \textit{rmg} corresponds to the \textit{classifier} margin
+% % TODO only if we took rmg in expectation over (X,Y)
+% , measuring the ratio of incorrectly classfied examples by a member (see definitions \ref{def:ensemble-margin} and \ref{def:classifier-margin}).
 
 \begin{theorem} (\cite{breiman_RandomForests_2001})
+  \label{thm:breiman}
 The variance of the ensemble margin can be expressed in terms of the covariance between the raw member margins of two members parameterised by \textit{i.i.d} $\Theta, \Theta'$.
 	$$
 	\Var{X,Y}{\mr(X,Y;D)} = \mathbb{E}_{\Theta, \Theta'}\left[ \text{Cov}_{(X,Y)}(\rmg(\Theta), \rmg(\Theta') ) \right] 
@@ -1061,7 +1072,7 @@ By the definition of variance, have
 &= \mathbb{E}_{Z}\left[ \mr(Z)^2 \right] - \mathbb{E}_{Z}\left[ \mr(Z) \right] ^2 \\
 \end{align*}
 
-For the left term, by the rule of iterated expectation and the fact that $Z$ and $\Theta$ are independent (see lemma \ref{thm:expected-value-properties}), it holds that
+For the left term, by the rule of iterated expectation and the fact that $Z$ and $\Theta$ are independent (see lemma \ref{thm:law-of-total-expectation}), it holds that
 $$
 \mathbb{E}_{Z}\left[ \mr(Z) ^2 \right]  = \mathbb{E}_{Z}\left[ \mathbb{E}_{\Theta}\left[ \rmg(\Theta) \mid Z \right] ^2  \right] = \mathbb{E}_{Z, \Theta}\left[ \rmg(\Theta)^2 \right] % by law of total \exp ectation
 = \mathbb{E}_{\Theta}\left[ \mathbb{E}_{Z}\left[ \rmg(\Theta) ^2 \right]  \right] 
@@ -1145,57 +1156,20 @@ In summary, we can conclude that the variance of the ensemble margin is equal to
 % This
 % % TODO better ref an eq
 % is the expected covariance between the classification margins of two individual members. 
-As we have seen before for the regression case, the generalisation error is lower if individual members are uncorrelated. Unfortunately, due to the initial application of Chebychev's inequality, this is only an upper bound. 
+\begin{corollary}
+Under the \zeroone-loss in classification ensembles, the ensemble error can be bounded from above by a pointwise covariance between ensemble margins. The ensemble error is lower if individual members are uncorrelated.
+\end{corollary}
+Unfortunately, due to the initial application of Chebychev's inequality, this is only an upper bound. 
+
 % In section \ref{sec:bias-variance-covariance}, we will be able to make the same observation from an exact decomposition of the generalisation error.
 
-\paragraph{Ensemble bias equals average member bias}
-It can be shown that the bias of a homogeneous ensemble is equal to the average bias of the ensemble members. We will give an illustrative argument for the arithmetic mean combiner here
-.
-We will show this in detail in a more general and inuitive way in section \ref{todo}.
 
-\begin{lemma} (Ensemble bias equals average member bias under arithmetic mean combiner \cite{louppe_UnderstandingRandomForests_2015})
-  \label{thm:ensemble-bias-equals-average-bias}
-$$
-\mathbb{E}_{X}\left[ \ell(y^\star(X), \bar{q}^\star(X)) \right] 
-= \mathbb{E}_{X}\left[ \ell(y^\star(X), q^\star(X)) \right] 
-% TODO also need exp over D
-$$
-\end{lemma}
-\begin{proof}
-Consider individual learner inputs $D = (D_{1}, \dots, D_{M})$. Each member depends on some $D_{i}$ and the combiner $\bar{q}$ depends wholly on $D$. Assuming that $D_{1}, \dots, D_{M}$ are independent and identically distributed, we can write
-$$
-\mathbb{E}_{D, \Theta}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ \Mavg q_{D_{i}} \right] = \Mavg \mathbb{E}_{D_{i}}\left[ q_{D_{i}} \right] = \mathbb{E}_{D'}\left[ q_{D'} \right]
-$$
-where $D'$ is distributed as any $D_{i}$. We can conclude $\mathbb{E}_{D}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ q_{D} \right]$ (see section \ref{sec:ensemble-learning-notation}).
-This implies
-% TODO pull this out into lemma, also using this somewhere else
-% need to reorder a bit anyway, havent even introduced star notation yet
-% TODO recap/ref definition of q^star
-$$
-\bar{q}^\star = \mathbb{E}_{D}\left[ \bar{q} \right]  = \mathbb{E}_{D}\left[ q_{D} \right]  = q^\star
-$$
-and thus the bias of the ensemble is the same as the bias of a member model $q$.
-\end{proof}
-This argument depends on the linearity of expectations, the arithmetic mean combiner and the fact that the ensemble is homogeneous. We will later show this more directly for any loss function and any combiner (see \ref{sec:unchanged-bias}).
-
-\begin{corollary}
-For homogeneous ensembles under the arithmetic mean combiner, ensemble improvement is solely due to variance reduction.
-% TODO clarify! what is ensemble improvement?
-\end{corollary}
-% TODO and later see that variance reduction is exactly measured by diversity -- summarise that clearly somewhere -- maybe even put it in a theorem
-% really in this thesis, we're the first to provide a comprehensive picture onto all this from the lens of the diversity decomp
-
-
-\section{Applications}
-
-% https://www.maths.usyd.edu.au/u/pengyi/publication/EnsembleBioinformatics-v6.pdf
-
-% TODO see https://www.maths.usyd.edu.au/u/pengyi/publication/EnsembleBioinformatics-v6.pdf
 
 \chapter{Random Forests}
 \subfile{chapters/random-forests.tex}
 
 \chapter{Diversity}
+\label{sec:diversity}
 
 % TODO clarify this apter and of growth strat to make clearer "diversity in ensembles" and "growth strats for ensembles" or sth of the like
 
@@ -1249,9 +1223,11 @@ For a metric $d:X \times X \to \mathbb{R}$ and $a,b,c \in X$, due to the triangl
 
 \section{Diversity in Random Forests and in Neural Networks}
 
-\paragraph{Quantifying diversity and average member error in terms of cells} As we have seen in section \ref{sec:cells}, the generalisation error can be expressed as a weighted sum over forest cells. 
-We can also express the ambiguity decomposition (see \ref{thm:ambiguity}) in terms of forest cells.
-For sake of clarity we omit the expectation over $D$ and write $Z \defeq (X,Y)$.  Let
+\paragraph{Quantifying diversity and average member error in terms of cells} As we have seen in section \ref{sec:tree-and-forest-partitions}, the generalisation error can be expressed as a weighted sum over forest cells. 
+We can also express the ambiguity decomposition (see \ref{thm:ambig-effect-decomp}) in terms of forest cells.
+For sake of clarity we omit the expectation over $D$ and write $Z \defeq (X,Y)$.  
+\begin{proposition} $\star$
+Let
 $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ be a forest partition of $Z=(X,Y)$.
 \begin{align*}
 \mathbb{E}_{Z}\left[ \ell(y, \bar{q}) \right]  &= \sum_{p=1}^P \prob{}{Z_{p}}  
@@ -1265,6 +1241,7 @@ $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ be a forest partition of $Z=(X,Y)$.
 \\
 &= \sum_{p=1}^P \prob{}{Z_{p}} \Mavg \mathbb{E}_{Z}\left[ \ell(y,q_{i}) - \LE{\bar{q}}{q_{i}} ~|~ Z_p \right] 
 \end{align*}
+\end{proposition}
 
  % TODO split this up into (a) expressing per cell (and possiby move to RF section) and (b) using as splitting criterion
 % \begin{align*}
@@ -1278,25 +1255,24 @@ $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ be a forest partition of $Z=(X,Y)$.
 % }_{\defeq \text{div}(Z_{p})}
 % \end{align*}
 $\prob{}{Z_{p}}$ corresponds to the area of the forest cell $p$ and can be determined based solely on the decision boundaries of the corresponding tree cells.
-$\text{div}(Z_{p})$ depends solely on the outputs of the tree cells that constitute $Z_{p}$. It is simply the generalised variance (see \ref{sec:clustering}) of these leaf outputs. If leaf outputs are saved with the tree model after construction, these can be directly read off the model. However, these values still depend directly on the training data. Instead, we would like to infer the value based on the decision boundaries alone.
+$\text{div}(Z_{p})$ depends solely on the outputs of the tree cells that constitute $Z_{p}$. It is simply the generalised variance (see \ref{def:bregman-information}) of these leaf outputs. If leaf outputs are saved with the tree model after construction, these can be directly read off the model. However, these values still depend directly on the training data. Instead, we would like to infer the value based on the decision boundaries alone.
 In Random Forests, trees are grown \textit{deeply}, that is, until each leaf contains only a single point. Consequently, if the number of data points $n$ is large, leaf cells will become small. Provided that the regression function $m(x) = \mathbb{E}_{}\left[ Y ~| X=x \right]$ is uniformly continous, small leaf cells imply that the variation of $m$ throughout a leaf is bounded. 
 % TODO will need that actual forest regression function will approximate $m$? (consistency)
-In fact \cite{scornet} show
+In fact \citeauthor{scornet_ConsistencyRandomForests_2015} show
 % TODO make clear that there are additional assumptions involved
 that, as $n$ grows, the variation in a leaf becomes arbitrarily small.
 % TODO maybe give prop 2 here
 This motivates that, instead of the data-dependent leaf output $q_{i}(x)$, one could instead use the center of the cell $\tilde{q_{i}}(x)$, depending only on the decision boundaries. If the variation inside a cell vanishes, then also the error of using $\tilde{q}_{i}(x)$ over $q_{i}(x)$ vanishes.
 
-Similarly, we can express the average member error in terms of tree cells. Due to the appearance of $y$, this is still directly dependent on realisations of $Y$.
-\begin{align*}
-\mathbb{E}_{Z}\left[ \Mavg \LE{y}{q_{i}} \right] &= \sum_{p=1}^P \prob{}{Z_{p}}  
-\underbrace{
-\Mavg \mathbb{E}_{Z}\left[ \ell(y, q_{i} ) ~|~Z_{p} \right]  
-}_{\defeq  \text{err}(Z_{p}) }
-\end{align*}
+% Similarly, we can express the average member error in terms of tree cells. Due to the appearance of $y$, this is still directly dependent on realisations of $Y$.
+% \begin{align*}
+% \mathbb{E}_{Z}\left[ \Mavg \LE{y}{q_{i}} \right] &= \sum_{p=1}^P \prob{}{Z_{p}}  
+% \underbrace{
+% \Mavg \mathbb{E}_{Z}\left[ \ell(y, q_{i} ) ~|~Z_{p} \right]  
+% }_{\defeq  \text{err}(Z_{p}) }
+% \end{align*}
 % TODO mention that there are "good" and "bad" flowers
 
-% TODO apply tree/model partitions to express diversity forest-cell-wise
 
 % TODO some soft talk about how diversity is essential for RFs, more so than e.g. NNs
 % the entire clou behind RFs is diversity (old: variance reduction)
@@ -1316,6 +1292,8 @@ Similarly, we can express the average member error in terms of tree cells. Due t
 
 
 \chapter{Growth Strategies}
+
+% TODO would be good to mention that thing where they show that with SFS/SBS selection scheme they find a better subset of trees
 
 % TODO would really be nice to mention and explain ADF scheme...
 
@@ -1353,6 +1331,16 @@ $ \Mavg \Breg{y}{q_{i}} - \Breg{\bar{q}}{q_{i}} = \Breg{y}{\bar{q}} \geq 0$,
 ambiguity is upper-bounded by the average member error. This means that any improvement due to diversity can only happen by reducing the amount of error introduced by the individual member error. If there is little average member error to begin with, encouraging diversity will not necessarily improve ensemble performance. However, this does not mean that ensemble performance has to decrease: Empirical experiments \cite{buschj-etc} have confimed that, as diversity is increased, there exist regions where the overall ensemble error stays constant -- that is, increasing diversity leads to increased member error but the two perfectly outweigh each other. In other words, one can find a wide range of ensemble models with equal performance but varying diversity.
 
 
+\paragraph{Ensemble bias and variance} 
+%
+The initial increase in average bias is also reflected in an initial increase in ensemble bias. At the same time, ensemble variance is decreased. 
+Note how the average variance stays almost constant, while the ensemble variance varies greatly. 
+This is the "outside view" on how diversity is a component of ensemble variance.
+
+
+As the number of trees grows, for some datasets, ensemble variance is higher. For others, it is similar to standard Random Forests.
+
+
 \section{Guided sequential training of member models}
 \label{sec:dynamic-random-forests}
 
@@ -1377,7 +1365,7 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 
 % TODO also note how under 0/1, there'll be "good" and "bad" cells, such as splits that create more good or bad diversity -- again, tradeoff, regularisation, ...
 
-
+\pagebreak
 \section{Guided parallel training of member models}
 % TODO make clear that this will mostly be about NCL
 
@@ -1402,7 +1390,7 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 % \chapter{Additional notes}
 
 % The cross-entropy loss is a special case of the KL-divergence.
-% \begin{lemma} (\cite{wood23}, theorem 5) \label{thm:cross-entropy-decomp}
+% \begin{lemma} (\cite{wood_UnifiedTheoryDiversity_2023}, theorem 5) \label{thm:cross-entropy-decomp}
 %     % TODO rephrase better into our terminology, not just paste this.
 %     % TODO remove underbraces
 % 	% https://math.stackexchange.com/questions/1074276/how-is-logistic-loss-and-cross-entropy-related
@@ -1428,7 +1416,7 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 	\includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/bvd.png}
 	\caption{
         Full empirical results for \zeroone-classification. Rows correspond to different datasets. Columns correspond to different learner variants. The plots show the components of the 
-        \textcolor{orange}{\textoverline{Bias}}-\textcolor{green}{\textoverline{Variance}}-\textcolor{blue}{Diversity} decomposition of the ensemble error \ref{thm:bias-variance-diversit-decomp}.
+        \textcolor{orange}{\textoverline{Bias}}-\textcolor{green}{\textoverline{Variance}}-\textcolor{blue}{Diversity} decomposition of the ensemble error \ref{thm:bias-variance-diversity-effect-decomp}.
         % TODO match colors
         % TODO ref where we elaborate on specific subplots in chapters
     }
@@ -1438,12 +1426,13 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 \begin{figure*}[hb]
 	\includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/ens.png}
 	\caption{
-        Full empirical results for \zeroone-classification. Rows correspond to different datasets. Columns correspond to different learner variants. The plots show the components of the 
-        decomposition of the ensemble error in ensemble bias and ensemble variance \ref{thm:bias-variance-decomp}.
+        ...
+        % Full empirical results for \zeroone-classification. Rows correspond to different datasets. Columns correspond to different learner variants. The plots show the components of the 
+        % decomposition of the ensemble error in ensemble bias and ensemble variance \ref{thm:bias-variance-decomp}.
         % TODO match colors
         % TODO ref where we elaborate on specific subplots in chapters
     }
-    \label{fig:zero-one-bvd-plots}
+    \label{fig:zero-one-ens-plots}
 \end{figure*}
 
 % TODO also write down all the other random experiments (sigmoid, regression, ...)
@@ -1453,7 +1442,7 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 
 what technologies we used, what other projects we built upon, where one can find the code, ...
 
-\paragraph{Compared datasets} We give a brief motivation for the classification datasets we have selected for evaluation. A detailed summary of each dataset can be found in \ref{fig:grid}.
+\paragraph{Compared datasets} We give a brief motivation for the classification datasets we have selected for evaluation. 
 \cover is a dataset with a relatively high number of examples and low feature dimensionality. \mnist is a dataset with a moderate number of examples and high dimensionality. \diabetes is a dataset with relatively high error rates. \bioresponse is a small dataset with a very high number of features ($d \approx \frac{1}{2}n$). \qsar is a small dataset used for quick testing.
 Further, \cite{bernard, xuChen} evaluated on \textit{mnist} (although not just a subset of it), \spambase, \digits and \diabetes.
 
@@ -1522,7 +1511,7 @@ Individual learners no longer independent! But: can consider this from the persp
 We will consider transferring [the DRF] approach to Bregman divergences.
 
 However, we may still consider the above equation and how choosing the next member $q_{M+1}$ affects it. Suppose the average member loss $\Mavg \Breg{y}{q_{i}}$ is large. Then this is either mitigated by the diversity $\Mavg \Breg{\bar{q}}{q_{i}}$, in which case the ensemble error is still low; or it is not, in which case the ensemble error too is large. 
-However, if the average member loss $\Mavg\Breg{y}{q_i}$ itself is small, there cannot be much diversity since, it is bounded by the average member error.  Because of this, we need to consider the difference relative to the average member loss (which, interestingly, is the \textit{ensemble improvement rate} of \cite{theisen}).
+However, if the average member loss $\Mavg\Breg{y}{q_i}$ itself is small, there cannot be much diversity since, it is bounded by the average member error.  Because of this, we need to consider the difference relative to the average member loss (which, interestingly, is the \textit{ensemble improvement rate} of \cite{theisen_WhenAreEnsembles_2023}).
 
 $$
 \frac{
@@ -1562,7 +1551,7 @@ If it is high, then the diversity relative to the average member error is low
 \subsection{Outlook: Alternatives to example weights}
 In section \ref{sec:dynamic-random-forests}, we use example weights to influence the construction of the next tree of the ensemble. However, example weights are just one way to do so. Here, we explore some alternatives.
 
-\paragraph{Leaf refinement} The leaf outcomes of a tree can be re-adjusted after it has been grown \cite{others}. This can be done for example using gradient descent \cite{buschj-negative-correlation-forests}. However, this requires an extra stage of optimisation. Further, only the leaf outputs are adjusted, but the tree structure is left untouched. Our approach instead works exactly through influencing the tree structure through weighted examples.
+\paragraph{Leaf refinement} The leaf outcomes of a tree can be re-adjusted after it has been grown \cite{others}. This can be done for example using gradient descent \cite{buschjager_ThereNoDoubleDescent_2021}. However, this requires an extra stage of optimisation. Further, only the leaf outputs are adjusted, but the tree structure is left untouched. Our approach instead works exactly through influencing the tree structure through weighted examples.
 
 \paragraph{A diversity-aware splitting criterion} Imagine growing $M$ trees simultaneously as follows: In each iteration, one split is determined for each tree. Which node is being split is left to the choice of the splitting criterion. 
 %When trees are grown independently of each other, splitting one node never influences the predictions of other nodes, since they form a disjoint partition. 
@@ -1593,8 +1582,8 @@ in sequential weighting approach, build in batches
 
 % The bibliography needs to be compiled with biber using your LaTeX editor, or on the command line with 'biber main' from the template directory
 
-\defbibnote{bibnote}{Here are the references in citation order.\par\bigskip} % Prepend this text to the bibliography
-\printbibliography[heading=bibintoc, title=Bibliography, prenote=bibnote] % Add the bibliography heading to the ToC, set the title of the bibliography and output the bibliography note
+% \defbibnote{bibnote}{Here are the references in citation order.\par\bigskip} % Prepend this text to the bibliography
+\printbibliography[heading=bibintoc, title=Bibliography] % Add the bibliography heading to the ToC, set the title of the bibliography and output the bibliography note
 
 %----------------------------------------------------------------------------------------
 %	INDEX
@@ -1602,6 +1591,6 @@ in sequential weighting approach, build in batches
 
 % The index needs to be compiled on the command line with 'makeindex main' from the template directory
 
-\printindex % Output the index
+% \printindex % Output the index
 
 \end{document}

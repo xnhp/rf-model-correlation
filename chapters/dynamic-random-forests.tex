@@ -10,6 +10,14 @@
 % % TODO check this
 % }
 
+
+% On points for whch the ensemble is incorrect, diversity hurts the ensemble performance. 
+% One could argue that, to minimise bad diversity, the average member error should be large, i.e. all members (instead of only some) should be driven to \textit{mis}-classify the example. However, we conjecture that this would cause the ensemble construction procedure to "give up" on misclassified examples. We will consider a different strategy first. Instead of giving up, the ensemble construction scheme should put more emphasis on these points, in the hope of eventually pushing it over the majority vote threshold towards a correct classification. This means that we are effectively \textit{increasing} bad diversity, in the hope that it eventually turns into good diversity.
+% % TODO plot of diversity-effect with the discont. around maj vote threshold
+
+% In standard Random Forests, each next tree is constructed independently of the ensemble constructed so far. Instead, we may try to construct the next tree in a coordinated manner such that it more optimally complements the ensemble constructed so far. 
+% Both good and bad diversity can be expressed in terms of the average member error. Each member that is added to the ensemble contributes to it. Consequently, we might be able to steer the development of ensemble performance by encouraging the next member to either correctly or inclassify a point, given how the ensemble constructed so far performs on this point.
+
 % TODO I think we need to adjust this, get notation right for not \neg y in multiclass case
 
 % TODO could sound reasonable to actively try not upweighting negative ones, or introduce sort of a slope in between
@@ -17,72 +25,12 @@
 
 % TODO stress that weighting is *one* way to use this information, could also think about doing "dynamic" NCL
 
-\subsection{Guiding ensemble construction with example weights}
-\label{sec:guiding-ensemble-construction-with-example-weights}
+under \zeroone-loss
 
 (introduction ensemble construction, tree-by-tree with adaptive weights)
 
 Now that we know exactly how correct and incorrect classifications affect the ensemble error, we will work towards leveraging this insight to find an ensemble construction scheme ...
 
-% TODO what do we hope to gain? 
-% - improved performance
-% - same/similar performance but higher diversity -> lower variance (actually need to write part on ensemble variance reduction...)
-% - same performance with fewer trees
-
-% \marginfigfromsource{fig:weighting-fns}{symlinks/illustrations/weighting-fns/weighting-fns}
-On points for which the ensemble is correct, diversity is beneficial and corresponds directly to the average member error. This means that we might expect to see an increase in ensemble performance if disagreement on correct points is encouraged -- as long as it does not cross the majority vote threshold. Indeed, in the perfect case, all examples would be correctly classified with a member error just below the majority vote threshold. This would result in an ensemble with large average member error but also with high diversity which mitigates the member error.
-
-% TODO all the "sweet spot" ensemble guys saying that there's a region of equally good models do not even consider this
-
-On points for whch the ensemble is incorrect, diversity hurts the ensemble performance. 
-One could argue that, to minimise bad diversity, the average member error should be large, i.e. all members (instead of only some) should be driven to \textit{mis}-classify the example. However, we conjecture that this would cause the ensemble construction procedure to "give up" on misclassified examples. We will consider a different strategy first. Instead of giving up, the ensemble construction scheme should put more emphasis on these points, in the hope of eventually pushing it over the majority vote threshold towards a correct classification. This means that we are effectively \textit{increasing} bad diversity, in the hope that it eventually turns into good diversity.
-% TODO plot of diversity-effect with the discont. around maj vote threshold
-
-In standard Random Forests, each next tree is constructed independently of the ensemble constructed so far. Instead, we may try to construct the next tree in a coordinated manner such that it more optimally complements the ensemble constructed so far. 
-Both good and bad diversity can be expressed in terms of the average member error. Each member that is added to the ensemble contributes to it. Consequently, we might be able to steer the development of ensemble performance by encouraging the next member to either correctly or inclassify a point, given how the ensemble constructed so far performs on this point.
-
-
-
-We now proceed to define some weighting functions informed by diversity (see \ref{prev-section}).
-% TODO plot it (only it) in margin
-\marginnote{
-   } 
-\begin{definition} (DRF weighting scheme \cite{bernard-drf})
-Let $\bar{q}$ be the ensemble constructed so far. For a pair $(X,Y) \in D$, define the \textit{Dynamic Random Forest weighting scheme} as 
-$$
-w_{\text{DRF}}(X) \defeq \Mavg \Lzo{Y}{q_{i}(X)}
-$$
-\label{def:drf-weighting-scheme}
-\end{definition}
-% TODO open over what $(X,Y)$ were really working here -- needs distinguishing also if we do weighted bootstrapping or weighted construction
-This will have the effect that correctly classified examples are assigned lower weight and incorrectly classified examples are assigned higher weight.  % TODO will it really?
-
-% TODO so, ensemble no longer homogeneous? like in boosting?
-
-% TODO let's phrase this more like "turns out this already appears in literature, however with little to no theoretic motivation"
-This weighting scheme was first proposed in \cite{bernard-drf}. However, they only give a heuristic, intuitive justification in that if a high number of trees misclassifies an example, the next tree should put more emphasis on it, similar to boosting strategies (\ref{sec:boosting}). We derive and motivate this weighting scheme from a perspective of diversity and give insight into how exactly it works -- namely, that it does \textit{not} flat-out increase the performance (as in boosting schemes) but instead encourages diversity.
-% TODO not quite correct, more intricate
-
-% TODO cite
-XuChen re-iterate on the DRF weighting scheme and propose an alternative scheme.
-$$
-w_{\text{XuChen}}(X) \defeq \begin{cases}
-\varepsilon^2 & \varepsilon \leq \frac{1}{2} \\ \\
-\sqrt{\varepsilon} & \varepsilon > \frac{1}{2}
-\end{cases}
-\hspace{2em} \text{for~}  \varepsilon \defeq \Mavg \Lzo{Y}{q_i(X)}
-$$
-% TODO plot it in margin
-Again, the authors provide only a heuristic motivation, which is that, compared to $w_{\text{DRF}}$, their method has a more drastic effect of up- and downweighting. We can now give a more informed interpretation. Inspecting $w_{\text{DRF}}$, which is continuous around the majority vote threshold, one can see that very similar weights are assigned to examples which are classified just barely correctly (resulting in a \zeroone-loss of $0$) and examples which are classified just barely incorrectly (resulting in a \zeroone-loss of $1$). This may mean suboptimal guidance in ensemble construction since both cases have very similar weights, but their effect on the ensemble loss is actually dramatically different. One disadvantage is that we take a heuristic step away from theory. % TODO wording
-
-
-% TODO do try other weighting fns, maybe one that does not go all the way up on bad side but instead has sort of a bump in that it will attempt to move examples that are close to the threshold towards it but also to fully give up on examples that are close to full member error
-
-% TODO relate this weighting to competence -- does it establish competence? can an ensemble be "more" competent? what interpretation does the competence inequality gap have?
-
-Now we just have to figure out
-% TODO wording
-how to actually influence the training of the next member such that it's performance on some points is (likely) increased or decreased. One way that is suited well for Random Forests
 % why exactly?
 is to assign \textit{weights} $w: X \to [0,1]$ to examples and consider them during member training. 
 In section \ref{sec:boosting-rationale-for-weights}, we will argue in detail how example weights influence the ensemble. % TODO
@@ -92,48 +40,248 @@ For random forests, these weights can possibly come into effect via two mechanis
 % -- although certanly thinkable, see negative correlation forests -- would actually expect to see a much stronger effect there
 \begin{itemize}
     \item \textit{Weighted bootstrapping}: Instead of drawing the bootstrap samples uniformly, draw a sample with probability according to its weight. If the bootstrap sample is large, examples with higher weight are more likely to be oversampled and thus appear multiple times in the bootstrap sample. 
-    \item \textit{Weighted tree construction}: We have seen in \ref{sec:decision trees} that tree construction according to some impurity measure greedily optimises a loss function. Likewise, weighting examples during computation of the impurity measure optimises a weighted loss.
+    \item \textit{Weighted tree construction}: We have seen in \ref{sec:decision-trees} that tree construction according to some impurity measure greedily optimises a loss function. Likewise, weighting examples during computation of the impurity measure optimises a weighted loss.
+    % TODO I think I have that formally in boosting motivation
 \end{itemize}
 % TODO dont need to consider leaf combiner because trees are deep
 
+% TODO what do we hope to gain? 
+% - improved performance
+% - same/similar performance but higher diversity -> lower variance (actually need to write part on ensemble variance reduction...)
+% - same performance with fewer trees
+
+% \marginfigfromsource{fig:weighting-fns}{symlinks/illustrations/weighting-fns/weighting-fns}
+% On points for which the ensemble is correct, diversity is beneficial and corresponds directly to the average member error. This means that we might expect to see an increase in ensemble performance if disagreement on correct points is encouraged -- as long as it does not cross the majority vote threshold. Indeed, in the perfect case, all examples would be correctly classified with a member error just below the majority vote threshold. This would result in an ensemble with large average member error but also with high diversity which mitigates the member error.
+
+% TODO all the "sweet spot" ensemble guys saying that there's a region of equally good models do not even consider this
+
+
+\subsection{Binary classification}
+
+intro
+
+\subsubsection{A simple weighting function}
+
+% TODO plot it (only it) in margin
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/illustrations/weighting-fns/drf-fns.png}
+    \caption{Illustration of $w_{\text{DRF}}$ and $w_{\text{XuChen}}$}
+\end{marginfigure}
+\begin{definition} (DRF weighting scheme \cite{bernard_DynamicRandomForests_2012})
+Let $\bar{q}$ be the ensemble constructed so far. For a pair $(X,Y) \in D$, define the \textit{Dynamic Random Forest weighting scheme} as 
+$$
+w_{\text{DRF}}(X) \defeq W(X)
+\hspace{2em} \text{for~}  W(X) \defeq \Mavg \Lzo{Y}{q_i(X)}
+$$
+\label{def:drf-weighting-scheme}
+\end{definition}
+% TODO open over what $(X,Y)$ were really working here -- needs distinguishing also if we do weighted bootstrapping or weighted construction
+This will have the effect that correctly classified examples are assigned lower weight and incorrectly classified examples are assigned higher weight.  % TODO will it really?
+
+% TODO so, ensemble no longer homogeneous? like in boosting?
+
+% TODO let's phrase this more like "turns out this already appears in literature, however with little to no theoretic motivation"
+% This weighting scheme was first proposed in \cite{bernard_DynamicRandomForests_2012}. However, they only give a heuristic, intuitive justification in that if a high number of trees misclassifies an example, the next tree should put more emphasis on it, similar to boosting strategies (\ref{sec:boosting}). 
+% TODO cite
+\marginnote{
+    Using diversity-effect, we can give a more informed interpretation of $w_{\text{XuChen}}$. Inspecting $w_{\text{DRF}}$, which is continuous around the majority vote threshold, one can see that very similar weights are assigned to examples which are classified just barely correctly (resulting in a \zeroone-loss of $0$) and examples which are classified just barely incorrectly (resulting in a \zeroone-loss of $1$). This may mean suboptimal guidance in ensemble construction since both cases have very similar weights, but their effect on the ensemble loss is actually dramatically different. One disadvantage is that we take a heuristic step away from theory. % TODO wording
+}
+\citeauthor{xu_ImplementationPerformanceOptimization_2017} re-iterate on the DRF weighting scheme and propose an alternative scheme.
+$$
+w_{\text{XuChen}}(X) \defeq \begin{cases}
+W(X)^2 & \text{~if~} W(X) \leq \frac{1}{2} \\ \\
+\sqrt{W(X)} & \text{~if~} W(X) > \frac{1}{2}
+\end{cases}
+$$
+% TODO plot it in margin
+Again, the authors provide only a heuristic motivation, which is that, compared to $w_{\text{DRF}}$, their method has a more drastic effect of up- and downweighting. 
+
+% TODO need to first introduce the idea of constructing next ensemble member with weights determined on previous
+Assuming the weights are used effectively, $w_{\text{DRF}}$ and $w_{\text{XuChen}}$, will have the effect of moving example-outcome pairs towards $\frac{1}{2}$ on the distribution of $W(X,Y)$ (compare figure \ref{fig:competence}). 
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/cover/bvd-standard-rf-classifier}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/cover/bvd-drf-weighted-bootstrap-classifier}
+    \caption{
+        Standard Random Forest and an ensemble constructed with the DRF weighting scheme (def. \ref{def:drf-weighting-scheme}, weighted bootstrapping). For the DRF scheme, neither average bias nor average variance are lower, hence the average member error is not lower. However, diversity is much larger.
+    }
+    \label{fig:cover-bvd-standard-vs-drf}
+\end{marginfigure}
+\begin{itemize}
+    \item It may seem reasonable to expect that this improves the average member error since the member to be trained puts more emphasis on "hard" examples and disregards "easy" examples, an idea very similar to boosting. This is also the motivation given in \cite{bernard_DynamicRandomForests_2012, xu_ImplementationPerformanceOptimization_2017}. However, across all experiments, we can observe that this is \textit{not} the case, as can be seen e.g. in figure \ref{fig:cover-bvd-standard-vs-rf}.
+    \item This also means that disagreement between members is maximised. This is indeed the case as can be seen in the higher diversity component across all experiments, see e.g. figure \ref{fig:cover-bvd-standard-vs-rf} for an example. For points for which the ensemble prediction is correct, this is reasonable because here, diversity is beneficial to the ensemble error. For points for which the ensemble prediction is incorrect, however, disagreement hurts the ensemble error.
+\end{itemize}
+This tradeoff is exactly reflected in the ambiguity decomposition.
+
+
+\paragraph{Comparing weighted bootstrapping and weighted tree construction} It is worth discussing why weighted bootstrapping and weighted tree construction produce such different behaviour. 
+%
+% Under weighted bootstrapping, examples are sampled according to a non-uniform probability distribution determined by the weights. This means that, in expectation, each example appears with a frequency according to its weight in the bootstrap sample.
+% %
+% With uniform bootstrapping and weighted tree construction, since each example is sampled according to the same probability, in expectation, each example appears with the same frequency in a bootstrap sample. However, in tree construction, the examples are then weighted. 
+%
+% It seems intuitive that both approaches should yield very similar results. However, one key difference can be identified. 
+In practise, any bootstrap sample is finite. The bootstrap sample is drawn with replacement, thus a bootstrap sample does not necessarily include all examples from the training dataset. 
+%
+Under uniform bootstrapping, each example has equal chance to be included in the bootstrap sample (see \ref{sec:bagging}). It is then considered during tree construction according to its weight. On the other hand, under weighted bootstrapping, examples with high weight are more likely and examples with low weight are less likely to appear in the bootstrap sample. In particular, this means that examples with low weight are more likely to not be included at all in the bootstrap sample and consequently not be considered at all during tree construction. 
+%
+This might be an intuitive explanation why weighted bootstrapping shows a stronger effect than weighted tree construction in our experiments.  A thorough discussion has to be left for future work. 
+
+
+\subsubsection{Capped Sigmoid and Capped Lerped Sigmoid}
+Informed by the theory on diversity, we make the following two claims:
+\begin{itemize}
+    \item We claim that incorrectly classified examples should not receive a particularly higher weight. If anything, examples for which the majority of members is incorrect should receive \textit{lower} weight since any subsequent correct vote will only increase bad diversity (unless the majority vote is tipped). However, across all benchmark datasets, the error rate is rather small, so there is little space opportunity for bad diversity to occur, so we would not expect a big difference between the vanilla sigmoid and the capped version. % TODO wording
+    \item Weights should not be related linearly to the ratio of incorrect members $W$. For diversity, it does not matter how many members are correct, as long as the ensemble prediction is correct. Thus, any correctly classified point should receive the same low weight. In the extreme case, the weighting is given a step function. Interpolating between a step function and a linear function could be expected to provide some sort of smoothing.
+\end{itemize}
+
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/illustrations/weighting-fns/sigmoid-fns.png}
+    \caption{Illustration of $w_{\text{sigm}}$ for $t = \frac{1}{2}$.}
+\end{marginfigure}
+
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/illustrations/weighting-fns/sigmoid-fns-k.png}
+    \caption{$t = 1 - \frac{1}{8}$}
+\end{marginfigure}
+
+% TODO note that low weights do *not* directly imply that an example will be misclassified
+
+Additionally, $W \approx \Mavg\Lzo{Y}{q_{i}}$ can not be expected to be a good approximation for low $M$. For the first couple of trees, the distribution will in fact be very discrete. This causes an overshooting, as can be observed particularly in weighted bootstrapping across almost all datasets, see figure \ref{fig:cover-bvd-standard-vs-drf}. To avoid this, we will aim to downregulate the influence of the weighting function for the first couple of trees in the ensemble. After this initial period, the function should have the same shape for all $M > M_{\text{max}}$.
+A function that meets these requirements is
+$$
+\text{sigmoid}(x;a,b,k) \defeq \frac{1}{k} (1 + \exp(a-bx))
+$$
+For $a=0$ and $k=1$, this function ranges in $[0,1]$ with its inflection point at $(0, \frac{1}{2})$ and its lower half in the range $[0, \frac{1}{2}]$. The parameter $b$ controls the "steepness". For low $b$, $\text{sigmoid}$ becomes similar to $x \mapsto \frac{1}{2}$. For high $b$, $\text{sigmoid}$ becomes similar to the step function with threshold $0$.
+We define a weighting function as follows.
+% https://www.desmos.com/calculator/kn9tpwdan5
+\begin{definition} (Sigmoid weighting function)
+% TODO add clipping, introduce scaling later
+\begin{align*}
+w_{\text{sigm} }(X) &\defeq \min\{ s, \frac{1}{2} \} \\
+\text{for}~ ~ & s \defeq \text{sigmoid}(W(X) - t; 0, b, 1) \\
+ & t \defeq \frac{1}{2}
+\end{align*}
+where $t = \frac{1}{2}$ is the voting threshold and $b$ is interpolated between $0$ and $b_{\text{max}}$ according to $M$.
+$$
+b \gets \frac{\min \{ M, M_{\text{max}} \}}{M_{\text{max} }} b_{\text{max} }
+$$
+\end{definition}
+$b_{\text{max}} \defeq 15$ by intuition.
+
+% TODO now want comparison between standard RF, DRF, and capped 1/k-sigmoid (or capped sigmoid for binary)
+% TODO either implement 1/k-sigmoid with dynamic threshold, or stick to binary and analyse threshold only for these
+% (while noting that DRF is still applicable because threshold does not matter there, XuChen not applicable tho)
+% maybe really do binary and non-binary completely separately because
+% (a) easier and less boring to read if explanations are built up over time
+% (b) binary datasets are also smaller, can then train on the large datasets later
+% (c) dont have to plot/look at *all* datasets all the time
+
+\begin{figure*}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/qsar-biodeg/bvd.png}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/bioresponse/bvd.png}
+    \caption{
+        Controlling $b$ sucessfullly mitigates spike but lower diversity for some reason. Capping then reaches higher diversity again. 
+    }
+\end{figure*}
+
+\subsubsection{Additional Results \& Discussion}
+
+
+\begin{figure*}
+    \includegraphics{symlinks/zero-one-plots/margins/spambase-openml/margins.png}
+    \caption{
+        Ratio of incorrect trees per number of trees in the ensemble, plotted separately for correctly (green) and incorrectly (red) classified examples. 
+    }
+    \label{fig:mnist-en}
+\end{figure*}
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margins/diabetes/standard-rf-classifier/by-example-50.png}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margins/diabetes/drf-weighted-bootstrap-classifier/by-example-50.png}
+    \caption{
+        Histograms of ensemble margins per example for the standard Random Forest (top) and weighted bootstrapping (bottom) learners grown each of $M=50$ trees on the \diabetes dataset. For weighted bootstrapping, the distribution of the margins appears slightly skewed to the center, reflecting that the weighting schemes encourages disagreement on points where many ensemble members are correct and agreement on points where many ensemble members are incorrect.
+    }
+    \label{fig:cover-margins-50}
+\end{marginfigure}
+\paragraph{Ensemble margins} 
+The weighting schemes are essentially thought of to influence the ratio of incorrect members and thus bias, variance and diversity. Under the weighting schemes defined in \ref{todo}, on points for which the ensemble prediction is correct, the ratio of incorrect trees should \textit{increase} (more diversity) and on points for which the ensemble prediction is incorrect, the ratio of incorrect trees should \textit{decrease}.
+We can directly observe the ratio of incorrect members. We plot the average ratio of incorrect trees $\Mavg \Lzo(y, q_i)$ separately for correctly and incorrectly classified examples. For weighted bootstrapping, across all datasets, we can indeed observe the expected effect. This is another view on the sharply increasing diversity as seen in e.g. figure \ref{fig:spambase-bvd}. Again, the effect diminishes as the number of trees grows.
+
+% TODO add margins plotting to DVC pipeline!
+% TODO in plots, use same order of datasets/learners as in other grids
+Further, we can look at the distribution of ensemble margin per example. We plot a histogram of examples with respect to the number of trees incorrectly classifying that example. In binary classification, more than $\frac{1}{2}M$ trees being incorrect leads to an incorrect ensemble prediction. % TODO what about multi-class?
+For instance for the \cover dataset, we can observe that the distribution of ensemble margins indeed seems to be skewed slightly to the right (i.e. in direction of more disagreement) for positive examples (see \reffig{fig:cover-margins-50})
+
+% also: oob estimation more computationally expensive? certainly harder to implement. also don't really see the motivation too much.
+
+% Full results are given in detail and for comparison with each other in \ref{sec:drf-full-results}.
+
+% brown2005 p1639 hints at that flexible diversity learning may be linked to noisy data
+
+\paragraph{Comparison to \cite{bernard_DynamicRandomForests_2012}} 
+\citeauthor{bernard-drf} evaluated only the following approach: They would perform both weighted bootstrapping and weighted tree construction. Further, weights would be determined only on out-of-bag-trees (see section \ref{sec:experiment-setup}). Additionally, unrelated to the question at hand, they also employed a different way to determine candidate split features. Unlike in standard random forests, where a fixed number of candidate split features is sampled from all available features, the number of sampled candidate features was left fully random here. It was left unanswered which of these components actually affect the ensemble to what extent. Further, they did not provide any explanation or empirical analysis in terms of diversity.
+Looking at our results, the following points seem likely:
+\begin{itemize}
+    \item An improvement in generalisation error is still obtained with standard candidate split feature sampling.
+    \item The improvement can be explained using the notions of diversity.
+    \item Weighted tree construction alone appears to have only very little effect as compared to a standard Random Forest.
+    \item Weighted bootstrapping seems to provide the main effect.
+    \item Determination of weights using out-of-bag-trees only does not improve performance for weighted tree construction. 
+    % TODO adress overfitting thoguths from DRF paper
+    % my intuition is that overfitting is not an issue here
+\end{itemize}
+
+% TODO bernard states that fewer trees are needed -- can we, too, observer this?
+
+% Xu_Chen report the following
+% TABLE II. AVERAGE ERROR RATES (IN \%) OF THE RF MADE OF 500 TREES, FOR THE 3 RF INDUCTION ALGORITHMS. 
+% uses oob estimation, doesnt seem to use improved feature selection
+% \begin{array}{|c|c|c|c|}
+% \hline \text { Datasets } & \text { RF } & \text { DRF } & \text { Optimized DRF } \\
+% \hline \text { Diabetes } & 23.6 & 23.58 & \mathbf{2 3 . 4 2} \\
+% \hline
+% \end{array}
+
+% bernard report
+% \begin{array}{|l|c|c|c|}
+% \hline \text { Datasets } & \text { BRF } & \text { F-RK } & \text { DRF } \\
+% \hline \hline \text { Diabetes } & 25.25 & 24.86 & \mathbf{2 4 . 5 9} \\
+% \hline \text { Digits } & 2.28 & 2.21 & \mathbf{2 . 1 0} \\
+% \hline
+% \end{array}
+% \begin{array}{|l|c|c|c|}
+% \hline \text { Datasets } & \text { BRF } & \text { F-RK } & \text { DRF } \\
+% \hline \text { MNIST } & 4.97 & 4.95 & \mathbf{4 . 6 1} \\
+% \hline \text { Spambase } & 4.88 & 5.03 & \mathbf{4 . 0 4} \\
+% \hline
+% \end{array}
+
+\subsection{Non-binary classification (variable threshold)}
+% (while noting that DRF is still applicable because threshold does not matter there, XuChen not applicable tho)
+% extend definition of sigmoid weighting fn here
+...
+
+\subsection{Regression}
+just dig out and repeat the old experiments (if there's time)
+
+
+% TODO ... and we'll prove that in this and that experiment
+
+% TODO do try other weighting fns, maybe one that does not go all the way up on bad side but instead has sort of a bump in that it will attempt to move examples that are close to the threshold towards it but also to fully give up on examples that are close to full member error
+
+% TODO relate this weighting to competence -- does it establish competence? can an ensemble be "more" competent? 
+
+
 % TODO although somewhat similar in spirit, need to take care to distinguish this from boosting, because it really is something different altogether
 
-\subsection{Experimental Evaluation of the DRF weighting schemes}
 
 % TODO actually mention that it has already been shown that this approach is valid due to Bernard and XuChen -- recap results
 
+\pagebreak
+\pagebreak
 % TODO overview: what are we trying to find out? Why are we comparing what we are comparing?
-We compare different variants of the weighting scheme introduced in section \ref{sec:guiding-ensemble-construction-with-example-weights}. We look at the overall ensemble generalisation error, as well as the components of the error as given by the bias-variance decomposition \ref{todo} and the diversity decomposition \ref{todo}. Further, we analyse the ensemble margins (definition \ref{def:ensemble-margin}).
-
-\subsubsection{Experiment Setup}
-\label{sec:experiment-setup}
+% We compare different variants of the weighting scheme introduced in section \ref{sec:guiding-ensemble-construction-with-example-weights}. We look at the overall ensemble generalisation error, as well as the components of the error as given by the bias-variance decomposition \ref{todo} and the diversity decomposition \ref{todo}. Further, we analyse the ensemble margins (definition \ref{def:ensemble-margin}).
 
 
-
-\paragraph{Compared learners} In summary, we compare the following learning algorithms. For a learner, any configuration is similar to the one mentioned before unless otherwise specified. Since for the weighted variants the construction of the next tree depends on the performance of the ensemble so far, trees are constructed in sequence.
-
-% TODO somewhere. these hyperparams are not necessarily the best for the dataset, in particular the number of features.
-\textit{standard-rf-classifier}: Standard Random Forest implementation based on \textit{sklearn}. The tree hyperparameters are such that trees are grown until each leaf contains one data point. The number of randomly sampled candidate dimensions to search for the best split is set to $\sqrt{d}$ where $d$ is the total number of dimensions. The impurity measure is the Gini impurity as defined in section \ref{sec:gini-impurity}. Each tree is grown on a bootstrap sample determined by sampling $n$ out of $n$ data points uniformly, with replacement.
-
-\textit{drf-weighted-bootstrap-classifier}: Each tree is grown on a bootstrap sample determined by sampling $n$ out of $n$ points according to the DRF weighting scheme (see \ref{def:drf-weighting-scheme}). To yield a valid probability distribution, the weights are normalised via $w'(x_i) \gets \frac{w(x_i)}{\sum_{j=1}^n w(x_j)}$.
-
-\textit{drf-weighted-fit-classifier}: Each tree is grown on a uniform bootstrap sample. For tree construction, namely measuring impurity, each example is weighted according to $w_{\text{DRF}}$ (again, normalised).
-
-\textit{drf-weighted-fit-oob-classifier}: The example weights for a point $x_i$ are determined based only on \textit{out-of-bag} trees for $x_i$. These are those trees whose bootstrap sample has not included $x_i$.
-% TODO don't forget to mention others here if we add some
-
-\paragraph{Compared datasets} We give a brief motivation for the classification datasets we have selected for evaluation. A detailed summary of each dataset can be found in \ref{fig:grid}.
-\cover is a dataset with a relatively high number of examples and low feature dimensionality. \mnist is a dataset with a moderate number of examples and high dimensionality. \diabetes is a dataset with relatively high error rates. \bioresponse is a small dataset with a very high number of features ($d \approx \frac{1}{2}n$). \qsar is a small dataset used for quick testing.
-Further, \cite{bernard, xuChen} evaluated on \textit{mnist} (although not just a subset of it), \spambase, \digits and \diabetes.
-
-\paragraph{Approximating statistical quantities} 
-% how exactly are we approximating E_D and diversity stuff (3 trials)
-For a dataset with $n$ examples, $n_{\text{train}} \defeq \frac{3}{4}n$ examples were assigned to be part of the \textit{training split}, the other $n_{\text{test}}$ for the \textit{testing split}. Examples in the testing split are used for evaluation only and were never used in training a model.
-If $X$ is a random variable taking values in the space of examples $\mathcal{X}$, expectations over $X$ are approximated as the arithmetic mean over given examples in the testing split, i.e. for a function $g$:
-$$
-\mathbb{E}_X \left[ g(X) \right]  \approx \sum_{i=1}^{n_\text{test}} g(x_i)
-$$
-If $D$ is a random variable corresponding to the input to a learner, for instance the training dataset or randomness in the learning algorithm, an expectation over $D$ is approximated by an arithmetic mean over results of a fixed number of trials. In our case, we performed $3$ trials. % TODO maybe some sentence on how we didnt have capacity to optimise for performance that much, and couldnt wait that much for restuls.
 
 \subsubsection{Results}
 
@@ -246,14 +394,6 @@ Weighted tree contruction with out-of-bag weights does not appear to bring any a
 %     \label{fig:cover-bvd}
 % \end{figure*}
 
-\paragraph{Ensemble bias and variance} 
-%
-The initial increase in average bias is also reflected in an initial increase in ensemble bias. At the same time, ensemble variance is decreased. 
-Note how the average variance stays almost constant, while the ensemble variance varies greatly. 
-This is the "outside view" on how diversity is a component of ensemble variance.
-
-
-As the number of trees grows, for some datasets, ensemble variance is higher. For others, it is similar to standard Random Forests.
 
 % \begin{figure*}
 %     \includegraphics{symlinks/zero-one-plots/bvd-decomps/mnist_subset/ens.png}
@@ -263,96 +403,16 @@ As the number of trees grows, for some datasets, ensemble variance is higher. Fo
 %     \label{fig:mnist-en}
 % \end{figure*}
 
-\paragraph{Ensemble margins} 
-\begin{figure*}
-    \includegraphics{symlinks/zero-one-plots/margins/spambase-openml/margins.png}
-    \caption{
-        Ratio of incorrect trees per number of trees in the ensemble, plotted separately for correctly (green) and incorrectly (red) classified examples. 
-    }
-    \label{fig:mnist-en}
-\end{figure*}
-\begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margins/diabetes/standard-rf-classifier/by-example-50.png}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margins/diabetes/drf-weighted-bootstrap-classifier/by-example-50.png}
-    \caption{
-        Histograms of ensemble margins per example for the standard Random Forest (top) and weighted bootstrapping (bottom) learners grown each of $M=50$ trees on the \diabetes dataset. For weighted bootstrapping, the distribution of the margins appears slightly skewed to the center, reflecting that the weighting schemes encourages disagreement on points where many ensemble members are correct and agreement on points where many ensemble members are incorrect.
-    }
-    \label{fig:cover-margins-50}
-\end{marginfigure}
-The weighting schemes are essentially thought of to influence the ratio of incorrect members and thus bias, variance and diversity. Under the weighting schemes defined in \ref{todo}, on points for which the ensemble prediction is correct, the ratio of incorrect trees should \textit{increase} (more diversity) and on points for which the ensemble prediction is incorrect, the ratio of incorrect trees should \textit{decrease}.
-We can directly observe the ratio of incorrect members. We plot the average ratio of incorrect trees $\Mavg \Lzo(y, q_i)$ separately for correctly and incorrectly classified examples. For weighted bootstrapping, across all datasets, we can indeed observe the expected effect. This is another view on the sharply increasing diversity as seen in e.g. figure \ref{fig:spambase-bvd}. Again, the effect diminishes as the number of trees grows.
-
-% TODO add margins plotting to DVC pipeline!
-% TODO in plots, use same order of datasets/learners as in other grids
-Further, we can look at the distribution of ensemble margin per example. We plot a histogram of examples with respect to the number of trees incorrectly classifying that example. In binary classification, more than $\frac{1}{2}M$ trees being incorrect leads to an incorrect ensemble prediction. % TODO what about multi-class?
-For instance for the \cover dataset, we can observe that the distribution of ensemble margins indeed seems to be skewed slightly to the right (i.e. in direction of more disagreement) for positive examples (see \reffig{fig:cover-margins-50})
-
-% also: oob estimation more computationally expensive? certainly harder to implement. also don't really see the motivation too much.
-
-% Full results are given in detail and for comparison with each other in \ref{sec:drf-full-results}.
-
-% brown2005 p1639 hints at that flexible diversity learning may be linked to noisy data
-
-\paragraph{Comparing weighted bootstrapping and weighted tree construction} It is worth discussing why weighted bootstrapping and weighted tree construction produce such different behaviour. 
-%
-% Under weighted bootstrapping, examples are sampled according to a non-uniform probability distribution determined by the weights. This means that, in expectation, each example appears with a frequency according to its weight in the bootstrap sample.
-% %
-% With uniform bootstrapping and weighted tree construction, since each example is sampled according to the same probability, in expectation, each example appears with the same frequency in a bootstrap sample. However, in tree construction, the examples are then weighted. 
-%
-% It seems intuitive that both approaches should yield very similar results. However, one key difference can be identified. 
-In practise, any bootstrap sample is finite. The bootstrap sample is drawn with replacement, thus a bootstrap sample does not necessarily include all examples from the training dataset. 
-%
-Under uniform bootstrapping, each example has equal chance to be included in the bootstrap sample (see \ref{sec:bagging}). It is then considered during tree construction according to its weight. On the other hand, under weighted bootstrapping, examples with high weight are more likely and examples with low weight are less likely to appear in the bootstrap sample. In particular, this means that examples with low weight are more likely to not be included at all in the bootstrap sample and consequently not be considered at all during tree construction. 
-%
-This might be an intuitive explanation why weighted bootstrapping shows a stronger effect than weighted tree construction in our experiments.  A thorough discussion has to be left for future work. 
 
 
 
-\paragraph{Comparison to \cite{bernard-drf}} 
-
-\citeauthor{bernard-drf} evaluated only the following approach: They would perform both weighted bootstrapping and weighted tree construction. Further, weights would be determined only on out-of-bag-trees (see section \ref{sec:experiment-setup}). Additionally, unrelated to the question at hand, they also employed a different way to determine candidate split features. Unlike in standard random forests, where a fixed number of candidate split features is sampled from all available features, the number of sampled candidate features was left fully random here. It was left unanswered which of these components actually affect the ensemble to what extent. Further, they did not provide any explanation or empirical analysis in terms of diversity.
-Looking at our results, the following points seem likely:
-\begin{itemize}
-    \item An improvement in generalisation error is still obtained with standard candidate split feature sampling.
-    \item The improvement can be explained using the notions of diversity.
-    \item Weighted tree construction alone appears to have only very little effect as compared to a standard Random Forest.
-    \item Weighted bootstrapping seems to provide the main effect.
-    \item Determination of weights using out-of-bag-trees only does not improve performance for weighted tree construction. 
-    % TODO adress overfitting thoguths from DRF paper
-    % my intuition is that overfitting is not an issue here
-\end{itemize}
-
-% TODO bernard states that fewer trees are needed -- can we, too, observer this?
-
-% Xu_Chen report the following
-% TABLE II. AVERAGE ERROR RATES (IN \%) OF THE RF MADE OF 500 TREES, FOR THE 3 RF INDUCTION ALGORITHMS. 
-% uses oob estimation, doesnt seem to use improved feature selection
-% \begin{array}{|c|c|c|c|}
-% \hline \text { Datasets } & \text { RF } & \text { DRF } & \text { Optimized DRF } \\
-% \hline \text { Diabetes } & 23.6 & 23.58 & \mathbf{2 3 . 4 2} \\
-% \hline
-% \end{array}
-
-% bernard report
-% \begin{array}{|l|c|c|c|}
-% \hline \text { Datasets } & \text { BRF } & \text { F-RK } & \text { DRF } \\
-% \hline \hline \text { Diabetes } & 25.25 & 24.86 & \mathbf{2 4 . 5 9} \\
-% \hline \text { Digits } & 2.28 & 2.21 & \mathbf{2 . 1 0} \\
-% \hline
-% \end{array}
-% \begin{array}{|l|c|c|c|}
-% \hline \text { Datasets } & \text { BRF } & \text { F-RK } & \text { DRF } \\
-% \hline \text { MNIST } & 4.97 & 4.95 & \mathbf{4 . 6 1} \\
-% \hline \text { Spambase } & 4.88 & 5.03 & \mathbf{4 . 0 4} \\
-% \hline
-% \end{array}
 
 
 
 \paragraph{Ambiguity-effect decomp plots} ...
 % TODO actually understand what is going on here.
 
-\paragaraph{Scatter Plots} ...
+\paragraph{Scatter Plots} ...
 % TODO where each member is a point and axes are diversity (ie. LE to centroid) and member error
 % -- like in Zhou2012 p. 110, because people did that with other measures
 
