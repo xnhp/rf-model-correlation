@@ -221,21 +221,13 @@ Note that bias-effect, variance-effect and ambiguity-effect are all of the form 
 With variance-effect, we have captured the \textit{effect} of variations between different training datasets) on the prediction error.
 With ambiguity-effect, we have captured the effect of variations between the different member models on the prediction error.
 We have already seen that for the squared error, the variance-effect coincides with familiar notion of "statistical" variance between the predictions.
-
-% TODO put somewhere else 
-% This is convenient, since we can then estimate variance (and its effect) independently of the target label $Y$.
-% This means that variance can be compared across different datasets.
-% % TODO re-check that this is true
-% The same applies to ambiguity \sidenote{Bias will always be indirectly dependent on the target labels via the expected label.}.
-% Also, labelled data can be scarce in practise, while examples alone may be easier to obtain. 
-
-We will now define a class of losses for which the loss-effects reduce to the loss between the two objects. This class covers many widely used loss functions and thus allows us to formulate a unified bias-variance-decomposition. 
+We will now argue that for Bregman divergences as defined in definition \ref{def:bregman-divergence}, the loss-effect terms reduce to the loss between the two objects.
+The class of Bregman divergences covers many widely used loss functions and thus allows us to formulate a unified bias-variance-decomposition. 
 
 % TODO put somewhere else
 % However, for some other losses -- in particular the 0-1-loss for classification -- such a decomposition is proven to not exist (see \cite{todo}). In these cases, we can still consider the more general effect decompositions (see \ref{sec:todo}).
 
 
-Bregman divergences have the one key property that their loss-effect terms collapse. 
 % TODO highlight how we are losing one expectation, and which one that is
 % TODO motivate more on why centroids
 
@@ -259,41 +251,19 @@ $$
 Using $q \gets q^\star$ shows that bias-effect collapses to bias for Bregman divergences: 
 $$\Breg{y^\star}{q^\star} = \mathbb{E}_{}\left[ \Breg{Y}{q^\star} - \Breg{Y}{y^\star} \right]$$
 
-\begin{lemma} \label{thm:bregman-collapse-variances} ($\star$, Generalised from \cite{ref:wood23})
+\begin{lemma} \label{thm:bregman-collapse-variances} ($\star$, Generalised from \cite{wood_UnifiedTheoryDiversity_2023})
 Let $q$ be a function of random variable $Z$ and independent of $Y$. For $q^\star = \mathcal{E}_{Z}\left[ q \right]$, i.e. the left Bregman centroid w.r.t. $Z$, it holds that
 $$
 \mathbb{E}_{Z}\left[ \Breg{q^\star}{q} \right] 
  = \mathbb{E}_{Z,Y}\left[ \Breg{Y}{q} - \Breg{Y}{q^\star} \right] 
 $$
 \end{lemma}
-% Let $\vec y$ be a random vector. Let $\vec q_{Z}$ be a random vector dependent on another random variable $Z$. Then it holds that
-% % TODO not sure whether this is correct, seems to have the exact same shape as above...
-% $$
-% \Breg{q^\star}{q} = 
-% \mathbb{E}_{Y}\left[ \Breg{Y}{q} - \Breg{Y}{q^\star} \right]  \\[1em]
-% $$
-% if  $q^\star$ is the left Bregman centroid.
-% \end{lemma}
 \begin{proof}
-\begin{align*}
-    \mathbb{E}_{Z,Y}\left[ \Breg{y}{q} - \Breg{y}{q^\star} \right]  
-    &= \mathbb{E}_{Z,Y}\left[ (\phi(y) - \phi(q) - \inner{\nabla \phi(q)}{y-q}) - (\phi(y) - \phi(q^\star) - \inner{y}{y - q^\star}) \right]  \\
-    &= \mathbb{E}_{Z,Y}\left[ \phi(q^\star) - \phi(q) - \inner{\nabla \phi(q)}{y-q} + \inner{\nabla \phi(q^\star)}{y-q^\star}\right]  & \text{$q^\star$, $q$ ~~indep. of Y} \\ 
-    &= \mathbb{E}_{Z}\left[  \phi(q^\star) - \phi(q) \right]  \\
-    &- \mathbb{E}_{Z,Y}\left[ \inner{\nabla \phi(q)}{y}\right]  + \mathbb{E}_{Y}\left[ \inner{\nabla \phi(q^\star)}{y} \right] \\
-    &+ \mathbb{E}_{Z}\left[ \inner{\nabla \phi(q)}{q} - \inner{\nabla \phi(q^\star)}{q^\star} \right] 
-\end{align*}
-By definition of $q^\star$, $\mathbb{E}_{Z}\left[ \nabla \phi(q^\star) \right] = \mathbb{E}_{Z}\left[ \nabla \phi (\nabla \phi)^{-1} \mathbb{E}_{Z}\left[ \nabla \phi(q) \right] \right] = \mathbb{E}_{Z}\left[ \nabla \phi(q) \right]$. This allows us to apply the linearity of $\inner{\cdot}{\cdot}$ twice to obtain
-\begin{align*}
-    \dots &= \mathbb{E}_{Z}\left[ \phi(q^\star) - \phi(q) \right]  - 0 + \mathbb{E}_{Z}\left[ \inner{\nabla \phi(q)}{q-q^\star} \right]  \\
-    &= \mathbb{E}_{Z}\left[ \phi(q^\star) - \phi(q)  - \inner{\nabla \phi(q)}{q^\star - q}\right]  \\
-    &= \mathbb{E}_{Z}\left[ \Breg{q^\star}{q} \right] 
-\end{align*}
+The proof is given in section \ref{proof:bregman-collapse-variances}.
 \end{proof}
-% TODO give proof here --relies only on linearity and "dual expectation"
 % TODO note that this is dual expectation, and repeat lemmas from paper indicating that the dual expectations are indeed centroids
 % TODO more on how this is all about variation around centroids and what the centroids are in example of variance and ambiguity
-% TODO bias-variance-diversity decomp
+
 % TODO highlight somewhere that this is a slightly different way of showing the decomp -- was previously shown by directly showing bias-variance decomp for it; here we start with effect decomp which trivially holds and then apply bregman collapse trick (which is inherent in the other proof too, but certainly not as clear)
 
 % TODO write D, Theta in both equations, needs to be clearer I guess
@@ -383,6 +353,7 @@ $$
 $$ and the value of any Bregman divergence is always non-negative. Further, ambiguity is now independent of the outcome $Y$.
 
 \begin{corollary} ~ ~ 
+    \label{cor:bregman-divergences}
     \begin{itemize}
         \item For any Bregman divergence, ensembling using the combiner implied by the divergence can not hurt performance.
         \item The diversity is an intuitive measure of ensemble improvement.

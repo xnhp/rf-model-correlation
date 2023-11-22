@@ -15,6 +15,9 @@ Consider the bias-variance-covariance decomposition for the squared error loss g
 % TODO remove explicit dependence on x
 The covariance term contributes positively to the ensemble error if the outputs of the members are positively  correlated. This suggests the idea that it might be beneficial to train ensemble members in coordination such that their outputs are uncorrelated.
 \cite{liu_EnsembleLearningNegative_1999} provide an implementation of this idea for neural network ensembles called \textit{Negative Correlation Learning} (NCL).
+\marginnote{
+  Note that the name is misleading here. The goal is not that members are negatively correlated, but \textit{un}correlated.
+}
 Neural network training involves a \textit{forward} and a \textit{backward} pass. In the forward pass, the neural network in its current state is queried with training data. Its prediction is evaluated according to a loss function. 
 Then, the model parameters are updated according to the gradient of the loss function with respect to the parameters. 
 %
@@ -54,9 +57,9 @@ Note that the penalty term corresponds to the contribution of the $i$-th member 
 % TODO highlight somewhere that this links bias-variance-covariance decomp and ambiguity -- i.e. expression via covarance is actually artifact of squared error -- and more importantly, that we are comparing model outputs and not losses -- which, at first, seems confusing
 Indeed, as \cite{brown_ManagingDiversityRegression_2005} noted, the NCL approach can be motivated more soundly via the ambiguity decomposition. 
 
-% The error of the full ensemble can be written as \sidenote{We additionally use a factor of $\frac{1}{2}$. This makes it easier to express gradients of this function and is equivalent for optimisation. }
+% The error of the full ensemble can be written as \sidenote{We additionally use a factor of $\nicefrac{1}{2}$. This makes it easier to express gradients of this function and is equivalent for optimisation. }
 % $$
-% e_{\text{ens}} \defeq \frac{1}{2} (\bar{q}-y)^2 = \Mavg \frac{1}{2}(y - q_{i})^2 ~ ~ - ~ ~ \Mavg \frac{1}{2}(\bar{q} - q_{i})^2
+% e_{\text{ens}} \defeq \nicefrac{1}{2} (\bar{q}-y)^2 = \Mavg \nicefrac{1}{2}(y - q_{i})^2 ~ ~ - ~ ~ \Mavg \nicefrac{1}{2}(\bar{q} - q_{i})^2
 % $$
 \begin{definition} (NCL neural network objective for squared error \cite{brown_ManagingDiversityRegression_2005}) The loss function of the $i$-th neural network ensemble member is defined as
 $$
@@ -64,7 +67,7 @@ e_{i}(y,x) \defeq (y - q_i)^2 ~ ~ - \lambda (\bar{q} - q_i)^2
  % TOOD why sum over members here when we define ell_i? should be removed?
 $$
 \end{definition}
-The penalty coeffient $\lambda$ smoothly interpolates between training $q_{i}$ to either maximise its individual performance or the ensemble performance. For sake of simplicitly, let us assume a factor of $\frac{1}{2}$ on the objective. This yields an equivalent optimisation problem, but allows us to to express the gradients in a simple form.
+The penalty coeffient $\lambda$ smoothly interpolates between training $q_{i}$ to either maximise its individual performance or the ensemble performance. For sake of simplicitly, let us assume a factor of $\nicefrac{1}{2}$ on the objective. This yields an equivalent optimisation problem, but allows us to to express the gradients in a simple form.
 $$
 \frac{\partial e_{i}}{\partial q_{i}} = \frac{1}{M}
 \left(
@@ -86,12 +89,12 @@ $$
 % TODO consistent notation for KL-divergence
 where $\bar{q}$ is the geometric mean combiner (see \ref{todo}). The proof is not trivial and does not give insight into whether such a decomposition and learning strategy might also exist for other loss functions.
 
-\cite{buschjager_GeneralizedNegativeCorrelation_2020} approached the problem by attempting to derive a generalised decomposition of the ensemble error that incorporates diversity. The basic idea is to consider a Taylor approximation around the ensemble combiner, which is assumed to be the arithmetic mean combiner. $\bar{q} \defeq \mathbb{E}_{\Theta}\left[ q_{\Theta} \right] \approx \frac{1}{M}\sum_{i=1}^M q_i$.
+\citeauthor{buschjager_GeneralizedNegativeCorrelation_2020} \cite{buschjager_GeneralizedNegativeCorrelation_2020} approached the problem by attempting to derive a generalised decomposition of the ensemble error that incorporates diversity. The basic idea is to consider a Taylor approximation around the ensemble combiner, which is assumed to be the arithmetic mean combiner. $\bar{q} \defeq \mathbb{E}_{\Theta}\left[ q_{\Theta} \right] \approx \frac{1}{M}\sum_{i=1}^M q_i$.
 \begin{align*}
 \mathbb{E}_{}\left[ \ell(y, q) \right]  &= 
 \mathbb{E}_{}\left[ \ell(\bar{q}) \right] 
 + \mathbb{E}_{}\left[ (q - \bar{q})^\top \nabla_{q^\star}(\ell (\bar{q})) \right]  \\
-&+ \mathbb{E}_{\Theta}\left[ \frac{1}{2} (q-\bar{q})^\top\nabla^2_{\bar{q}}(\ell(q^\star))(q-\bar{q}) \right] \\
+&+ \mathbb{E}_{\Theta}\left[ \nicefrac{1}{2} (q-\bar{q})^\top\nabla^2_{\bar{q}}(\ell(q^\star))(q-\bar{q}) \right] \\
 &+ \mathbb{E}_{}\left[ R_{3} \right] 
 \end{align*}
 $R_{3}$ is the remainder of the Taylor approximation, which vanishes if the third derivative of $\ell$ is zero.
@@ -102,7 +105,7 @@ $$
 \bar{q} = \mathbb{E}_{{\Theta}}\left[ q_{\Theta} \right] \approx \Mavg q_{i}
 $$
 \begin{align*}
-\mathbb{E}_{\Theta}\left[ \frac{1}{2} (q-\bar{q})^\top\nabla^2_{\bar{q}}(\ell(\bar{q}))(q-\bar{q}) \right] \approx \frac{1}{2}\Mavg d_{i}^\top D d_{i} \\
+\mathbb{E}_{\Theta}\left[ \nicefrac{1}{2} (q-\bar{q})^\top\nabla^2_{\bar{q}}(\ell(\bar{q}))(q-\bar{q}) \right] \approx \nicefrac{1}{2}\Mavg d_{i}^\top D d_{i} \\
 \text{~~for $D \defeq \nabla^2_{\bar{q}}(\ell(\bar{q}),y)$ and $d_{i} \defeq (\bar{q} - q_i)$}
 \end{align*}
 \vspace{0.5em}
@@ -116,7 +119,7 @@ Based on this, they propose the following generalised training objective.
 \begin{definition} (Generalised NCL objective as proposed by \cite{buschjager_GeneralizedNegativeCorrelation_2020})
     \label{def:buschj-ncl-objective}
 $$
-e_i \defeq \Mavg \ell(y,q_{i}) - \frac{1}{2} \Mavg d_{i}^\top D d_{i}
+e_i \defeq \Mavg \ell(y,q_{i}) - \nicefrac{1}{2} \Mavg d_{i}^\top D d_{i}
 $$
 where $D \defeq \nabla^2_{\bar{q}}(\ell(y, \bar{q})$ and $d_{i} \defeq (q_{i} - \bar{q})$
 \end{definition}

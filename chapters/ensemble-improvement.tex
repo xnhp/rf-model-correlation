@@ -19,6 +19,7 @@
 
 
 \section{Diversity for the \zeroone-Loss}
+\label{sec:diversity-zeroone}
 % TODO chapter intro
 
 \begin{definition}
@@ -31,7 +32,7 @@ $$
 
 The ensemble combiner implied by the \zeroone-loss is the plurality vote.
 \marginnote{
-    The proper term here would actually be \textit{plurality} vote since, for a class to win the vote, it is required to have more than $\frac{1}{k}$ votes. Strictly speakin, a \textit{majority} vote win requires the majority of all votes, i.e. more than $\frac{1}{2}$. For $k=2$, majority and plurality voting is equivalent.
+    The proper term here would actually be \textit{plurality} vote since, for a class to win the vote, it is required to have more than $\nicefrac{1}{k}$ votes. Strictly speakin, a \textit{majority} vote win requires the majority of all votes, i.e. more than $\nicefrac{1}{2}$. For $k=2$, majority and plurality voting is equivalent.
     % TODO throughout what follows, try to resolve ambiguities between maj vote and plurality vote
 }
 \begin{definition} 
@@ -65,7 +66,7 @@ As with other variables, we sometimes omit explicitly stating the dependence on 
 .
 % TODO notation
 $$
-0 \leq \mathbb{E}_{}\left[ \Lzo{Y}{\bar{q}} \right] = \prob{}{W \geq \kappa} \leq \prob{}{W \geq \frac{1}{2}} \leq 2 \mathbb{E}_{}\left[ W \right] 
+0 \leq \mathbb{E}_{}\left[ \Lzo{Y}{\bar{q}} \right] = \prob{}{W \geq \kappa} \leq \prob{}{W \geq \nicefrac{1}{2}} \leq 2 \mathbb{E}_{}\left[ W \right] 
 $$
 % TODO actually provide example 1 from theisen paper, that's easy to understand and gives intuition
 While there exist examples for which this upper bound is tight \cite{theisen_WhenAreEnsembles_2023}, it is reasonable to suspect that the ensemble being worse by a factor of two is only a pathological case and not relevant for practise.
@@ -215,7 +216,7 @@ A common idea is that, in order for ensembling to be effective, the performance 
    \label{def:weak-learner}  (Weak learner)
     need to check / reformulate this
     % A model $q_\Theta$ is a \textit{weak learner} iff it performs better than as if randomly guessing, i.e. 
-    % $$\mathbb{E}_{(X,Y)}\left[ W_{\Theta}(X,Y) \right] \geq \frac{1}{2}$$.
+    % $$\mathbb{E}_{(X,Y)}\left[ W_{\Theta}(X,Y) \right] \geq \nicefrac{1}{2}$$.
 \end{definition}
 
 \begin{theorem} 
@@ -252,7 +253,7 @@ However, this is not a sufficient
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{figma-illustrations/competence.pdf}
     \caption{
-        Illustration for the competence condition \ref{def:2-competence} for binary classification. Red squares correspond to pairs $(X,Y)$ from the joint distribution of examples and outcomes. For each of these pairs, the average/expected member error $W_{\Theta}(X,Y) \approx \Mavg \Lzo(y, q_i)$ is the ratio of incorrect members. The center $\frac{1}{2}$ is the majority vote threshold. Informally, an ensemble is competent, if, for any two intervals defined by $t$ left and right of the threshold, more examples are in the left part. For the upper example, this holds. For the lower example, even though many examples are classified correctly by many members, the ensemble is \textit{not} competent.
+        Illustration for the competence condition \ref{def:2-competence} for binary classification. Red squares correspond to pairs $(X,Y)$ from the joint distribution of examples and outcomes. For each of these pairs, the average/expected member error $W_{\Theta}(X,Y) \approx \Mavg \Lzo(y, q_i)$ is the ratio of incorrect members. The center $\nicefrac{1}{2}$ is the majority vote threshold. Informally, an ensemble is competent, if, for any two intervals defined by $t$ left and right of the threshold, more examples are in the left part. For the upper example, this holds. For the lower example, even though many examples are classified correctly by many members, the ensemble is \textit{not} competent.
         % TODO come back to this from persective of good/bad div
         % TODO emphasize that this is motivation for *dis*couraging disagreement on incorrect points (bad div)
     }
@@ -267,7 +268,7 @@ However, this is not a sufficient
    \label{def:2-competence} 
     ($2$-competence, \cite{theisen_WhenAreEnsembles_2023}) An ensemble is $2$-competent iff
 $$
-\forall t \in \left[ 0, \frac{1}{2} \right]: ~ \prob{(X,Y) }{W(X,Y)  \in \left[ t, \frac{1}{2} \right]} ~ ~  \geq ~ ~ \prob{(X,Y) }{W(X,Y) \in \left[ \frac{1}{2}, 1-t \right]}
+\forall t \in \left[ 0, \nicefrac{1}{2} \right]: ~ \prob{(X,Y) }{W(X,Y)  \in \left[ t, \nicefrac{1}{2} \right]} ~ ~  \geq ~ ~ \prob{(X,Y) }{W(X,Y) \in \left[ \nicefrac{1}{2}, 1-t \right]}
 $$
 \end{definition}
 The condition is illustrated in figure \ref{fig:competence}.  
@@ -285,37 +286,37 @@ It is used to show two results:
 	\item bounds on the generalisation error  % TODO
 \end{itemize}
 
-One can see that competence is essentially determined by the distribution of examples $(X,Y)$ over the range of $W(X,Y)$ which is divided by the majority vote threshold $\frac{1}{2}$. We have already seen that, similarly, diversity-effect in its apparent form of good and bad diversity is determined by just the same characteristics. How are these two related?
+One can see that competence is essentially determined by the distribution of examples $(X,Y)$ over the range of $W(X,Y)$ which is divided by the majority vote threshold $\nicefrac{1}{2}$. We have already seen that, similarly, diversity-effect in its apparent form of good and bad diversity is determined by just the same characteristics. How are these two related?
 In this section, we will argue that non-negative diversity-effect is in fact equivalent to a notion of competence generalised to $k > 2$ classes. Unless otherwise noted, all expectations and probabilites are over the distribution of $(X,Y)$.
 
 While proving that $2$-competence implies non-negative diversity-effect, \citeauthor{theisen_WhenAreEnsembles_2023} establish the following fact.
 \begin{align}
 \label{eq:competence-lemma2}
-\text{ens. $2$-competent} ~\leftrightarrow~ \mathbb{E}_{}\left[ W~\ind{W < \frac{1}{2}} \right] \geq \mathbb{E}_{}\left[ 
-\compl{W}~\ind{\compl{W} \leq \frac{1}{2} } 
+\text{ens. $2$-competent} ~\leftrightarrow~ \mathbb{E}_{}\left[ W~\ind{W < \nicefrac{1}{2}} \right] \geq \mathbb{E}_{}\left[ 
+\compl{W}~\ind{\compl{W} \leq \nicefrac{1}{2} } 
 \right] 
 \end{align}
 We can rearrange this into a more suggestive form. Recall that $W = \mathbb{E}_{D, \Theta}\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]$. We now split off the expectation over $D$ and instead consider $W_{\Theta} = \mathbb{E}_{\Theta}\left[ \Lzo{Y}{q_{D, \Theta}(X)} \right]$. Rearranging the above and exploiting the linearity of expectation, we obtain
 $$
-d \defeq \mathbb{E}_{(X,Y),D }\left[ W_{\Theta} ~\ind{W_{\Theta} < \frac{1}{2}} \right]  - \mathbb{E}_{(X,Y) ,D}\left[ \compl{W_{\Theta}} ~\ind{\compl{W_{\Theta}} \leq \frac{1}{2} } \right] ~ ~ \geq ~ ~  0
+d \defeq \mathbb{E}_{(X,Y),D }\left[ W_{\Theta} ~\ind{W_{\Theta} < \nicefrac{1}{2}} \right]  - \mathbb{E}_{(X,Y) ,D}\left[ \compl{W_{\Theta}} ~\ind{\compl{W_{\Theta}} \leq \nicefrac{1}{2} } \right] ~ ~ \geq ~ ~  0
 $$
 The indicator functions are mutually exclusive and can thus be understood as a case distinction. With slight abuse of notation, where the expectations are only over the subset of the distribution for which the case condition holds, we can write
 $$
 d = 
 \begin{cases}
-\mathbb{E}_{}\left[ W_{\Theta} \right] & \leftrightarrow W_{\Theta} < \frac{1}{2} \\[1em]
-\mathbb{E}_{}\left[ \compl{W_{\Theta}}  \right]  = \mathbb{E}_{}\left[ 1 - W_{\Theta} \right]  & \leftrightarrow \compl{W_{\Theta}} \leq \frac{1}{2} 
+\mathbb{E}_{}\left[ W_{\Theta} \right] & \leftrightarrow W_{\Theta} < \nicefrac{1}{2} \\[1em]
+\mathbb{E}_{}\left[ \compl{W_{\Theta}}  \right]  = \mathbb{E}_{}\left[ 1 - W_{\Theta} \right]  & \leftrightarrow \compl{W_{\Theta}} \leq \nicefrac{1}{2} 
 \end{cases}
 $$
 
-For $k=2$, the majority vote threshold is $\frac{1}{2}$ and thus the conditions correspond exactly to the ensemble being either correct or incorrect.
+For $k=2$, the majority vote threshold is $\nicefrac{1}{2}$ and thus the conditions correspond exactly to the ensemble being either correct or incorrect.
 
 \begin{align}
 \label{eq:gen-error-ratio-binary}
 k = 2 ~\rightarrow~ 
 \begin{cases}
-W_{\Theta}  < \frac{1}{2} ~\leftrightarrow~  \bar{q}(X) = Y \\[1em]
-\compl{W_\Theta }  \leq \frac{1}{2} ~\leftrightarrow~ \bar{q}(X) \not= Y
+W_{\Theta}  < \nicefrac{1}{2} ~\leftrightarrow~  \bar{q}(X) = Y \\[1em]
+\compl{W_\Theta }  \leq \nicefrac{1}{2} ~\leftrightarrow~ \bar{q}(X) \not= Y
 \end{cases}
 \end{align}
 
@@ -325,9 +326,10 @@ Recalling the characterisation of good and bad diversity of lemma \ref{thm:good-
 Moreover, it is important to note that the gap of equation \ref{eq:competence-lemma2} and consequently the gap in the definition of $2$-competence (\ref{def:2-competence}) is exactly the diversity-effect and hence exactly measures the ensemble improvement. In other words, one can now speak about the degree of competence of an ensemble.
 
 \subsection{Competence and Diversity in non-binary classification problems}
+\label{sec:k-competence}
 % TODO maybe repeat what is ref'd here in margins
 % Due to \ref{eq:gen-error-ratio-binary}, we can now see that for $k=2$, the other direction also holds: Any ensemble with non-negative diversity-effect also is competent. 
-However, for $k>2$, the equivalence in equation \ref{eq:gen-error-ratio-binary} is not given. While it is sufficient (a class with more than $\frac{1}{2}M$ votes will win any plurality vote), it is not necessary: a plurality vote can be won with less than $\frac{1}{2}M$ votes. Thus, there are ensembles which have non-negative diversity-effect (ensemble improvement) that are not $2$-competent. % TODO areas of wood23 fig20
+However, for $k>2$, the equivalence in equation \ref{eq:gen-error-ratio-binary} is not given. While it is sufficient (a class with more than $\nicefrac{1}{2}M$ votes will win any plurality vote), it is not necessary: a plurality vote can be won with less than $\nicefrac{1}{2}M$ votes. Thus, there are ensembles which have non-negative diversity-effect (ensemble improvement) that are not $2$-competent. % TODO areas of wood23 fig20
 
 The key difference is that for $k>2$, the voting threshold for a pair $(X,Y)$ is no longer the same value for all examples. Since a class wins if and only if it has more votes than any other class, the voting threshold depends on the distribution of class votes, which is potentially different for any pair $(X,Y)$. Nevertheless, there is still \textit{a} classification threshold, namely the ratio of votes for the next-best class. Because we will be considering the ratio of incorrect votes as a basic quantity, we will now define it from the reciprocal perspective:
 $$
@@ -389,7 +391,7 @@ for $ \kappa \defeq 1 - \max_{Z \not= Y} \mathbb{E}_{\Theta}\left[ ~\ind{q_{\The
 
 % TODO relate to 2-competence
 % TODO not correct
-% For classification problems with $k=2$, $k$-competence is exactly $2$-competence as of definition \ref{def:2-competence} since the voting threshold is always $\frac{1}{2}$.
+% For classification problems with $k=2$, $k$-competence is exactly $2$-competence as of definition \ref{def:2-competence} since the voting threshold is always $\nicefrac{1}{2}$.
 
 \citeauthor{theisen_WhenAreEnsembles_2023} showed that $2$-competence implies non-negative diversity-effect. 
 We now show that a very similar line of argument using $k$-competence actually holds in both directions.
@@ -462,7 +464,7 @@ Using this, we can now directly prove theorem \ref{thm:k-competence-diversity-ef
     \end{align*}
     The first term is the ratio of incorrect members in expectation over all examples and is equal to the error rate of an average member.
     \begin{align*} 
-    \mathbb{E}_{(X,Y) }\left[ W  \right]  = \mathbb{E}_{(X,Y) }\left[ \mathbb{E}_{D,\Theta}\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right]  = \mathbb{E}_{D_{\Theta}}\left[ \mathbb{E}_{(X,Y) }\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right] 
+    \mathbb{E}_{(X,Y) }\left[ W  \right]  = \mathbb{E}_{(X,Y) }\left[ \mathbb{E}_{D,\Theta}\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right]  = \mathbb{E}_{D,\Theta}\left[ \mathbb{E}_{(X,Y) }\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right] 
     \end{align*}
     The second term is the ensemble error. 
 \end{proof}
@@ -472,21 +474,27 @@ Using this, we can now directly prove theorem \ref{thm:k-competence-diversity-ef
 $2$-competence was used to show upper and lower bounds for the diversity-effect \cite{theisen_WhenAreEnsembles_2023}. Now we show that, with minor adjustments, the same bounds can be derived from $k$-competence. 
 Besides giving performance guarantees, these bounds are interesting due to that they are expressed in terms of disagreements between members, which until now we have only seen for Bregman divergences.
 
-\begin{theorem} (Upper bound) In $k$-competent ensembles,
+\begin{theorem} 
+\label{thm:theisen-upper}
+    (Upper bound) In $k$-competent ensembles,
 $$
 \mathbb{E}_{}\left[ W \right] - \prob{}{W \geq \kappa} \leq \mathbb{E}_{\rho, \rho'}\left[ D(q_{\rho}, q_{\rho'}) \right]  
 $$
+for $D(q_{\rho}, q_{\rho'}) = \mathbb{E}_{X}\left[ ~\ind{q_{\rho} \not= q_{\rho'}} \right]$
 \end{theorem}
 \begin{proof}
     The proof can be found in \cite{theisen_WhenAreEnsembles_2023}. It does not make use of competence and therefore still holds for $k$-competent ensembles.
 \end{proof}
 
-\begin{theorem} (Lower bound) In $k$-competent ensembles,
+\begin{theorem} 
+\label{thm:theisen-lower}
+    (Lower bound) In $k$-competent ensembles,
 $$
  \frac{2(k-1)}{k}\mathbb{E}_{}\left[ D(q_{\rho}, q_{\rho'}) \right]  - \frac{3k-4}{k}\mathbb{E}_{}\left[ W \right] 
  ~ ~ \leq ~ ~
 \mathbb{E}_{}\left[ W \right] - \prob{}{W \geq \kappa} 
 $$
+for $D(q_{\rho}, q_{\rho'}) = \mathbb{E}_{X}\left[ ~\ind{q_{\rho} \not= q_{\rho'}} \right]$
 \end{theorem}
 \begin{proof}
 Lemmas 3 and 4 hold without adjustments for $k$-competence and are shown in \cite{cited-by-theisen} and \cite{theisen_WhenAreEnsembles_2023}, respectively.
@@ -494,11 +502,12 @@ Lemmas 3 and 4 hold without adjustments for $k$-competence and are shown in \cit
 & \prob{}{W \geq \kappa}  \\
 & \leq  2 \mathbb{E}_{}\left[ W^2 \right]  & \text{(Lemma \ref{thm:lemma-claim})}   \\
 & =  2\mathbb{E}_{\rho, \rho'}\left[ L(q_{\rho}, q_{\rho_{}}) \right]  & \text{(Lemma 3 in \cite{theisen_WhenAreEnsembles_2023})} \\
-& = \frac{4(k-1)}{k} \left(  \mathbb{E}_{}\left[ W  \right] - \frac{1}{2} \mathbb{E}_{\rho, \rho'}\left[ D(q_{\rho}, q_{\rho'}) \right]    \right) & \text{(Lemma 4 in \cite{theisen_WhenAreEnsembles_2023})} 
+& = \frac{4(k-1)}{k} \left(  \mathbb{E}_{}\left[ W  \right] - \nicefrac{1}{2} \mathbb{E}_{\rho, \rho'}\left[ D(q_{\rho}, q_{\rho'}) \right]    \right) & \text{(Lemma 4 in \cite{theisen_WhenAreEnsembles_2023})} 
 \end{align*}
 Rearranging the terms yields the statement.
 \end{proof}
 
+We conclude by checking the inequality in the proof of theorem \ref{thm:theisen-lower}.
 \begin{lemma} $\star$ (Generalised from \cite{theisen_WhenAreEnsembles_2023}) In $k$-competent ensembles it holds that
 \label{thm:lemma-claim}
 $$
@@ -506,38 +515,10 @@ $$
 $$
 \end{lemma}
 \begin{proof}
-Note that
-$$
-\prob{}{W \geq \kappa} \leq 2 \mathbb{E}_{}\left[ W^2 \right] ~\leftrightarrow~ 
-\prob{}{W \geq \kappa} - 2 \mathbb{E}_{}\left[ W^2 \right] \geq 0
-$$
-$$
-2\mathbb{E}_{}\left[ W^2 \right] - \prob{}{W \geq \kappa} = 
-\mathbb{E}_{}\left[ (2W^2-1)~\ind{W \geq \kappa} \right]
-$$
-We will aim to show that this above expression is nonnegative.
-The  final inequality is due to applying lemma \ref{thm:lemma-2} to the second term.
-\marginnote{
-    \begin{align*}
-    & W \geq \kappa \\
-    & ~\leftrightarrow~ 1-W < 1-\kappa \\
-    & ~\leftrightarrow~ \compl{W}  \leq 1-\kappa
-    \end{align*}
-}
-\begin{align*}
-& \mathbb{E}_{}\left[ 2W^2 \right]  - \prob{}{W \geq \kappa}  \\
-&= \mathbb{E}_{}\left[ 2W^2 \right]  - \mathbb{E}_{}\left[ ~\ind{W \geq \kappa} \right]  \\
-&= \mathbb{E}_{}\left[ (2W^2 - 1) ~\ind{W \geq \kappa} \right]  + \mathbb{E}_{}\left[ 2W^2 ~\ind{W < \kappa} \right] \\
-& \geq  \mathbb{E}_{}\left[ (2W^2 - 1) ~\ind{W \geq \kappa} \right]  + \mathbb{E}_{}\left[ 2\compl{W} ^2 ~\ind{\compl{W}  < \kappa} \right] 
-\end{align*}
-Note that for $k \geq 2$, $\kappa > 1-\kappa$ and thus $\mathbb{E}_{}\left[ ~\ind{\compl{W} \leq \kappa} \right] \geq \mathbb{E}_{}\left[ ~\ind{\compl{W} \leq 1 - \kappa} \right]$, allowing us to continue
-\begin{align*}
-\dots &\geq 
-\mathbb{E}_{}\left[ (2W^2 - 1) ~\ind{W \geq \kappa} \right]  + \mathbb{E}_{}\left[ 2\compl{W} ^2 ~\ind{\compl{W}  < 1-\kappa} \right]  \\
-&= \mathbb{E}_{}\left[ 1-4 \compl{W} + 2 \compl{W}^2 ~\ind{\compl{W} < 1-\kappa }  \right]  \\
-& \geq 0
-\end{align*}
+    The proof is given in \ref{sec:proof-lemma-claim}.
 \end{proof}
+
+% TODO another essential difference: for multiclass problems, diversity is not in terms of disagreements of member models but in terms of correctness
 
 % practical use: if we can verify that k-competent, we get (good!) bounds
 
@@ -546,7 +527,7 @@ Note that for $k \geq 2$, $\kappa > 1-\kappa$ and thus $\mathbb{E}_{}\left[ ~\in
 % % The approach is to show the inequality (see \ref{eq:gen-error-as-prob})
 % % $$
 % % \begin{align}
-% % \mathbb{E}_{(X,Y),D }\left[ \Lzo{Y}{\bar{q}(X)} \right] &= \prob{}{Y \not= \bar{q}(X)} = \prob{(X,Y) ,D}{W_{\Theta} \geq \frac{1}{k}} \\
+% % \mathbb{E}_{(X,Y),D }\left[ \Lzo{Y}{\bar{q}(X)} \right] &= \prob{}{Y \not= \bar{q}(X)} = \prob{(X,Y) ,D}{W_{\Theta} \geq \nicefrac{1}{k}} \\
 % % \leq \mathbb{E}_{(X,Y), D}\left[ W_{\Theta}  \right] 
 % % \end{align}
 % % $$

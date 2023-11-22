@@ -52,7 +52,7 @@ $$
 \begin{align}
 \mathbb{E}_{}\left[ \Lzo{Y}{q(X)} \right] &= 
 \mathbb{E}_{}\left[  
-\frac{1}{2}\left( \sigma^2_{x} + \text{bias}(q) + \text{var}(q)   \right)
+\nicefrac{1}{2}\left( \sigma^2_{x} + \text{bias}(q) + \text{var}(q)   \right)
 \right] \\
 \text{for} ~ ~ & \text{bias}(q) =  \sum_{y} \left(  \prob{}{y^\star = y ~|~x} - \prob{}{q=y ~|~ x} \right)^2 \\
 & \text{var}(q) = 1 - \sum_{y} \prob{}{q=y ~|~x}^2  \\
@@ -141,17 +141,19 @@ The Bias-Variance-Covariance decomposition can be interpreted as a decomposition
 However, this decomposition is only given for the squared error and the arithmetic mean combiner. 
 
 
-\paragraph{A covariance decomposition for classification}
-% TODO not sure whether this should be included
-\citeauthor{didaci_DiversityClassifierEnsembles_2013} builds on the decomposition given by \citeauthor{kohavi_BiasVarianceDecomposition_} and, similar to the derivation of the covariance decomposition for the squared-error loss, derive average bias, average variance and covariance terms.  They decompose the bias and variance terms of the ensemble as follows, writing $P\left[y_i\right]\defeq P\left[Y=y_i \mid \mathbf{x}\right]$ and $\hat{P}_{q}\left[y_i\right] \defeq P[q=\left.y_i\right]$. 
-% TODO use PP
-\begin{align*}
-\operatorname{bias}(\bar{q}) & =\frac{1}{2} \sum_{y_i}\left(P\left[y_i\right]-\frac{1}{\sqrt{N}} \sum_j \hat{P}_{q_{j}}\left[y_i\right]+\frac{1}{\sqrt{N}} \sum_j \hat{P}_{q_{j}}\left[y_i\right]-\hat{P}_{\bar{q}}\left[y_i\right]\right)^2 \\
-& =\overline{\operatorname{bias}}+b, \\ \\
-\operatorname{var}(\bar{q}) & =\frac{1}{2}\left(1-\frac{1}{N^2} \sum_{j, y_i} \hat{P}_{q_{j}}^2\left[y_i\right]+\frac{1}{N^2} \sum_{j, y_i} \hat{P}_{q_{j}}^2\left[y_i\right]-\sum_{y_i} \hat{P}_{\bar{q}}\left[y_i\right]^2\right) \\
-& =\frac{1}{N} \overline{\operatorname{var}}+v,
-\end{align*}
-However, there are remaining terms $b$ and $v$ and, as the authors state, their interpretation is yet unclear.
+% TODO maybe reintroduce(would have to fix notiation)
+% but really don't see why we would need that
+% \paragraph{A covariance decomposition for classification}
+% % TODO not sure whether this should be included
+% \citeauthor{didaci_DiversityClassifierEnsembles_2013} builds on the decomposition given by \citeauthor{kohavi_BiasVarianceDecomposition_} and, similar to the derivation of the covariance decomposition for the squared-error loss, derive average bias, average variance and covariance terms.  They decompose the bias and variance terms of the ensemble as follows, writing $P\left[y_i\right]\defeq P\left[Y=y_i \mid \mathbf{x}\right]$ and $\hat{P}_{q}\left[y_i\right] \defeq P[q=\left.y_i\right]$. 
+% % TODO use PP
+% \begin{align*}
+% \operatorname{bias}(\bar{q}) & =\nicefrac{1}{2} \sum_{y_i}\left(P\left[y_i\right]-\frac{1}{\sqrt{N}} \sum_j \hat{P}_{q_{j}}\left[y_i\right]+\frac{1}{\sqrt{N}} \sum_j \hat{P}_{q_{j}}\left[y_i\right]-\hat{P}_{\bar{q}}\left[y_i\right]\right)^2 \\
+% & =\overline{\operatorname{bias}}+b, \\ \\
+% \operatorname{var}(\bar{q}) & =\nicefrac{1}{2}\left(1-\frac{1}{N^2} \sum_{j, y_i} \hat{P}_{q_{j}}^2\left[y_i\right]+\frac{1}{N^2} \sum_{j, y_i} \hat{P}_{q_{j}}^2\left[y_i\right]-\sum_{y_i} \hat{P}_{\bar{q}}\left[y_i\right]^2\right) \\
+% & =\frac{1}{N} \overline{\operatorname{var}}+v,
+% \end{align*}
+% However, there are remaining terms $b$ and $v$ and, as the authors state, their interpretation is yet unclear.
 
 
 \subsection{Relationship between Ambiguity and Covariance}
@@ -179,14 +181,15 @@ $$
 \end{itemize}
 Inspecting the proofs of theorems \ref{thm:bias-variance-covariance} and \ref{thm:breiman}, one can observe that in both cases, one begins with a measure of variance. Based on this, a covariance expression is then extracted, enabled by the definition of variance involving a square, producing cross-terms.
 In other words, \textit{the covariance term is an artifact of the squared-error loss}. The notion of variance is more general.
+% TODO corollary: uncorrelatedness is a special case of diversity
 
-For the case of squared-error loss, \cite{brown_ManagingDiversityRegression_2005} relate the ambiguity decomposition (\ref{thm:ambig-effect-decomp}) and the bias-variance-covariance decomposition (theorem \ref{thm:bias-variance-covariance}) directly. 
+For the case of squared-error loss, \citeauthor{brown_ManagingDiversityRegression_2005} \cite{brown_ManagingDiversityRegression_2005} relate the ambiguity decomposition (\ref{thm:ambig-effect-decomp}) and the bias-variance-covariance decomposition (theorem \ref{thm:bias-variance-covariance}) directly. 
 \begin{align*}
-\mathbb{E}_{}\left[ \Mavg (y - q_{i})^2 - \Mavg (\bar{q} - q_{i})^2 \right]  = \overline{\text{bias} }^2 + \frac{1}{M} \overline{\text{var} } + \left( 1 - \frac{1}{M} \right) \overline{\text{covar} }
+\mathbb{E}_{}\left[ \Mavg (y - q_{i})^2 - \Mavg (\bar{q} - q_{i})^2 \right]  = \overline{\text{bias} } + \frac{1}{M} \overline{\text{var} } + \left( 1 - \frac{1}{M} \right) \overline{\text{covar} }
 \end{align*}
 which yields
 \begin{align*}
-\mathbb{E}_{}\left[ \Mavg (y - q_{i})^2 \right]  &= \overline{\text{bias} }^2 + \Omega \\
+\mathbb{E}_{}\left[ \Mavg (y - q_{i})^2 \right]  &= \overline{\text{bias} } + \Omega \\
 &= \Omega - \left( \frac{1}{M}\overline{var} + \left( 1-\frac{1}{M} \right) \overline{\text{covar} } \right) \\
 \text{for~}  & \Omega \defeq \overline{\text{var} } + \Mavg \left( \mathbb{E}_{}\left[ q_{i} \right] - \mathbb{E}_{}\left[ \bar{q} \right] \right)^2
 \end{align*}

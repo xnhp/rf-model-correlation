@@ -12,10 +12,7 @@ A Random Forest is a collection of randomized decision trees. A decision tree is
 \label{sec:decision-trees}
 
 We are interested in learning algorithms that, given some training data, produce a model that is able to predict a reasonable outcome when queried with a previously unseen example (see section \ref{sec:supervised-learning})
-
-% \marginnote{TODO decision tree construction pseudocode}
-
-One intuitive approach is to consider the examples in the training data that are "close" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the close points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neigbours, $k$-Means, etc.
+One intuitive approach is to consider the examples in the training data that are "close" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the close points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neighbours, $k$-Means, and others.
 % TODO some examples other than k--
 
 % TODO decision tree always lowercase
@@ -219,7 +216,7 @@ $$
 % TODO this seems to be the "generalised square euclidean distance", see https://franknielsen.github.io/BregmanDivergenceDualIGGenConvexity-25Nov2021.pdf / Scalar and separable Bregman divergences
 % TODO cite "on the universality of the logistic loss function"
 
-If $p$ is a class probability distribution and $u \defeq [\frac{1}{k}, \dots, \frac{1}{k}]^\top$ a uniform distribution, then $p-u$ is a margin vector and the optimisation corresponds to maximising the classification margins as measured by the squared error.
+If $p$ is a class probability distribution and $u \defeq [\nicefrac{1}{k}, \dots, \nicefrac{1}{k}]^\top$ a uniform distribution, then $p-u$ is a margin vector and the optimisation corresponds to maximising the classification margins as measured by the squared error.
 
 A common approach in training classification models
 is \textit{margin maximisation} \cite{schapire_BoostingFoundationsAlgorithms_2012}
@@ -342,6 +339,11 @@ Thus, a random forest additionally requires the following parameters:
 % see e.g. scornet
 \end{itemize}
 
+
+% TODO practical advantages
+% parallelisable, oob estimation, feature importance, proximity, directly allow more-than-binary classification
+% small model size (only need to store decision rules and leaf outputs)
+
 % TODO default params are good choice
 
 
@@ -444,7 +446,5 @@ $$
 % TODO maybe more precise derivation
 While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In section \ref{sec:later} we will see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
 
-\subsection{Practical advantages}
-parallelisable, oob estimation, feature importance, proximity, directly allow more-than-binary classification
 
 \end{document}
