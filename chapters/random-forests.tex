@@ -2,7 +2,7 @@
 \documentclass[../main.tex]{subfiles}
 \begin{document}
 
-In this chapter, we describe the Random Forest learning algorithm. We first motivate and describe decision trees, which are the basic components of a Random Forest. We then proceed to describe a particular property of decision trees: they are likely to exhibit high variance. While this is undesirable for a learning algorithm, we will see that combining several randomized decision trees into a Random Forest ensemble turns exactly that property into a crucial advantage (see section \ref{sec:unchanged-bias}).
+In this chapter, we describe the Random Forest learning algorithm. We first motivate and describe decision trees, which are the basic components of a Random Forest. We then proceed to describe a particular property of decision trees: they are likely to exhibit high variance. While this is undesirable for a learning algorithm, we will see that combining several randomized decision trees into a Random Forest ensemble turns exactly that property into a crucial advantage (see \cref{sec:unchanged-bias}).
 % TODO make sure we get back to this later -- I think the idea was to say that if there's high variance, we also have high room to improve due to diversity?
 
 A Random Forest is a collection of randomized decision trees. A decision tree is a data-driven recursive partitioning scheme, combined with a means to produce a prediction based on the training points in a partition cell. The Random Forest prediction then is an aggregate of the predictions of all individual trees.
@@ -11,7 +11,7 @@ A Random Forest is a collection of randomized decision trees. A decision tree is
 \section{Decision Trees}
 \label{sec:decision-trees}
 
-We are interested in learning algorithms that, given some training data, produce a model that is able to predict a reasonable outcome when queried with a previously unseen example (see section \ref{sec:supervised-learning})
+We are interested in learning algorithms that, given some training data, produce a model that is able to predict a reasonable outcome when queried with a previously unseen example (see \cref{sec:supervised-learning})
 One intuitive approach is to consider the examples in the training data that are "close" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the close points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neighbours, $k$-Means, and others.
 % TODO some examples other than k--
 
@@ -32,7 +32,15 @@ Because we are recursively partitioning the input space, we have at hand a tree 
         Rendering of a decision tree structure. Each inner node corresponds to a partitioning of the parent edge. In standard decision trees, this is a binary partition. In other words, the examples are \textit{split} at a certain value threshold in a certain feature dimension.    }
 \end{marginfigure}
 
-\marginfigfromsource{fig:decision-tree-boundaries}{symlinks/illustrations/decision-trees/decision-tree-boundaries}
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{figma-illustrations/tree-partition.pdf}
+    \label{fig:tree-partition}
+    \caption{A decision tree partitions the data space. For a query example, the corresponding leaf node is determined by traversing the tree downwards from the root node and applying the learned decision criteria.}
+% TODO I think this fig does not really provide any value here
+\end{marginfigure}
+
+
+% \marginfigfromsource{fig:decision-tree-boundaries}{symlinks/illustrations/decision-trees/decision-tree-boundaries}
     
 
 There are the following main components to the implementation of a decision tree:
@@ -43,228 +51,96 @@ There are the following main components to the implementation of a decision tree
     \item The \textit{leaf aggregation function} that produces a prediction for a specific cell. When using the constructed tree for prediction, this will be the leaf node that the query point is assigned in.
 \end{itemize}
 
+Like any learner, the quality of a decision tree $q$ is measured with respect to a loss function $\ell$ evaluated over some test set $D \defeq \{ (x_{i}, y_{i}) \}_{1}^n$. We are ultimately interested in finding a tree that minimises this loss, as an approximate to the generalisation error (see \cref{sec:supervised-learning}).
+$$
+\frac{1}{n} \sum_{i \in D} \ell(y_{i}, q(x_{i}))
+$$
+The loss over all examples in a certain leaf (cell) is then 
+$$L(f) \defeq \frac{1}{n_{f}} \sum_{i \in f} \ell(y_{i}, q(f))$$ where $n_{f}$ is the number of points in $f$.
 
-\subsection{Centroids as leaf combiners} 
+\begin{proposition} $\star$
+    \label{thm:decision-trees-impurity}
+The choice of loss function, impurity measure and leaf combiner are tightly related and chosing one of these will determine the other choices.
+\end{proposition}
+The basic idea is that an impurity measure is in fact nothing else than the variance around a centroid. In decision trees,  the tree prediction $q$ is constant over a leaf $f$: If $q(f)$ is the output for leaf $f$ then $\forall x \in f: q(x) = q(f)$. If $q(f)$ is chosen to be a centroid with respect to a loss $\ell$, then an impurity measure is exactly the loss of the points in a leaf.
 
-% TODO don't talk about "points"
-
-We will consider the leaf aggregation function first. Consider a parent node $P$ that, due to some split, was partitioned into the disjoint union $L~\dot{\cup}~R$.
-Let $y_{P}, y_{L}$ and $y_{R}$ be the output values of the parent and the two new leaf nodes, produced by the leaf aggregation function. Since the leaf output is constant over a single cell, the gain in loss due to a split is the difference between the loss of the parent node and the sum of losses of the two individual child nodes.
-For brevity, we write $\ell_{P}(y) \defeq \sum_{i \in P} \ell(y, y_{i})$.
+We can write the loss as a sum over the losses of the individual leaves $f$.
 \begin{align*}
-\text{\textit{Loss Gain}: } \hspace{1em} &
-\sum_{i \in P} \ell(y_{P}, y_{i}) - \left(  \sum_{i \in L} \ell(y_{L}, y_{i}) + \sum_{i \in R} \ell(y_{R}, y_{i}) \right) \\[1.5em]
-&= \ell_P(y_P) - \left(\ell_L(y_L) + \ell_R(y_R) \right)
+\frac{1}{n} \sum_{i\in D}  \ell(y_{i}, q(x_{i})) &= \sum_{f \in q} \frac{n_{f}}{n}  
+L(f) 
+\hspace{1em} \text{for~~ } L(f) \defeq \frac{1}{n_{f}} \sum_{i \in f} \ell(y_{i}, q(f))
 \end{align*}
-In order for a split to yield positive loss gain, the leaf aggregation function needs to be such that the loss does not increase as constraints are removed, i.e. the set of considered examples is reduced. Recall that $\bar{z}$ is a centroid with respect to a loss function $\ell$ and a set of outcomes $P$ if and only if $\bar{z} = \arg\min_{z} \sum_{i \in P} \ell(z, y_{i}) = \arg\min_z \ell_P(z)$ (\ref{prelims:centroids}).
-\begin{lemma}
-\label{lemma:loss-gain-nonnegative}
-For a loss function $\ell$, if the leaf aggregator of a node $P$ is $y_{P} \defeq \arg\min_{z} \sum_{i \in P} \ell(z, y_{i})$, i.e. the centroid with respect to $\ell$, the loss gain is nonnegative.
-% TODO double-check ~positive~ -> nonnegative.
-\end{lemma}
-\begin{proof}
-Let $\ell_{P}(y) \defeq \sum_{i \in P} \ell(y, y_{i})$. Since $P = L \dot{\cup}R$, we need to show that $\ell_{P}(y_{P}) = \ell_{L}(y_{P}) + \ell_{R}(y_{P}) \geq \ell_{L}(y_{L}) + \ell_{R}(y_{R})$. Assume $\ell_{L}(y_{P}) < \ell_{L}(y_{L})$. This contradicts the definition of $y_{L}$ as the minimizer, and as such $\ell_{L}(y_{P}) \geq \ell_{L}(y_{L})$. Likewise, we can conclude that $\ell_{R}(y_{P}) \geq \ell_{R}(y_{R})$. Combining the two inequalities yields the statement.
-\end{proof}
-
-This rigorously motivates the specific choice of leaf aggregation function. The majority vote is a centroid with respect to the \zeroone-loss for classification, while the arithmetic mean is the centroid with respect to the squared error loss for regression.
-
-
-% define stopping criteria
-% defin leaf aggregations
-
-\subsection{Splitting criteria greedily minimise loss functions}
-\label{sec:splitting-criteria-greedily-minimise-loss-functions}
-
-In the best possible case, all training examples in a given cell correspond to the same (classification) or very similar (regression) outcomes. If a query point then falls within that cell, i.e. it has similar features, one can say with high confidence that the query point should have the same (similar) outcome. In the spirit of greedy optimisation, we aim to split cells such that the resulting child cells are more \textit{pure} with respect to their outcomes. 
-
-\marginnote{
-    % TODO this is somewhat superfluous with "loss gain" since that is evaluated on the training data.
-    The notion of local purity is linked to the training error: If a leaf cell is perfectly pure, all training examples in that cell correspond to the same outcome. Hence, the leaf aggregation function, which us usually implemented as some kind of mean, will produce exactly that outcome for any query point that belongs to this cell, in particular any training points. Consequently, for a suitable definition of "error", perfectly pure cells have zero training error.
-}
-
-% TODO diagram with tables, how a split makes the outcomes more pure
-
-
-Consider a split, parameterised by $\Theta$, that partitions a parent node $P$ into the disjoint union $L_{\Theta} ~\dot{\cup}~R_{\Theta}$. Let $n, n_{L}, n_{R}$ be the cardinalities of the parent and the two child nodes. Let $H$ be an impurity measure. We will select the split that yields the lowest impurity.
+Given a loss function $\ell$ and assuming the tree structure (and thus the leaves $f$) are fixed, how should we define the leaf combiner $q(f)$? From the equation above, we can already see that $L(f)$ is minimised if $q(f) = \arg\min_{z} \sum_{i \in f} \ell(y_{i}, z)$. That is, $q(f)$ is a centroid with respect to $\ell$.
+\paragraph{Squared Error and Variance reduction} A commonly used impurity measure for regression is the squared-error variance.
 $$
-\arg \min_{\Theta} ~ \frac{n_{L}}{n} H(L_{\Theta}) + \frac{n_{R}}{n} H(R_{\Theta})
+H_{\text{var} }(f) = \frac{1}{n_{f}} \sum_{i\in f} (y_{i} - \bar{y})^2 \hspace{1em} \text{for~} \bar{y} \defeq \frac{1}{n_{f}} \sum_{i \in f} y_{i}
 $$
-The gain in purity is then the difference between impurities before and after the split.
+$\bar{y} = \arg\min_{z} \sum_{i \in f} (y_{i} - z)^2$ is a centroid with respect to the squared-error loss.
+Splitting according to $H_{\text{var}}$ minimises the squared-error loss of the tree if the leaf combiner is the arithmetic mean, $q(f) = \bar{y}$.
+
+\paragraph{\zeroone-loss and majority vote} The majority vote is a centroid with respect to the \zeroone-loss. The implied impurity measure is the error rate.
+$$
+H_{0/1}(f) = \frac{1}{n_{f}} \sum_{i \in f} \Lzo{y_{i}}{q(f)}
+$$
+
+\paragraph{Entropy and Information Gain} We can further express the loss of a leaf $L(f)$ for each of the classes $k$ separately. Further, let us assume the leaf combiner provides a probability distribution over the classes $k$ (this is without loss of generality since predicting a single class can be seen as a one-hot distribution). Let $q(f)_{k}$ be the $k$-th entry of the distribution $q(f)$. Then
 \begin{align}
-\text{\textit{Purity Gain}: } \hspace{1em}
-H(P) - \left(  \frac{n_{L}}{n} H(L_{\Theta}) + \frac{n_{R}}{n}H(R_{\Theta}) \right)
-\label{eq:purity-gain}
+\begin{split}
+\label{eq:leaf-loss-per-class}
+L(f) &= \frac{1}{n_{f}} \sum_{i \in f} \ell(y_{i}, q(f)) \\
+&= \frac{1}{n_{f}} \sum_{i\in f} \sum_{k} ~\ind{y_{i} = k} ~\ell(k, q(f)_{k}) \\
+&= \sum_{k} \sum_{i \in f} \frac{1}{n_{f}} ~\ind{y_{i} = k} ~ \ell(k, q(f)_{k}) \\
+&= \sum_{k} p_{fk} ~ \ell(k, q(f)_{k})
+\end{split}
 \end{align}
-Note that this is different from the gain in \textit{loss} achieved due to a split. 
-
-
-We now proceed to define two commonly used splitting criteria. These are the Gini impurity for classification and Variance Reduction (also known as \textsc{Cart}) for regression \cite{tibshirani_ElementsStatisticalLearning_2017}.
-For a splitting function criterion to produce useful decision trees, a reasonable impurity measure should also imply a positive loss gain. Often, this is intuitively clear but particularly for the case of Gini impurity, a comprehensive explanation appears to be hard to find in the literature. We clarify this in the following.
-
-\subsubsection{Variance Reduction for regression estimates}
-\marginnote{In binary classification, i.e. if outcomes are in $\{0,1\}$, the squared error reduces to the \zeroone-loss. As such, the mean \zeroone-loss, i.e. the error rate, trivially also is a measure of variance.
-% OK this is really quite trivial, not sure whether we should keep
-}
-\marginnote{
-    \textit{Recap}: $P$ is the parent node before the split with combiner $y_P$. $L$ and $R$ are the two child nodes after a split with combiners $y_L$ and $y_R$. 
-}
-
-A commonly used impurity measure for regression is the squared-error variance. 
+Consider the negative entropy impurity measure
 $$
-H_{\text{var}}(P) \defeq \frac{1}{n_{P}} \sum_{i \in P} (y_{i} - y_{P})^2 \hspace{2em} \text{for} \hspace{1em} y_{P} \defeq \frac{1}{n_{p}}\sum_{i\in P}y_{i}
+H_{\text{entr} }(f)  = \sum_{k} p_{fk} \log(p_{fk})
 $$
-To motivate this impurity measure, it remains to be shown that a split guided by this impurity measure actually reduces the value of a specific loss function and which one that is. Luckily, it is easy to see that this holds for the squared error loss. Plugging the definition into the purity gain (eq. (\ref{eq:purity-gain})) yields
-$$
-H(P) = \frac{1}{n_{P}} \sum_{i \in P} (y_{i} - y_{P})^2
-= \frac{1}{n_{P}}  
-\underbrace{
- \sum_{i \in L} (y_{i} - y_P)^2 
- }_{\ell_{L}(y_{P})}
- +
-\frac{1}{n_{P}}
- \underbrace{
- \sum_{i \in R} (y_{i} - y_{P}) ^2
- }_{\ell_{R}(y_{P})}
-$$
-and
-$$
-\frac{n_{L}}{n_{P}} H(L) +
-\frac{n_{R}}{n_{P}} H(R) = 
-\frac{n_{L}}{n_{P}} \frac{1}{n_{L}} 
-\underbrace{
-\sum_{i \in L} (y_{i} - y_{L})^2
-}_{\ell_{L}(y_{L})}
-~ + ~ 
-\frac{n_{R}}{n_{P}} \frac{1}{n_{R}}
-\underbrace{
- \sum_{i \in R} (y_{i} - y_{R})^2
-}_{\ell_{R}(y_{R})}
-$$
-By lemma \ref{lemma:loss-gain-nonnegative}, we can directly conclude that the loss gain is positive for any split if the arithmetic mean is used as a leaf combiner.
+If the leaf combiner is the distribution of classes in $f$, i.e. $q(f) = p_{f} = [p_{f_{1}}, \dots, p_{fK}]^\top$ then $H_{\text{entr}}$ maximises $\ell(k, q(x_{i})) = - \log q(x_{i})_{k} = -\log p_{fk}$. Rewriting this over all examples, this is the \textit{log-loss}, also known as \textit{cross-entropy} loss.
 
-\subsubsection{Gini Impurity for class labels}
-\label{sec:gini-impurity}
+\paragraph{Gini impurity} 
+To measure the purity of class labels in a cell, one may consider the probability of drawing two different outcomes from the examples in the current cell. 
+Let $p_{f}$ be the probability distribution of classes in leaf $f$. Let $p_{fk}$ be the probability of drawing an example of class $k$ from leaf $f$.
+The probability of drawing one example of class $k$ and one of a different class is $p_{fk}(1-p_{fk})$.
+The probability of drawing two examples of \textit{any} two different classes then is the \textit{Gini impurity}
+$$
+H_{\text{Gini}}(f) \defeq \sum_{k}p_{fk}(1-p_{fk}) = \sum_k p_{fk} - \sum_k p_{fk}^2 = 1 - \sum_k p_{fk}^2
+$$
+Analogous to the analysis for $H_{\text{entr}}$, let the leaf combiner be the class distribution in $f$, that is $q(f) \defeq p_{f}$.
+From \cref{eq:leaf-loss-per-class}, we can see that $H_{\text{Gini}}$ minimises $\ell(y_{i}, q(x_{i})) = 1 - q(x_{i})_{y_{i}}$, i.e. it maximises the probabilty of the target class.
+It remains to be seen that $q(f) = p_{f}$  is in fact a centroid with respect to $\ell$. The centroid is
+\begin{align*}
+\arg \min_{z} \frac{1}{n_{f}} \sum_{i \in f} (1 - z_{y_{i}}) \equiv \arg\max_{z} \frac{1}{n} \sum_{i \in f} z_{y_{i}}
+\end{align*}
+Let $e_{k}$ be the vector that contains $1$ at position $k$ and $0$ otherwise. Then 
+$$
+z_{y_{i}} = \inner{z}{e_{y_{i}}}
+$$
+Further, $\frac{1}{n_{f}} \sum_{i} e_{y_{i}}$ is exactly the vector of class frequencies $p_{f}$. Continuing, we have
+\begin{align*}
+\arg\max_{z} \frac{1}{n} \sum_{i \in f} z_{y_{i}} &= \arg \max_{z} \inner{z}{\frac{1}{n} \sum_{i} e_{y_{i}}}  \\
+&= \arg \max_{z} \inner{z}{p_{f}}
+\end{align*}
+which is maximised if and only if $z = p_{f}$.
+
+% We now proceed to define two commonly used splitting criteria. These are the Gini impurity for classification and Variance Reduction (also known as \textsc{Cart}) for regression \cite{tibshirani_ElementsStatisticalLearning_2017}.
+% For a splitting function criterion to produce useful decision trees, a reasonable impurity measure should also imply a positive loss gain. Often, this is intuitively clear but particularly for the case of Gini impurity, a comprehensive explanation appears to be hard to find in the literature. We clarify this in the following.
 
 
-% TODO references:
+
+
+% TODO references for gini impurity and margin maximisation
 % - leistner2009 3.1 for def of margin vector, relation to empirical node error
 % - sklearn user guide 1.10.7.1 for definition of gini split crit
 % - CART
 % TODO so, how would this behave if we actually used it for classification? since sqerr sort of reduces to 0-1-loss?
 
-To measure the purity of class labels in a cell, one may consider the probability of drawing two different outcomes from the examples in the current cell. 
-Let $p_{k}$ be the probability of drawing an example of class $k$ from node $P$.
-% TODO ($\prob{.}{.}$ is the estimated density in the node $P$ and alos the leaf combiner)
-The probability of drawing one example of class $k$ and one of a different class is $p_{k}(1-p_{k})$.
-% TODO parameterise, make region explicit?
-The probability of drawing two examples of \textit{any} two different classes then is the \textit{Gini impurity}
-$$
-H_{\text{Gini}}(P) \defeq \sum_{k}p_{k}(1-p_{k}) = 1 - \sum_k p_k^2
-$$
-% TODO proper definition, box?
-We will now argue that a reduction in the Gini impurity in fact pushes values $p_{k}$ to the extremes of the probability simplex. 
-We perform a slight shift in perspective and consider the classification \textit{margin} (see \ref{def:classifier-margin}) instead of the estimated probabilites. 
- The margin can be thought to represent the classifier's confidence in its prediction. $\prob{}{k|x}$ describes the probability estimated by the classifier that $X$ is of class $k$.
 
 % TODO code snippet illustration plot of margin vector -- should be simple
 % TODO disallow page breaks in these boxes
-\begin{definition} (Classifier margins \cite{tibshirani_ElementsStatisticalLearning_2017}) The margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
-$$
-m(x,y) \defeq \prob{}{y|x} - \max_{j\not=y} \prob{}{j|x}
-$$
-\begin{itemize}
-    \item The vector $m(x) = [m_{1}(x), \dots, m_{K}(x)]^\top$, where $K$ is the total number of classes, is called a \textit{margin vector} iff its components sum to zero. 
-    \item For a pair $(X,y)$ of example and true outcome, the model's prediction is correct iff $m_y(x) > 0$ 
-\end{itemize}
-\label{def:classifier-margin}
-\end{definition}
 % margin reflects notion of classifier confidence: here, yes, but not necessarily for RF margin
 
-We will argue that the Gini impurity split criterion, which finds a split such that the Gini impurity is reduced, maximises the classification margins.
-
-\begin{proposition} $\star$ ~ Let $p$ be a probability distribution and $u$ an arbitrary vector.
-   % TODO not fully arbitrary,needs to be a valid argument for breg 
-    Let $G =\sum_{k} p_{k}(1-p_{k})$ be the Gini impurity. Then $-G$ is the generator for the Bregman divergence
-$$
-\sBreg{-G}{p}{u} = \sum_{k}(p_{k}-u_{k})^2
-$$
-\end{proposition}
-\begin{proof}
-Let $\phi(q) \defeq (-1) \sum_{k} p_{k}(1-p_{k})$ as assumed.
- \begin{align*}
-\sBreg{-G}{p}{u} &=  
-\underbrace{(-1) \sum_{k} p_{k}(1-p_{k})}_{\phi(p)} 
- ~ ~ - ~ ~  
-\underbrace{(-1) \sum_{k} u_{k}(1-u_{k})}_{\phi(u)}  
-~ ~ - ~ ~  
-\underbrace{\sum_{k} (2u_{k}-1)(p_{k}-u_{k})}_{\langle \nabla \phi(u), p-u \rangle} \\  
- &= \sum_{k} (p_{k}-u_{k})^2
-\end{align*}
-the first equality follows by definition of a Bregman divergence (see \ref{def:bregman-divergence}) and the second equality by arithmetic.
-\end{proof}
-
-
-Note further that maximising the value of the generator function $\phi$ with respect to $p$ while leaving the the other parameter $u$ fixed also maximises the divergence $\Breg{p}{u}$. 
-% TODO
-\sidenote{TODO explain, at least with intuition. Convexity of generator etc.}
-The sign of the generator value and the sign of the divergence are related in that  $\sBreg{-\phi}{p}{u} = - \Breg{p}{u}$.
-This means that minimising the Gini impurity during splitting maximises component-wise sum of squared errors between $p$ and $u$.
-$$
-\min G \rightarrow \min \sBreg{G}{p}{u} \rightarrow \max \sBreg{-G}{p}{u} = \sum_{k}\left( p_{k} - u_k \right)^2
-$$
-% TODO this is a separable bregman divergence, where else have we seen that?
-% TODO this seems to be the "generalised square euclidean distance", see https://franknielsen.github.io/BregmanDivergenceDualIGGenConvexity-25Nov2021.pdf / Scalar and separable Bregman divergences
-% TODO cite "on the universality of the logistic loss function"
-
-If $p$ is a class probability distribution and $u \defeq [\nicefrac{1}{k}, \dots, \nicefrac{1}{k}]^\top$ a uniform distribution, then $p-u$ is a margin vector and the optimisation corresponds to maximising the classification margins as measured by the squared error.
-
-A common approach in training classification models
-is \textit{margin maximisation} \cite{schapire_BoostingFoundationsAlgorithms_2012}
-in which we aim to maximise the margin of the true label $m_{y}(X)$. 
-A margin loss function $\ell : \mathbb{R} \to \mathbb{R}$ is a \textit{margin-maximising} loss if $\ell'(m_{y}(X)) \leq 0$ for all values of $m_{y}$ \cite{leistner_SemiSupervisedRandomForests_2009}.
-\marginnote{
-    An example for a margin-maximising loss function is the \textit{hinge loss} defined as
-    $\ell(m_{y}(x)) \defeq  \max \{ 0, 1-p \}$. Its subderivative is 
-    $$
-    \frac{\partial\ell}{\partial p} = \begin{cases}
-    -1 & p \leq 1 \\
-    0 & \text{else}
-    \end{cases}
-    $$ and hence it is a margin-maximising loss.
-}
-% \begin{marginfigure} \label{fig:hinge-loss}
-%     \includegraphics[width=\textwidth]{symlinks/illustrations/mini-fn-plots/hinge-loss.png}
-%     \includegraphics[width=\textwidth]{symlinks/illustrations/mini-fn-plots/hinge-loss-grad.png}
-%     % TODO put these in same figure after all and mention that hinge loss can be seen as upper bound of 0-1-loss
-%     % TODO too hard to read, should have different colours
-% \end{marginfigure}
-%
-A decision tree can also be evaluated based on a margin loss.
-The empirical error of a decision tree node $P$ with respect to a margin loss $\ell$ can be written as $L(P) = \frac{1}{|P|} \sum_{i \in P} \ell\left(m_{y}(x_{i})\right)$ where $m_{y}(x_{i})$ is the value of the true margin. Then the following holds \cite{leistner_SemiSupervisedRandomForests_2009}.
-\begin{align*}
-L(P) &= \frac{1}{|P|}\sum_{i \in P} \sum_{k} \ind{y_{i}=k} ~ ~ \cdot ~ ~  \ell   \left( m_y(x_i) \right)  \\
-&= \sum_{k}  
-\frac{1}{|P|} \sum_{i \in P} \ind{y_{i}=k}
-~ ~ \cdot ~ ~ 
-\ell(m_{y}(x_{i})) \\
-&= \sum_k p_k(x_i) \ell(m_y(x_i))
-\end{align*}
-In summary, the Gini impurity splitting criterion greedily optimises classification margins and thus margin-maximising losses.
-
-\subsubsection{Information Gain for class probabilities}
-
-Another common impurity measure is the \textit{Shannon entropy}. Let $p_{k}$ be the probability of drawing an example of class $k$ from node $P$.
-$$
-H_{\text{entr}}(P) \defeq -\sum_{k} p_{k} \log p_{k}
-$$
-The purity gain with respect to the entropy is referred to as \textit{information gain}.
-Seeing that the negative entropy is the Bregman generator of the KL-divergence (see table \ref{tab:bregman-examples}), one can apply similar arguments to see that constructing a tree using the entropy impurity measure corresponds to greedily optimising for a KL-divergence whose second argument is a uniform distribution -- which is also known as \textit{relative entropy} or \textit{cross-entropy}.
-$$
-- \frac{1}{n} \sum_{i}^n \sum_k \mathbf{1}\left[y_i=k\right] \log(p_k(x_i))
-$$
-
-% TODO check definitions, got this from a LLM
-% TODO reconcile with marginnote above
 
 % TODO maybe margin note on tsallis entropies
 % TODO cite these two
@@ -274,36 +150,17 @@ $$
 
 % TODO: i.e. each tree level is sort of a margin boosting step, cf margin analysis of boosting; ADF etc.
 
-\subsubsection{Relationship to $2$-means clustering}
-% TODO different heading that suggests the core statement
+% TODO this does not really apply since weve realised traditional DT construction is not so much about breggies... put in outlook where we already mention k-means thing
+% \subsubsection{Relationship to $2$-means clustering}
+% % TODO different heading that suggests the core statement
 
-% TODO so "loss gain" / "purity gain" somethign there is really k-means objective?
-% so: decision tree construction = boosting for greedy opt of that? in some sense
+% % TODO so "loss gain" / "purity gain" somethign there is really k-means objective?
+% % so: decision tree construction = boosting for greedy opt of that? in some sense
 
 
-As established in section \ref{sec:splitting-criteria-greedily-minimise-loss-functions}, splitting criteria aim to find a binary partition of the examples in the parent node. The quality of a partition is evaluated according to the purity of the labels. Note that the example features are not considered at all here. If indeed a centroid is chosen as leaf combiner, the notion of impurity is very similar to the objective function of $k$-means clustering on the class labels.
-% TODO this might be a good place to reconsider spaeh
+% As established in section \ref{sec:splitting-criteria-greedily-minimise-loss-functions}, splitting criteria aim to find a binary partition of the examples in the parent node. The quality of a partition is evaluated according to the purity of the labels. Note that the example features are not considered at all here. If indeed a centroid is chosen as leaf combiner, the notion of impurity is very similar to the objective function of $k$-means clustering on the class labels.
+% % TODO this might be a good place to reconsider spaeh
 
-Let $I_{\phi}$ be the Bregman information as defined in definition \ref{def:bregman-information}. Let $X$ be a random variable representing data points. Let $M$ be a random variable taking values in $\mathcal{M}$ representing the set of cluster centroids. Then the objective for generalised $k$-means hard clustering \cite{banerjee_ClusteringBregmanDivergences_2004} is to minimise the loss in Bregman information due to the quantisation induced by $M$:
-$$
- \ell_{\phi}(M) \defeq I_{\phi}(X) - I_{\phi}(M)
-$$
-One can show \cite{banerjee_ClusteringBregmanDivergences_2004} that
-$$
-\ell_{\phi}(M) = \mathbb{E}_{\pi}\left[ I_{\phi}(X_{k}) \right]  \approx \sum_{h=1}^K \sum_{x_{i} \in \mathcal{X_{k}}} \mathcal{v}_{i} \Breg{x_{i}}{\mu_{h}}
-% TODO what is pi?
-$$
-where $K$ is the number of clusters, $\mathcal{X}_{k}$ are the cells of the clustering, $\mathcal{v}_{i}$ is the distribution of the $x_{i}$ and $\mu_{k}$ is the right Bregman centroid of $\mathcal{X}_{k}$.
-
-Classical $k$-means is a special case of this for the squared-error divergence. The KL-divergence implies the mutual information as a variance and yields \textit{information-theoretic clustering} \cite{todo}. The Ikura-Saito divergence yields the \textit{LBG algorithm} \cite{todo}.
-
-% TODO the idea of generalised variance is already introduced in introduction on bregman divs -- maybe move ideas about clustering to there; here only bring the corollary that choice of loss implies impurity measure (and leaf combiner, ought to be bregman centroid)
-% or maybe move to outlook
-
-Particularly relevant for decision trees is the following insight: The choice of Bregman divergence implies a measure of variance (see \ref{def:bregman-information} for examples). Optimising for this measure of variance implies the splitting criterion \sidenote{The leaf combiner, which corresponds to the right Bregman centroid is independent on the chosen divergence, see \ref{def:bregman-centroids}.}. This gives a theoretical rationale for choosing splitting function and leaf combiner in decision trees.
-% TODO put down this practical advise more prominently!
-
-% TODO note that ambiguity-effect could then be a generalised variance for 0/1-loss
 
 % \subsection{Stopping Criteria \& Tree depth}
 
@@ -316,76 +173,60 @@ Particularly relevant for decision trees is the following insight: The choice of
 % TODO indeed, high variance of ensemble members is "wanted" in ensembling -- else no room for improvement
 % in other words, ensembling only "effective" for high variance learners
 
-\marginfigfromsource{fig:variance-vs-tree-depth}{symlinks/illustrations/bias-variance/variance-vs-tree-depth}
 
 The deeper a decision tree is grown, the closer the resultig partition cells will fit the training data. This approximation is in fact guided \textit{only} by the training data. In the extreme case, if the tree is fully grown, each partition cell will correspond to a single example and the outcome for that cell will be the outcome of that example. The tree essentially turns into a $1$-nearest-neighbour scheme with respect to the training dataset. This means that trees constructed with different samples $D$ of training datasets from the original distribution $P(X,Y)$ potentially predict quite different outcomes for testing examples. This is captured in the concept of learner variance as defined in \ref{sec:bias-variance-effects}. In \ref{fig:variance-vs-tree-depth}, one can indeed observe that trees of greater depth have greater variance. At the same time, their fit to the training data improves, which is captured by lower bias.
+% \marginfigfromsource{fig:variance-vs-tree-depth}{symlinks/illustrations/bias-variance/variance-vs-tree-depth}
 % so learner variance and correlation are really tightly the same
 % \marginnote{
     % TODO extremly randomized trees -> essentially constant variance?
 % }
 Mitigating this strong dependence on the training data is one of the main motivations of Random Forests. The basic idea is as follows: If we produce several uncorrelated decision trees and average their predictions, then the predictions should exhibit lower variance
-In standard forests, this is achieved by introduceing randomness into the decision tree construction algorithm by two mechanisms:
+In standard forests, this is achieved by introduceing randomness into the decision tree construction algorithm by two mechanisms \cite{scornet_ConsistencyRandomForests_2015,breiman_RandomForests_2001}:
 \begin{itemize}
 \item \textit{Bootstrapping}: Each tree is constructed not on the entire training dataset but a random subset of it. Usually, this \textit{bootstrap sample} is produced by drawing the same amount of points with replacement.
 % TODO some considerations on how bootstrapping is actually a vital component
-\item \textit{Random feature selection}: When determining where to split a node, not all features are considered but only a random subset of a certain size.
+\item \textit{Random feature selection}: When determining where to split a node, not all features are considered but only a random subset of a given size.
 % TODO maybe some references....
 \end{itemize}
 
-Thus, a random forest additionally requires the following parameters:
-% TODO
+The predictions of individual trees are aggregated to form the forest prediction. Unlike single decision trees, trees in Random Forests are usually grown until each leaf is perfectly pure. Besides their theoretical appeal, Random Forests have several practical advantages.
 \begin{itemize}
-\item number of trees...
-% see e.g. scornet
+    \item The construction of individual trees is easily parallelisable.
+    \item The trained forest model is relatively small: Only decision rules and leaf outputs need to be stored.
+    \item Inference is comparatively fast.
+    \item A Random Forest model naturally provides a measure of feature importance \cite{breiman_ClassificationRegressionTrees_2017}.
+    \item Random Forests models naturally support classification tasks with more than two target classes.
+    \item They are well-suited for problems with extremely high feature dimensionality \cite{yang_ReviewEnsembleMethods_2010}.
+    \item There are few hyperparameters to pick and common choices have been shown to work robustly across a wide range of tasks. % TODO cite
+    \item They are not prone to overfitting (\cf \cref{sec:diversity-rfs-nns}).
 \end{itemize}
 
-
-% TODO practical advantages
-% parallelisable, oob estimation, feature importance, proximity, directly allow more-than-binary classification
-% small model size (only need to store decision rules and leaf outputs)
-
-% TODO default params are good choice
-
-
-% TODO for the following subsections: default params/implementation, review on their effects
 
 \subsection{Bagging}
 \label{sec:bagging}
 
-A vital ingredient to Random Forests is the \textit{Bagging} procedure, which stands for \textit{bootstrapping and aggregating}. Bagging is an ensemble learning technique not specific to Random Forests. In Bagging, each member is constructed not on the full training dataset but a \textit{bootstrap sample} of it. The bootstrap sample is usually determined by drawing $n$ out of $n$ examples uniformly with replacement \cite{breiman,others}. We will refer to this as \textit{uniform bootstrapping}. One can also determine the bootstrap sample by drawing $n$ out of $n$ points with replacement according to a probability distribution $\{p_1, ..., p_n\}$, which we call \textit{weighted bootstrapping}. Bootstrapping means that each member will be trained on a different dataset. 
-
 \marginnote{
 In uniform bootstrapping, if we draw $n$ samples from $n$ available points, the probability of an example being selected in a single draw is $\frac{1}{n}$. Conversely, the probability of an example not being selected in a single draw is $1-\frac{1}{n}$. We draw $n$ times. Hence, the probability of an observation not being selected in any of the draws is $(1-\frac{1}{n})^n$. The probability of an example indeed being selected in at least one of the draws then is $1 - (1 - \frac{1}{n})^n$.  For large $n$, one can approximate $\lim_{ n \to \infty }1-(1-\frac{1}{n})^n = 1- e^{-1} \approx 0.632$ \cite{buschjager_ThereNoDoubleDescent_2021}.
 }
+A vital ingredient to Random Forests is the \textit{Bagging} procedure, which stands for \textit{bootstrapping and aggregating}. Bagging is an ensemble learning technique not specific to Random Forests. In Bagging, each member is constructed not on the full training dataset but a \textit{bootstrap sample} of it. The bootstrap sample is usually determined by drawing $n$ out of $n$ examples uniformly with replacement \cite{breiman_RandomForests_2001,buschjager_GeneralizedNegativeCorrelation_2020}. We will refer to this as \textit{uniform bootstrapping}. One can also determine the bootstrap sample by drawing $n$ out of $n$ points with replacement according to a probability distribution $\{p_1, ..., p_n\}$, which we call \textit{weighted bootstrapping}. Bootstrapping means that each member is trained on a different dataset. 
+
 
 % randomization
 
-\subsection{Feature \& Split selection}
-
-% randomization
-
-\subsection{Number of trees}
-
-\subsection{Depth of trees}
-
-\subsection{Random Forests converge}
+% \subsection{Random Forests converge}
 
 
-As the number of trees increases, for almost surely all sequences $(\Theta_{1}, \dots)$, the generalisation error $PE^\star$ converges:
-$$
-% TODO uhh doesnt really make sense, check reference
-\mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}(X)) \right]  \to
-% PE^\star \to 
-% \prob{\vec{X}, Y}{\left(\prob{\Theta}{q(\vec{X}, \Theta)=Y} - \max_{j \neq Y} \prob{\Theta}{q(X; \Theta) = j } \right) < 0
-% } = 
-\prob{\vec{X}, Y}{
-\mr(\vec{X}, Y)  < 0
-}
-$$
-
-\subsection{Random Forests do not overfit}
-
-\subsection{Random Forests are consistent}
+% As the number of trees increases, for almost surely all sequences $(\Theta_{1}, \dots)$, the generalisation error $PE^\star$ converges:
+% $$
+% % TODO uhh doesnt really make sense, check reference
+% \mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}(X)) \right]  \to
+% % PE^\star \to 
+% % \prob{\vec{X}, Y}{\left(\prob{\Theta}{q(\vec{X}, \Theta)=Y} - \max_{j \neq Y} \prob{\Theta}{q(X; \Theta) = j } \right) < 0
+% % } = 
+% \prob{\vec{X}, Y}{
+% \mr(\vec{X}, Y)  < 0
+% }
+% $$
 
 \subsection{Tree and Forest Partitions}
 \label{sec:tree-and-forest-partitions}
@@ -393,13 +234,6 @@ $$
 The generalisation error, and consequently individual terms of any decomposition of it have been defined point-wise. That is, they are measured by an expectation over possible realisations of example-outcome pairs $(X,Y)$. They further depend on a random variable $D$ representing the training input to the learner. In order to estimate such an expectation for a given model (a realisation of $D$), one has to sample realisations of $(X,Y)$. In practise, these example-outcome pairs typically come from a validation dataset that was withheld from training.
 We have seen in \ref{todo} that for some losses, diversity can be expressed independently of the outcome variable $Y$. 
 To approximate an actual value, we would still need to sample realisations of $X$.
-
-\begin{marginfigure}
-    \includegraphics[width=\textwidth]{figma-illustrations/tree-partition.pdf}
-    \label{fig:tree-partition}
-    \caption{A decision tree partitioning the data space. For a query example, the corresponding leaf node is determined by traversing the tree downwards from the root node and applying the learned decision criteria.}
-% TODO I think this fig does not really provide any value here
-\end{marginfigure}
 
 Decision Trees, particularly if grown deeply, can be considered to \textit{approximate} the training data, i.e. they are a lossy representation of the training data. A grown decision tree model contains two kinds of parameters, both derived from the training data $D$.
 \begin{itemize}
@@ -415,7 +249,7 @@ This leads to the question whether characteristics of a Random Forest model coul
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{figma-illustrations/forest-partition.pdf}
     \label{fig:forest-partition}
-    \caption{The data space $\mathcal{X}$ (gray) and partitions $P_1$ (purple) and $P_2$ (red) of it induced by two decision trees. The intersections of any cell of $P_1$ and any cell of $P_2$ form the \textit{forest partition}. One such intersection is highlighted in yellow.
+    \caption{The \tcircle{gray} data space $\mathcal{X}$ (gray) and partitions \tcircle{purple} $P_1$ and \tcircle{red} $P_2$  of it induced by two decision trees. The \tcircle{yellow} intersections of any cell of $P_1$ and any cell of $P_2$ form the \textit{forest partition}. One such intersection is highlighted in yellow.
     }
 \end{marginfigure}
 Each level of a decision tree induces a partition of the space of examples $\mathcal{X}$. Because each example is associated with an outcome, we can also think of it as a partition of $(\mathcal{X}, \mathcal{Y})$. We call such a partition a \textit{tree partition} and a cell a \textit{tree cell}.
@@ -437,14 +271,18 @@ $$
 $$
 }
 Consider a forest partition $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ of $Z=(X,Y)$. Using the linearity of expectations and the law of total expectation, we can write the generalisation error of the forest as follows. 
-\begin{proposition} $\star$
+\begin{proposition} 
+   \label{thm:random-forest-structure} 
+    $\star$ The generalisation error of a random forest model can be expressed in terms of intersections of tree cells.
 % TODO definitions
 $$
 \mathbb{E}_{Z,D}\left[ \ell(y,\bar{q}) \right] = \mathbb{E}_{D}\left[ \sum_{p=1}^P \prob{}{Z_{p}} \cdot \mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]   \right] 
 $$
-\end{proposition}
+\end{proposition} 
 % TODO maybe more precise derivation
-While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In section \ref{sec:later} we will see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
+A similar statement can be made for the simpler case of a single decision tree and is used in \cref{sec:decision-trees}.
+
+While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In \cref{sec:diversity-rfs-nns} we see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
 
 
 \end{document}

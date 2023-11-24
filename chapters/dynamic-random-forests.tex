@@ -305,6 +305,7 @@ We evaluate this approach on multiple non-binary classification problems.
 
 
 \begin{observation} 
+     % TODO
     ... dont seem to gain anything
 \end{observation}
 
@@ -345,31 +346,35 @@ Likewise, for a given ensemble, we look at the distribution of ensemble margin p
 
 \subsection{Ensemble size and generalisation error}
 
+\subsubsection{Binary classification}
+
 We evaluate the overall ensemble generalisation error of ensembles produced by different weighting strategies. We emphasize that we make no claims about the applicability of a specific learner to a specific dataset. We specifically picked the benchmark datasets to provide diverse classification problems. The datasets have different properties: some are higher-dimensional and some have a high best achievable error rate, implying that the data may be noisy. Likewise, we make no claims about the adequacy of hyperparameter choices for a given dataset. 
 We merely compare different strategies on the same benchmark datasets and for the same hyperparameter choices.
 
 \begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/spambase-openml/get_expected_ensemble_loss.png}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/sdrf_sigmoid/spambase-openml/get_expected_ensemble_loss.png} 
     \caption{...}
     \label{fig:ensemble-loss-spambase-openml}
 \end{marginfigure}
 \begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/cover/get_expected_ensemble_loss.png}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/drf_sigmoid/cover/get_expected_ensemble_loss.png}
     \caption{...}
     \label{fig:ensemble-loss-cover}
 \end{marginfigure}
 \begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/diabetes/get_expected_ensemble_loss.png}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/drf_sigmoid/diabetes/get_expected_ensemble_loss.png}
     \caption{...}
     \label{fig:ensemble-loss-diabetes}
 \end{marginfigure}
 
+Let us first consider the weighting function for binary classification tasks.
+In \cref{tab:models-generalisation-error-binary}, we compare the minimum achieved generalisation error over all values of $M$. As already observed in the literature \cite{bernard_SelectionDecisionTrees_2009,buschjager_ThereNoDoubleDescent_2021}, the generalisation error can be expected to be a decreasing function of the number of trees, given that the data is sufficiently large and regular. In \cref{fig:ensemble-loss-diabetes,fig:ensemble-loss-spambase-openml}, we can observe that the behaviour can be irregular for some datasets, although a decreasing trend is still clear. 
+
  \begin{table}[!ht]
     \begin{tabular}{llllll}%
-    % \bfseries Time (s) & \bfseries Zeroed time (s)% specify table head
     \csvreader[
         head=false
-    ]{symlinks/zero-one-plots/compare_models/get_expected_ensemble_loss.csv}{}
+    ]{symlinks/zero-one-plots/compare_models/drf_sigmoid/get_expected_ensemble_loss.csv}{}
     % use head of csv as column names
     {\\\hline
     \csvcoli&
@@ -381,9 +386,35 @@ We merely compare different strategies on the same benchmark datasets and for th
     }% specify your coloumns here
     \end{tabular}
     \caption{minimum ensemble test error achieved over all $M$}
-    \label{tab:models-generalisation-error}
+    \label{tab:models-generalisation-error-binary}
  \end{table}
 
+
+In \cref{tab:models-generalisation-error-nonbinary}, we analyse the dynamic threshold weighting function $w_\text{dyn}$ for non-binary classification tasks. We additionally include $w_\text{lerp}$ in the comparison but note that it's theoretical motivation here is lacking: It is based on a classification threshold of $\nicefrac{1}{2}$, which does not apply to non-binary classification problems. $w_\text{DRF}$ was derived with a threshold of $\nicefrac{1}{2}$ but can be applied to any threshold since it is a linear function.
+
+ \begin{table}[!ht]
+    \begin{tabular}{lllll}%
+    \csvreader[
+        head=false
+    ]{symlinks/zero-one-plots/compare_models/dynamic_threshold/get_expected_ensemble_loss.csv}{}
+    % use head of csv as column names
+    {\\\hline
+    \csvcoli&
+    \csvcolii&
+    \csvcoliii&
+    \csvcoliv&
+    \csvcolv
+    }% specify your coloumns here
+    \end{tabular}
+    \caption{minimum ensemble test error achieved over all $M$}
+    \label{tab:models-generalisation-error-nonbinary}
+ \end{table}
+
+ \begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/dynamic_threshold/digits/get_expected_ensemble_loss.png}
+    \caption{...}
+    \label{fig:dynamic_thresholds-digits-ensemble_loss}
+ \end{marginfigure}
 
  \begin{observation} ~~ % TODO observation
     \begin{itemize}

@@ -47,7 +47,7 @@ This perfectly divides the ensemble error into error due to characteristics of t
 This decomposition was originally given for the squared-error loss \cite{krogh_NeuralNetworkEnsembles_1995} and the KL-divergence \cite{todo}. We will treat this quantity in detail in the rest of this chapter. Right now, note that the ambiguity term can be interpreted as a measure of \textit{variance} where individual distances are measured by the loss $\ell$. For the squared-error loss and the arithmetic mean combiner, this is exactly the "statistical" variance over the members $\Mavg \left(q_{i} - \Mavg q_{i}\right)^2$. For other loss functions, this yields other well-known quantities (see definition \ref{def:bregman-information}).
 
 \subsection{Impurity} 
-\citeauthor{KohaviWolpert} give a bias-variance decomposition of the \zeroone-loss as follows.
+\citeauthor{kohavi_BiasVarianceDecomposition_} \cite{kohavi_BiasVarianceDecomposition_} give a bias-variance decomposition of the \zeroone-loss as follows.
 $$
 \begin{align}
 \mathbb{E}_{}\left[ \Lzo{Y}{q(X)} \right] &= 
@@ -60,7 +60,7 @@ $$
 \end{align}
 $$
 Note that the variance and noise terms are of the form of the Gini impurity (see \ref{sec:gini-impurity}) and can be interpreted as measures of impurity.
-\citeauthor{kuncheva_MeasuresDiversityClassifier_2003} take inspiration from this variance term and proceed as follows. Instead of considering the impurity over positive or negative labels, they instead consider the impurity over labels for which the ensemble is correct ($\tilde{y} = +1$) or incorrect ($\tilde{y} = -1$), respectively. As such, the probability is not with respect to the distribution of labels but the distribution $\Theta$ of members in the ensemble. Let the number of correct classifiers on an example be $m_{+}(x) \defeq \sum_{j}^M \ind{q_{j}(x) = y(x)}$ where $y(x)$ is the true label of $x$. This yields
+\citeauthor{kuncheva_MeasuresDiversityClassifier_2003} \cite{kuncheva_MeasuresDiversityClassifier_2003} takes inspiration from this variance term and proceed as follows. Instead of considering the impurity over positive or negative labels, they instead consider the impurity over labels for which the ensemble is correct ($\tilde{y} = +1$) or incorrect ($\tilde{y} = -1$), respectively. As such, the probability is not with respect to the distribution of labels but the distribution $\Theta$ of members in the ensemble. Let the number of correct classifiers on an example be $m_{+}(x) \defeq \sum_{j}^M \ind{q_{j}(x) = y(x)}$ where $y(x)$ is the true label of $x$. This yields
 $$
 \text{var}'_{x} \defeq 1 - \sum_{\tilde{y}} \prob{\Theta}{q = \tilde{y} ~ |~ x}^2
 $$
@@ -71,12 +71,12 @@ Averaging this over the entire training dataset, this can be understood as a mea
 
 \subsection{Entropy}
 % TODO what is diversity term for KL-divergence? entropy? or rather, mutual information? (see section on bregman information)
-\citeauthor{cunningham_DiversityQualityClassification_2000} propose the entropy between member predictions as a diversity measure. For a single point, it is given as
+\citeauthor{cunningham_DiversityQualityClassification_2000} \cite{cunningham_DiversityQualityClassification_2000}propose the entropy between member predictions as a diversity measure. For a single point, it is given as
 $$
 \sum_{y \in \{ -1, +1 \}} - \prob{\Theta}{y ~|~x} \log \prob{\Theta}{y~|~x}
 $$
 where, for an ensemble, $\prob{\Theta}{y~|~x} \approx \Mavg \ind{q_{i}(x) = y}$.
-\citeauthor{shipp_RelationshipsCombinationMethods_2002} propose a target-dependent measure that is reminiscent of the entropy. With $m_{+}(x) = \sum_{j=1}^M \ind{q_{i}(x) = y(x)}$:
+\citeauthor{shipp_RelationshipsCombinationMethods_2002} \cite{shipp_RelationshipsCombinationMethods_2002}propose a target-dependent measure that is reminiscent of the entropy. With $m_{+}(x) = \sum_{j=1}^M \ind{q_{i}(x) = y(x)}$:
 $$
 \frac{1}{M - \ceil{\frac{M}{2}}} \min \{ m_{+}(x), M-m_{+}(x) \}
 $$
@@ -84,7 +84,6 @@ $$
 \subsection{Covariance}
 \label{sec:bias-variance-covariance}
 
-\paragraph{Covariance of members}
 In section \ref{sec:ensemble-learning-motivation}, we have already seen evidence that the covariance between members is an essential factor to ensemble performance. Indeed, the notion of covariance and uncorrelatedness has been a guiding thought in the literature \cite{didaci_DiversityClassifierEnsembles_2013, brown_ManagingDiversityRegression_2005, buschjager_GeneralizedNegativeCorrelation_2020}.
 We will now introduce an exact decomposition of the ensemble error for the squared-error loss that includes the average covariance between member predictions.
 \begin{theorem} (Bias-Variance-Covariance decomposition \ref{ueda_GeneralizationErrorEnsemble_1996, brown_ManagingDiversityRegression_2005})

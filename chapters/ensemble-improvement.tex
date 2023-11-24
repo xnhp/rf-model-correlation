@@ -20,7 +20,9 @@
 
 \section{Diversity for the \zeroone-Loss}
 \label{sec:diversity-zeroone}
-% TODO chapter intro
+While for Bregman divergences ensembling cannot hurt performance, this is not given for the general case. For the \zeroone-loss, a way forward is to impose assumptions on the performance of member models.
+In the remainder of this section, we will review some assumptions that imply ensemble effectivity and show that they are in fact tightly related. We begin by focussing on binary classification problems and then briefly consider non-binary problems.
+
 
 \begin{definition}
 \label{def:zeroone-loss}
@@ -56,6 +58,12 @@ $$
 As with other variables, we sometimes omit explicitly stating the dependence on $(X,Y)$. Further, we write $W_{\Theta} \defeq \mathbb{E}_{\Theta}\left[ \Lzo{Y}{q_{D, \Theta}} \right]$. For the complement, we write $\compl{W} \defeq 1 - W$
 \end{definition}
 
+\begin{lemma} (\cite{theisen_WhenAreEnsembles_2023}) The ratio of incorrect members in expectation over all examples is equal to the error rate of an average member.
+    \begin{align*} 
+    \mathbb{E}_{(X,Y) }\left[ W  \right]  = \mathbb{E}_{(X,Y) }\left[ \mathbb{E}_{D,\Theta}\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right]  = \mathbb{E}_{D,\Theta}\left[ \mathbb{E}_{(X,Y) }\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right] 
+    \end{align*}
+    \label{thm:W-lzo}
+\end{lemma}
 
 
 % TODO emphasize that this is sort of a "classic" bound and we provide it for context
@@ -179,7 +187,7 @@ For a classification problem with $k=2$ classes, let $y, \bar{q} \in \{ -1, 1 \}
 % \Mavg \Lzo{y}{q_{i}} - \left(\Mavg   \Lzo{y}{q_{i}} - 1 \right) = 1
 % $$       
 
-Note that this is a special case of the ambiguity-effect decomposition of theorem \ref{thm:ambig-effect-decomp}.
+Note that this is a special case of the ambiguity-effect decomposition of \cref{thm:ambig-effect-decomp}.
 There is a tradeoff between average member error and diversity. Here, however, diversity is not always beneficial. On points where the ensemble is incorrect, disagreements have a negative effect on the overall ensemble error.
 In other words, for majority vote ensembles, diversity is only beneficial \textit{on points at which the ensemble can actually afford to be diverse}. 
 
@@ -205,18 +213,18 @@ Good and bad diversity can be expressed solely in terms of the ratio of incorrec
 Analogous equalities hold in expectation over member parameter $\Theta$.
 \end{lemma}
 
-\subsection{Weak Learners}
+\subsection{Ensembles of weak Learners}
 
-A common idea is that, in order for ensembling to be effective, the performance of individual members must not be too bad. In the remainder of this section, we will review some assumptions that imply ensemble effectivity and show that they are in fact tightly related.
+The following result holds for an arbitrary number of classes. Note that this is also the assumption enabling \cref{thm:breiman}.
 
-% !! TODO check 
 \begin{definition} 
     % TODO relate to margin defs
     % TODO cite
-   \label{def:weak-learner}  (Weak learner)
-    need to check / reformulate this
-    % A model $q_\Theta$ is a \textit{weak learner} iff it performs better than as if randomly guessing, i.e. 
-    % $$\mathbb{E}_{(X,Y)}\left[ W_{\Theta}(X,Y) \right] \geq \nicefrac{1}{2}$$.
+   \label{def:weak-learner}  (Weak learner, \cite{theisen_WhenAreEnsembles_2023,wood_BiasVarianceDecompositionsMargin_2022})
+   A model $q_{\Theta}$ is a weak learner if and only if performs better than randomly guessing.
+$$
+\mathbb{E}_{(X,Y) }\left[ \Lzo{Y}{q_{\Theta}} \right] \geq \nicefrac{1}{2}
+$$
 \end{definition}
 
 \begin{theorem} 
@@ -232,18 +240,8 @@ $$
 ~ ~ \geq ~ ~ 0
 $$
 \end{theorem}
-% TODO at least provide intuition on why that is
-\begin{proof}
-... essentially using jury theorem
-\end{proof}
 
-% TODO double terms (diversity-effect and ensemble improvement), this is confusing, they're really the same thing.
-
-However, this is not a sufficient 
-% todo check wording of "sufficient"
-% condition, as example \ref{fig:pathological-example} shows.
-% TODO
-%
+A proof is given in \cite{wood_UnifiedTheoryDiversity_2023}. For binary classification problems, one can see that the weak learner condition implies that good diversity outweighs bad diversity.
 
 \subsection{Competence in binary classification problems}
 
@@ -253,7 +251,7 @@ However, this is not a sufficient
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{figma-illustrations/competence.pdf}
     \caption{
-        Illustration for the competence condition \ref{def:2-competence} for binary classification. Red squares correspond to pairs $(X,Y)$ from the joint distribution of examples and outcomes. For each of these pairs, the average/expected member error $W_{\Theta}(X,Y) \approx \Mavg \Lzo(y, q_i)$ is the ratio of incorrect members. The center $\nicefrac{1}{2}$ is the majority vote threshold. Informally, an ensemble is competent, if, for any two intervals defined by $t$ left and right of the threshold, more examples are in the left part. For the upper example, this holds. For the lower example, even though many examples are classified correctly by many members, the ensemble is \textit{not} competent.
+        Illustration for the competence condition \ref{def:2-competence} for binary classification. \tcircle{orange} Squares correspond to pairs $(X,Y)$ from the joint distribution of examples and outcomes. For each of these pairs, the average/expected member error $W_{\Theta}(X,Y) \approx \Mavg \Lzo(y, q_i)$ is the ratio of incorrect members. The center $\nicefrac{1}{2}$ is the majority vote threshold. Informally, an ensemble is competent, if, for any two \tcircle{ctpblue} intervals defined by $t$ left and right of the threshold, more examples are in the left part. For the upper example, this holds. For the lower example, even though many examples are classified correctly by many members, the ensemble is \textit{not} competent.
         % TODO come back to this from persective of good/bad div
         % TODO emphasize that this is motivation for *dis*couraging disagreement on incorrect points (bad div)
     }
@@ -271,23 +269,36 @@ $$
 \forall t \in \left[ 0, \nicefrac{1}{2} \right]: ~ \prob{(X,Y) }{W(X,Y)  \in \left[ t, \nicefrac{1}{2} \right]} ~ ~  \geq ~ ~ \prob{(X,Y) }{W(X,Y) \in \left[ \nicefrac{1}{2}, 1-t \right]}
 $$
 \end{definition}
-The condition is illustrated in figure \ref{fig:competence}.  
+The condition is illustrated in \cref{fig:competence}.  
 % TODO re-integrate
 % The weak learner assumption is a special case of this for $t = 0$.  % TODO Check
 % Ensembles of weak learners are competent and as such, this alternatively indirectly proves theorem \ref{thm:weak-learner-ensembles-nonnegative}.
 % TODO elaborate, maybe star
-It is used to show two results:
+
+\begin{proposition} $\star$
+\label{thm:weak-learner-competence}
+The weak learner condition of \cref{def:weak-learner} is a special case of $2$-competence.
+\end{proposition}
+\begin{proof}
+The weak learner condition implies that, also in expectation
+$$
+\mathbb{E}_{\Theta,D}\left[ \mathbb{E}_{(X,Y) }\left[ \Lzo{Y}{\bar{q}} \right]  \right]  \geq \nicefrac{1}{2}
+$$
+Consequently, using \cref{thm:W-lzo}, we have
+\begin{align*}
+\nicefrac{1}{2} &\leq \mathbb{E}_{\Theta,D, (X,Y) }\left[ \Lzo{Y}{\bar{q}} \right]  = \mathbb{E}_{(X,Y) }\left[ W \right]  \\
+& ~\leftrightarrow~ \mathbb{E}_{(X,Y) }\left[ ~\ind{W \in \left[ 0, \nicefrac{1}{2} \right]}  \right] = \prob{(X,Y) }{W \in [0, \nicefrac{1}{2}]} = 1
+\end{align*}
+\end{proof}
+
+The $2$-competence condition was used to show two kinds of results \cite{theisen_WhenAreEnsembles_2023}:
 \begin{itemize}
 	\item In $2$-competent ensembles, diversity-effect is non-negative.
-	\sidenote{
-		Although not acknowledging the role of diversity-effect as a component of the ensemble generalisation error and thus referring to it only as "ensemble improvement", one of the main results of \cite{theisen_WhenAreEnsembles_2023} is that, in competent ensembles, ensemble improvement (i.e. diversity-effect) is non-negative. 
-        % TODO
-	}
-	\item bounds on the generalisation error  % TODO
+	\item For $2$-competent ensembles, the ensemble generalisation error is bounded from above and below by linear functions of the expected disagreement between two members.
 \end{itemize}
 
 One can see that competence is essentially determined by the distribution of examples $(X,Y)$ over the range of $W(X,Y)$ which is divided by the majority vote threshold $\nicefrac{1}{2}$. We have already seen that, similarly, diversity-effect in its apparent form of good and bad diversity is determined by just the same characteristics. How are these two related?
-In this section, we will argue that non-negative diversity-effect is in fact equivalent to a notion of competence generalised to $k > 2$ classes. Unless otherwise noted, all expectations and probabilites are over the distribution of $(X,Y)$.
+We will argue that non-negative diversity-effect is in fact equivalent to a notion of competence generalised to $k > 2$ classes. Unless otherwise noted, all expectations and probabilites are over the distribution of $(X,Y)$.
 
 While proving that $2$-competence implies non-negative diversity-effect, \citeauthor{theisen_WhenAreEnsembles_2023} establish the following fact.
 \begin{align}
@@ -323,13 +334,13 @@ W_{\Theta}  < \nicefrac{1}{2} ~\leftrightarrow~  \bar{q}(X) = Y \\[1em]
 % For $k=2$, the cases of \ref{just-above} correspond directly to the cases of the ensemble being correct or incorrect of equation \ref{eq:binary-classification-cases}. 
 Recalling the characterisation of good and bad diversity of lemma \ref{thm:good-bad-diversity-W}, we can see that $d$ is nothing else but the diversity-effect. This means that non-negative effect is exactly equivalent to $2$-competence for a classification problem with $k=2$ classes.
 % TODO if we want to make this more formal, we can use the arguments of theisen, proving thm 1 from lemma 2
-Moreover, it is important to note that the gap of equation \ref{eq:competence-lemma2} and consequently the gap in the definition of $2$-competence (\ref{def:2-competence}) is exactly the diversity-effect and hence exactly measures the ensemble improvement. In other words, one can now speak about the degree of competence of an ensemble.
+Moreover, it is important to note that the gap of equation \ref{eq:competence-lemma2} and consequently the gap in the definition of $2$-competence (\cf \ref{def:2-competence}) is exactly the diversity-effect and exactly measures the ensemble improvement. In other words, we can now speak about the degree of competence of an ensemble.
 
 \subsection{Competence and Diversity in non-binary classification problems}
 \label{sec:k-competence}
 % TODO maybe repeat what is ref'd here in margins
 % Due to \ref{eq:gen-error-ratio-binary}, we can now see that for $k=2$, the other direction also holds: Any ensemble with non-negative diversity-effect also is competent. 
-However, for $k>2$, the equivalence in equation \ref{eq:gen-error-ratio-binary} is not given. While it is sufficient (a class with more than $\nicefrac{1}{2}M$ votes will win any plurality vote), it is not necessary: a plurality vote can be won with less than $\nicefrac{1}{2}M$ votes. Thus, there are ensembles which have non-negative diversity-effect (ensemble improvement) that are not $2$-competent. % TODO areas of wood23 fig20
+For $k>2$, the equivalence between the correctness of the ensemble and less than half of the members being incorrect (\cf \ref{eq:gen-error-ratio-binary}) is not given. While it is sufficient (a class with more than $\nicefrac{1}{2}M$ votes will win any plurality vote), it is not necessary: a plurality vote can be won with less than $\nicefrac{1}{2}M$ votes. Thus, there are ensembles which have non-negative diversity-effect (ensemble improvement) that are not $2$-competent. % TODO areas of wood23 fig20
 
 The key difference is that for $k>2$, the voting threshold for a pair $(X,Y)$ is no longer the same value for all examples. Since a class wins if and only if it has more votes than any other class, the voting threshold depends on the distribution of class votes, which is potentially different for any pair $(X,Y)$. Nevertheless, there is still \textit{a} classification threshold, namely the ratio of votes for the next-best class. Because we will be considering the ratio of incorrect votes as a basic quantity, we will now define it from the reciprocal perspective:
 $$
@@ -337,7 +348,7 @@ $$
 $$
 and it holds that
 \marginnote{
-    Let $$t \defeq \max_{Z\not=Y} \mathbb{E}_{\Theta}\left[ ~\ind{q_{\Theta} = Z} \right]$$. Then
+    Let $$t \defeq \max_{Z\not=Y} \mathbb{E}_{\Theta}\left[ ~\ind{q_{\Theta} = Z} \right]$$ Then
     \begin{align*}
     \bar{q} = y & ~\leftrightarrow~ \compl{W}  \geq t \\
     & ~\leftrightarrow~ W = 1 - \compl{W}  < 1 - t = \kappa \\
@@ -444,7 +455,7 @@ Since $W$ is nonnegative, using that $\mathbb{E}_{}\left[ X \right] = \int \prob
 \end{proof}
 Using this, we can now directly prove theorem \ref{thm:k-competence-diversity-effect}.
 
-\begin{proof} (Theorem \ref{thm:k-competence-diversity-effect}, generalised from \cite{theisen_WhenAreEnsembles_2023})
+\begin{proof} (For \cref{thm:k-competence-diversity-effect}, generalised from \cite{theisen_WhenAreEnsembles_2023})
     \begin{align*}
         0 &= \mathbb{E}_{}\left[ (W-1)~\ind{W \geq \kappa} \right]  - \mathbb{E}_{}\left[ (W-1) ~\ind{W \geq \kappa} \right]  \\
         &= \mathbb{E}_{}\left[ (W-1)~\ind{W \geq \kappa} \right]  + \mathbb{E}_{}\left[ (1-W)~\ind{W \geq \kappa} \right]  \\
@@ -462,17 +473,14 @@ Using this, we can now directly prove theorem \ref{thm:k-competence-diversity-ef
         = & \mathbb{E}_{}\left[ W  \right]  - \mathbb{E}_{}\left[ ~\ind{W \geq \kappa} \right]  \\
         = & \mathbb{E}_{}\left[ W \right]  - \prob{}{W \geq \kappa}
     \end{align*}
-    The first term is the ratio of incorrect members in expectation over all examples and is equal to the error rate of an average member.
-    \begin{align*} 
-    \mathbb{E}_{(X,Y) }\left[ W  \right]  = \mathbb{E}_{(X,Y) }\left[ \mathbb{E}_{D,\Theta}\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right]  = \mathbb{E}_{D,\Theta}\left[ \mathbb{E}_{(X,Y) }\left[ \Lzo{Y}{q_{D,\Theta}(X)} \right]  \right] 
-    \end{align*}
+    The first term is the ratio of incorrect members in expectation over all examples and is equal to the error rate of an average member (see \cref{thm:W-lzo})
     The second term is the ensemble error. 
 \end{proof}
 
 \subsection{Bounds for competent ensembles}
 
 $2$-competence was used to show upper and lower bounds for the diversity-effect \cite{theisen_WhenAreEnsembles_2023}. Now we show that, with minor adjustments, the same bounds can be derived from $k$-competence. 
-Besides giving performance guarantees, these bounds are interesting due to that they are expressed in terms of disagreements between members, which until now we have only seen for Bregman divergences.
+Besides giving performance guarantees, these bounds are interesting due to that they are expressed in terms of disagreements between members -- which until now we have only seen for Bregman divergences.
 
 \begin{theorem} 
 \label{thm:theisen-upper}

@@ -259,7 +259,7 @@ $$
 $$
 \end{lemma}
 \begin{proof}
-The proof is given in section \ref{proof:bregman-collapse-variances}.
+The proof is given in \cref{proof:bregman-collapse-variances}.
 \end{proof}
 % TODO note that this is dual expectation, and repeat lemmas from paper indicating that the dual expectations are indeed centroids
 % TODO more on how this is all about variation around centroids and what the centroids are in example of variance and ambiguity
@@ -278,6 +278,20 @@ $$
 \Breg{\bar{q}}{q} = \mathbb{E}_{}\left[ \Breg{Y}{\bar{q}} - \Breg{Y}{q} \right]
 $$
 % TOD do these have a geometric intuition?
+
+\begin{figure}
+$$
+\begin{array}{lll}
+\hline \text { Divergence } & \text { Combiner } & \text { Name } \\
+\hline \text { Squared loss } & \frac{1}{M} \sum_{i=1}^M q_i & \text { Arithmetic mean } \\
+\text { Poisson regression loss } & \prod_{i=1}^M q_i^{\frac{1}{M}} & \text { Geometric mean } \\
+\text { KL-divergence } & Z^{-1} \prod_{i=1}^M\left(\mathbf{q}_i^{(c)}\right)^{\frac{1}{M}} & \text { Normalised geometric mean } \\
+\text { Itakura-Saito loss } & 1 /\left(\frac{1}{M} \sum_{i=1}^M \frac{1}{q_i}\right) & \text { Harmonic mean } \\
+\hline
+\end{array}
+$$
+\caption{Examples for the combiner $\mathcal{E}_\Theta \left[q_\Theta\right]$ implied by a Bregman divergence \cite{wood_UnifiedTheoryDiversity_2023}.}
+\end{figure}
 
 % TODO also give bregman ambiguity decomp somewhere
 % then mention that krogh showed this for KL-divergence and Geurts (as mentioned in Louppe p67) for squared error.
@@ -339,12 +353,11 @@ $$
 It is evident, that the Jensen gap is but a special case of ambiguity-effect (\ref{thm:ambig-effect-decomp}) for $\bar{q} \defeq \Mavg q_{i}$ and convex loss functions. 
 This shows that the ensemble loss is always smaller-equal than the expected member loss, but \textit{only} if the ensemble output is actually produced by an arithmetic mean. 
 
-However, it can not be assumed from the outset that the arithmetic mean is the best ensemble combiner. Indeed, for the cross-entropy loss, \citeauthor{abe} proceed to note that the Jensen gap corresponds to a form that is "not immediately recognizable". Although they do find an interpretation of it, it is still necessarily dependent on the outcome $Y$ 
+However, it can not be assumed from the outset that the arithmetic mean is the best ensemble combiner. Indeed, for the cross-entropy loss, \citeauthor{abe_PathologiesPredictiveDiversity_2023} \cite{abe_PathologiesPredictiveDiversity_2023} proceed to note that the Jensen gap corresponds to a form that is "not immediately recognizable". Although they do find an interpretation of it, it is still necessarily dependent on the outcome $Y$ 
 \marginnote{
 	In fact, for the case of cross-entropy, \cite{wood_UnifiedTheoryDiversity_2023} show that the ambiguity term is still nonnegative, i.e. that the arithmetic mean combiner does not hurt performance. 
 }.
-As illustrated in \ref{sec:bregman-divergences} on Bregman divergences, 
-it seems reasonable to define the ensemble combiner in accordance to the Bregman divergence, i.e. to be the \textit{dual} expectation $\mathcal{E}_{\Theta}\left[ q_{\Theta} \right]$. 
+It seems reasonable to define the ensemble combiner in accordance to the Bregman divergence, i.e. to be the \textit{dual} expectation $\mathcal{E}_{\Theta}\left[ q_{\Theta} \right]$. 
 % TODO actually talk about these combiners somewhere
 Non-negativity is then easily shown since in that case ambiguity-effect reduces to ambiguity.
 $$
