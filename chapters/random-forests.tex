@@ -2,7 +2,7 @@
 \documentclass[../main.tex]{subfiles}
 \begin{document}
 
-In this chapter, we describe the Random Forest learning algorithm. We first motivate and describe decision trees, which are the basic components of a Random Forest. We then proceed to describe a particular property of decision trees: they are likely to exhibit high variance. While this is undesirable for a learning algorithm, we will see that combining several randomized decision trees into a Random Forest ensemble turns exactly that property into a crucial advantage (see \cref{sec:unchanged-bias}).
+In this chapter, we describe the Random Forest learning algorithm. We first motivate and describe decision trees, which are the basic components of a Random Forest. We then proceed to describe a particular property of decision trees: they are likely to exhibit high variance. While this is undesirable for a learning algorithm, we will see that combining several randomized decision trees into a Random Forest ensemble turns exactly that property into a crucial advantage (see also \cref{sec:unchanged-bias}).
 % TODO make sure we get back to this later -- I think the idea was to say that if there's high variance, we also have high room to improve due to diversity?
 
 A Random Forest is a collection of randomized decision trees. A decision tree is a data-driven recursive partitioning scheme, combined with a means to produce a prediction based on the training points in a partition cell. The Random Forest prediction then is an aggregate of the predictions of all individual trees.
@@ -12,13 +12,13 @@ A Random Forest is a collection of randomized decision trees. A decision tree is
 \label{sec:decision-trees}
 
 We are interested in learning algorithms that, given some training data, produce a model that is able to predict a reasonable outcome when queried with a previously unseen example (see \cref{sec:supervised-learning})
-One intuitive approach is to consider the examples in the training data that are "close" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the close points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neighbours, $k$-Means, and others.
+One intuitive approach is to consider the examples in the training data that are "close" to the query point. Then, one might claim that the outcome for the query point must surely be similar to the outcomes of the close points -- which we already know. Indeed, finding a proper notion of "closeness" is at the heart of many machine learning algorithms such as $k$-Nearest-Neighbours, $k$-Means, Support Vector Machines, and others.
 % TODO some examples other than k--
 
 % TODO decision tree always lowercase
 Constructing a decision tree means recursively partitioning the input space $\mathcal{X}$, guided by the training data $D$. Then, given a query $X$, we check the partition cell that $X$ belongs to
 % TODO clarify how that is determined
- and all the training examples that are in it. These are the examples we consider "close" to $X$. The tree's prediction will be an aggregation of the outcomes of all training points in that cell. 
+ and all the training examples that are in it. These are the examples we consider "close" to $X$. The tree's prediction will be an aggregation of the outcomes of all training points in that cell. The partition is constructed greedily and recursively: At each iteration, the parent cell is split into two child cells based on a local impurity criterion.
 
 Because we are recursively partitioning the input space, we have at hand a tree structure of decision rules. The cells of the resulting partition are the leaves of the tree. The non-leaf nodes are also referred to as \textit{decision nodes}, but there is no inherent difference between leaf and non-leaf nodes. We will use either of the terms \textit{leaf} and \textit{cell}, depending which aspect we want to emphasize.
 
@@ -48,23 +48,24 @@ There are the following main components to the implementation of a decision tree
 \begin{itemize}
     \item The \textit{splitting criterion} to apply recursively to subsets of the training data.
     \item The \textit{stopping criterion} that determines whether a node should be split further. This will determine the depth of the decision tree.
-    \item The \textit{leaf aggregation function} that produces a prediction for a specific cell. When using the constructed tree for prediction, this will be the leaf node that the query point is assigned in.
+    \item The \textit{leaf aggregation function} that produces a prediction for a specific cell. When using the constructed tree for prediction, this will be the leaf node that the query point is assigned to.
 \end{itemize}
 
-Like any learner, the quality of a decision tree $q$ is measured with respect to a loss function $\ell$ evaluated over some test set $D \defeq \{ (x_{i}, y_{i}) \}_{1}^n$. We are ultimately interested in finding a tree that minimises this loss, as an approximate to the generalisation error (see \cref{sec:supervised-learning}).
+Like any learner, the quality of a decision tree $q$ is measured with respect to a loss function $\ell$ evaluated over some test set $\{ (x_{i}, y_{i}) \}_{1}^n$. We are ultimately interested in finding a tree that minimises this loss, as an approximate to the generalisation error (see \cref{sec:supervised-learning}).
 $$
-\frac{1}{n} \sum_{i \in D} \ell(y_{i}, q(x_{i}))
+\frac{1}{n} \sum_{i=1 }^n \ell(y_{i}, q(x_{i}))
 $$
-The loss over all examples in a certain leaf (cell) is then 
-$$L(f) \defeq \frac{1}{n_{f}} \sum_{i \in f} \ell(y_{i}, q(f))$$ where $n_{f}$ is the number of points in $f$.
+% The loss over all examples in a certain leaf (cell) is then 
+% $$L(f) \defeq \frac{1}{n_{f}} \sum_{i \in f} \ell(y_{i}, q(f))$$ where $n_{f}$ is the number of points in $f$.
 
 \begin{proposition} $\star$
     \label{thm:decision-trees-impurity}
 The choice of loss function, impurity measure and leaf combiner are tightly related and chosing one of these will determine the other choices.
 \end{proposition}
-The basic idea is that an impurity measure is in fact nothing else than the variance around a centroid. In decision trees,  the tree prediction $q$ is constant over a leaf $f$: If $q(f)$ is the output for leaf $f$ then $\forall x \in f: q(x) = q(f)$. If $q(f)$ is chosen to be a centroid with respect to a loss $\ell$, then an impurity measure is exactly the loss of the points in a leaf.
+The basic idea is that an impurity measure is in fact nothing else than the variance around a centroid. 
+If $q(f)$ is chosen to be a centroid with respect to a loss $\ell$, then an impurity measure is exactly the loss of the points in a leaf.
 
-We can write the loss as a sum over the losses of the individual leaves $f$.
+In decision trees, the tree prediction $q$ is constant over a leaf $f$: If $q(f)$ is the output for leaf $f$ then $\forall x \in f: q(x) = q(f)$. Thus, we can write the loss as a sum over the losses of the individual leaves $f$.
 \begin{align*}
 \frac{1}{n} \sum_{i\in D}  \ell(y_{i}, q(x_{i})) &= \sum_{f \in q} \frac{n_{f}}{n}  
 L(f) 
@@ -76,23 +77,25 @@ $$
 H_{\text{var} }(f) = \frac{1}{n_{f}} \sum_{i\in f} (y_{i} - \bar{y})^2 \hspace{1em} \text{for~} \bar{y} \defeq \frac{1}{n_{f}} \sum_{i \in f} y_{i}
 $$
 $\bar{y} = \arg\min_{z} \sum_{i \in f} (y_{i} - z)^2$ is a centroid with respect to the squared-error loss.
-Splitting according to $H_{\text{var}}$ minimises the squared-error loss of the tree if the leaf combiner is the arithmetic mean, $q(f) = \bar{y}$.
+$q(f) = \bar{y}$ implies $H_\text{var}(f) = L(f)$. In other words, splitting according to $H_{\text{var}}$ minimises the squared-error loss of the tree if the leaf combiner is the arithmetic mean.
 
 \paragraph{\zeroone-loss and majority vote} The majority vote is a centroid with respect to the \zeroone-loss. The implied impurity measure is the error rate.
 $$
 H_{0/1}(f) = \frac{1}{n_{f}} \sum_{i \in f} \Lzo{y_{i}}{q(f)}
 $$
 
-\paragraph{Entropy and Information Gain} We can further express the loss of a leaf $L(f)$ for each of the classes $k$ separately. Further, let us assume the leaf combiner provides a probability distribution over the classes $k$ (this is without loss of generality since predicting a single class can be seen as a one-hot distribution). Let $q(f)_{k}$ be the $k$-th entry of the distribution $q(f)$. Then
+\paragraph{Entropy and Information Gain} We can further express the loss of a leaf $L(f)$ for each of the $k$ classes  separately. Further, let us assume the leaf combiner provides a probability distribution over the classes $k$ (this is without loss of generality since predicting a single class can be seen as a one-hot distribution). Let $q(f)_{k}$ be the $k$-th entry of the distribution $q(f)$. Then
 \begin{align}
 \begin{split}
 \label{eq:leaf-loss-per-class}
 L(f) &= \frac{1}{n_{f}} \sum_{i \in f} \ell(y_{i}, q(f)) \\
+ % TODO only if loss is "separable"
 &= \frac{1}{n_{f}} \sum_{i\in f} \sum_{k} ~\ind{y_{i} = k} ~\ell(k, q(f)_{k}) \\
 &= \sum_{k} \sum_{i \in f} \frac{1}{n_{f}} ~\ind{y_{i} = k} ~ \ell(k, q(f)_{k}) \\
 &= \sum_{k} p_{fk} ~ \ell(k, q(f)_{k})
 \end{split}
 \end{align}
+where $p_f$ is the class distribution in leaf $f$.
 Consider the negative entropy impurity measure
 $$
 H_{\text{entr} }(f)  = \sum_{k} p_{fk} \log(p_{fk})
@@ -173,15 +176,17 @@ which is maximised if and only if $z = p_{f}$.
 % TODO indeed, high variance of ensemble members is "wanted" in ensembling -- else no room for improvement
 % in other words, ensembling only "effective" for high variance learners
 
-
-The deeper a decision tree is grown, the closer the resultig partition cells will fit the training data. This approximation is in fact guided \textit{only} by the training data. In the extreme case, if the tree is fully grown, each partition cell will correspond to a single example and the outcome for that cell will be the outcome of that example. The tree essentially turns into a $1$-nearest-neighbour scheme with respect to the training dataset. This means that trees constructed with different samples $D$ of training datasets from the original distribution $P(X,Y)$ potentially predict quite different outcomes for testing examples. This is captured in the concept of learner variance as defined in \ref{sec:bias-variance-effects}. In \ref{fig:variance-vs-tree-depth}, one can indeed observe that trees of greater depth have greater variance. At the same time, their fit to the training data improves, which is captured by lower bias.
+The deeper a decision tree is grown, the closer the resultig partition cells will fit the training data. This approximation is in fact guided \textit{only} by the training data. In the extreme case, if the tree is fully grown, each partition cell will correspond to a single example and the outcome of that cell will be the outcome of that example. The tree essentially turns into a $1$-nearest-neighbour scheme with respect to the training dataset. This means that trees constructed with different samples $D$ of training datasets from the original distribution $P(X,Y)$ potentially predict quite different outcomes for testing examples. This is captured in the concept of learner variance as defined in \ref{sec:bias-variance-effects}. 
+% In \ref{fig:variance-vs-tree-depth}, one can indeed observe that trees of greater depth have greater variance. At the same time, their fit to the training data improves, which is captured by lower bias.
+% TODO maybe reintroduce
 % \marginfigfromsource{fig:variance-vs-tree-depth}{symlinks/illustrations/bias-variance/variance-vs-tree-depth}
 % so learner variance and correlation are really tightly the same
 % \marginnote{
     % TODO extremly randomized trees -> essentially constant variance?
 % }
+
 Mitigating this strong dependence on the training data is one of the main motivations of Random Forests. The basic idea is as follows: If we produce several uncorrelated decision trees and average their predictions, then the predictions should exhibit lower variance
-In standard forests, this is achieved by introduceing randomness into the decision tree construction algorithm by two mechanisms \cite{scornet_ConsistencyRandomForests_2015,breiman_RandomForests_2001}:
+In standard forests, this is achieved by introducing randomness into the decision tree construction algorithm by two mechanisms \cite{scornet_ConsistencyRandomForests_2015,breiman_RandomForests_2001}:
 \begin{itemize}
 \item \textit{Bootstrapping}: Each tree is constructed not on the entire training dataset but a random subset of it. Usually, this \textit{bootstrap sample} is produced by drawing the same amount of points with replacement.
 % TODO some considerations on how bootstrapping is actually a vital component
@@ -232,7 +237,7 @@ A vital ingredient to Random Forests is the \textit{Bagging} procedure, which st
 \label{sec:tree-and-forest-partitions}
 
 The generalisation error, and consequently individual terms of any decomposition of it have been defined point-wise. That is, they are measured by an expectation over possible realisations of example-outcome pairs $(X,Y)$. They further depend on a random variable $D$ representing the training input to the learner. In order to estimate such an expectation for a given model (a realisation of $D$), one has to sample realisations of $(X,Y)$. In practise, these example-outcome pairs typically come from a validation dataset that was withheld from training.
-We have seen in \ref{todo} that for some losses, diversity can be expressed independently of the outcome variable $Y$. 
+We have seen in \cref{sec:diversity} that for some losses, diversity can be expressed independently of the outcome variable $Y$. 
 To approximate an actual value, we would still need to sample realisations of $X$.
 
 Decision Trees, particularly if grown deeply, can be considered to \textit{approximate} the training data, i.e. they are a lossy representation of the training data. A grown decision tree model contains two kinds of parameters, both derived from the training data $D$.
@@ -262,7 +267,7 @@ Each forest cell is associated with $M$ tree cells whose intersection constitute
 For any query point that falls within a certain tree cell, the forest prediction is given by an aggregate over the associated tree cells. Thus, the predictions of a random forest are constant over a single forest cell.
 This means that also a loss, as well as any decomposition constituents of the loss are constant over forest cells.
 
-However, exploiting that partitions are cell-wise constant, we can apply a special case of the law of total expectation to express it in terms of cells.
+Exploiting that partitions are cell-wise constant, we can apply a special case of the law of total expectation to express it in terms of cells.
 \sidenote{
 % TODO move to lemma in prelims
 Let $X_{1} \dot\cup \dots \dot\cup X_{M}$ be a disjoint, countable partition of the sample space of $X$. Then
@@ -270,17 +275,17 @@ $$
 \mathbb{E}_{X}\left[ X \right] = \sum_{i=1}^M  \mathbb{E}_{X}\left[ X ~|~X_{i} \right] \cdot \prob{}{X_{i}}
 $$
 }
-Consider a forest partition $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ of $Z=(X,Y)$. Using the linearity of expectations and the law of total expectation, we can write the generalisation error of the forest as follows. 
+Consider a forest partition $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ of $Z=(X,Y)$. 
 \begin{proposition} 
    \label{thm:random-forest-structure} 
     $\star$ The generalisation error of a random forest model can be expressed in terms of intersections of tree cells.
 % TODO definitions
 $$
-\mathbb{E}_{Z,D}\left[ \ell(y,\bar{q}) \right] = \mathbb{E}_{D}\left[ \sum_{p=1}^P \prob{}{Z_{p}} \cdot \mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]   \right] 
+\mathbb{E}_{Z,D}\left[ \ell(y,\bar{q}) \right] = \mathbb{E}_{Y,D}\left[ \sum_{p=1}^P \prob{}{Z_{p}} \cdot \mathbb{E}_{Z}\left[ \ell(Y, \bar{q}) ~|~Z_{p}\right]   \right] 
 $$
 \end{proposition} 
 % TODO maybe more precise derivation
-A similar statement can be made for the simpler case of a single decision tree and is used in \cref{sec:decision-trees}.
+A similar statement can be made for the simpler case of a single decision tree and is used in \cref{sec:decision-trees} to derive impurity measures.
 
 While we have eliminated the dependence on a query point $X$, the quantity $\mathbb{E}_{Z}\left[ \ell(y, \bar{q}) ~|~Z_{p}\right]$ still depends on a realisation of an outcome $Y$. In \cref{sec:diversity-rfs-nns} we see that we can decompose this term further into components that are dependent and independent of $Y$, respectively.
 

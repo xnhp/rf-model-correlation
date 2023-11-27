@@ -36,6 +36,9 @@
 \definecolor{def}{HTML}{F8EBFF}
 \definecolor{thm}{HTML}{FFF7D9}
 \definecolor{cor}{HTML}{EEFFE0}  
+\definecolor{ctporange}{HTML}{DF8E1D}
+\definecolor{ctpred}{HTML}{DD7878}
+\definecolor{ctpblue}{HTML}{04A5E5}
 % Load mathematical packages for theorems and related environments
 \usepackage[
   framed=true,
@@ -52,6 +55,10 @@
 \newcommand{\avgBiasCircle}{\tikzcircle[fill=memberbias]{3pt}}
 \newcommand{\avgVarianceCircle}{\tikzcircle[fill=membervariance]{3pt}}
 \newcommand{\ensembleErrorCircle}{\tikzcircle[fill=ensemble-error]{3pt}}
+
+\newcommand{\bvdlegend}{(Legend: \avgBiasCircle~average member bias, \avgVarianceCircle~average member variance, \diversityCircle~diversity, \ensembleErrorCircle~ensemble generalisation error.)}
+
+\newcommand{\tcircle}[1]{\tikzcircle[fill=#1]{3pt}}
 
 % \renewcommand{\labelitemi}{$\circ$}
 % \renewcommand{\labelitemii}{$\circ$}
@@ -86,12 +93,11 @@
     \\[5.5em]
     {\Large presented by}
     \\[1.5em]
-    {\LARGE \textbf{Benjamin Moser}}
+    {\Large \textbf{Benjamin Moser}}
     \\[1.5em]
     {\Large at the}
     \\[1.2em]
     % TODO signet
-    % TODO faculty
     {\Large \textbf{University of Konstanz}}
     \\[1.0em]
     {\Large \textbf{Department of Computer and Information Science}}
@@ -99,8 +105,8 @@
     \begin{align*}
       % TODO check titles
       % TODO fix issues with nth
-      % \text{\large {\nth{1} Supervisor}:~} &  \text{ \large Prof.\ Dr.\ Sven Kosub } \\
-      % \text{\large {\nth{2} Supervisor}:~} &  \text{ \large Prof.\ Dr.\ Tobias Sutter } \\
+      \text{\large {\nth{1} Supervisor}:~} &  \text{ \large Sven Kosub } \\
+      \text{\large {\nth{2} Supervisor}:~} &  \text{ \large Tobias Sutter } \\
     \end{align*}
     \vfill
     {\Large {Konstanz, 2023}}
@@ -168,7 +174,9 @@
 
 \chapter*{Abstract}
 
-...
+
+A Random Forest is an ensemble of randomised decision trees. How are differences between individual trees related to the performance of the forest?
+Despite their simplicity and success, it is not yet fully clear when and why Random Forests work well. We approach this problem from the general perspective of ensemble learning. Guided by the diversity decomposition of the ensemble error, we analyse the role of diversity in regression and classification ensembles and argue that this theory is particularly relevant to Random Forest ensembles. We provide a thorough introduction to the diversity theory and relate it to previous results on ensemble learning. We further link it theoretically to the recently developed notion of ensemble competence. Focusing on \zeroone-classification, we explore methods to regulate diversity in Random Forests. We see that it is possible to obtain smaller and better Random Forest ensembles. We further propose a generalisation of a well-known diversity regularisation scheme for neural network ensembles.
 
 
 %----------------------------------------------------------------------------------------
@@ -221,10 +229,54 @@
 
 \chapter{Introduction}
 
-% TODO argue why we are considering the combination of diversity theory and random forests -- in that it is particularly relevant there
+Random Forests are some of the most successful and widely used off-the-shelf classifiers
+\cite{biau_RandomForestGuided_2016,yang_ReviewEnsembleMethods_2010}. Despite their intuitive formulation, it is not yet fully understood when and why Random Forests work well. 
+A Random Forest is an ensemble of randomized decision trees.
+If all trees were very similar, we could not expect to gain much over just using a single tree.  
+It seems reasonable to suspect that differences between individual trees must be essential to the performance gain. How are the differences between individual trees related to the quality of the Random Forest model?
+
+We approach this question from the perspective of ensemble learning. The key challenge is to formally grasp a concept of \textit{diversity} of the ensemble members that can be related to other characteristics of the ensemble.
+This has been an ongoing line of inquiry for over 20 years. 
+Even though already in \citeyear{krogh_NeuralNetworkEnsembles_1995} and \citeyear{ueda_GeneralizationErrorEnsemble_1996}, decompositions of the generalisation error that describe the interactions between ensemble members have been published, grasping the concept in full generality has remained elusive. Results were either limited to specific loss functions or remained disconnected from the ensemble error \cite{kuncheva_MeasuresDiversityClassifier_2003}.
+Further, empirical investigation has mainly focussed on neural network ensembles
+\cite{abe_BestDeepEnsembles_2022,abe_PathologiesPredictiveDiversity_2023,liu_EnsembleLearningNegative_1999,buschjager_GeneralizedNegativeCorrelation_2020,buschjager_ThereNoDoubleDescent_2021}
+and the exact behaviour of Random Forests remains elusive.
+
+In this thesis, we take up two very recent publications 
+\cite{wood_UnifiedTheoryDiversity_2023, theisen_WhenAreEnsembles_2023}
+which, as we will illustrate, provide an exhaustive and unifying framework for analysing ensembles. The central piece is a decomposition of the ensemble error into average member bias, average variance and a diversity term \cite{wood_UnifiedTheoryDiversity_2023}.
+We provide an alternate derivation of this decomposition and link it theoretically to the theory of ensemble competence \cite{theisen_WhenAreEnsembles_2023}. Further, we consider the role of diversity in Random Forests.
+
+In \cref{sec:overview} and \cref{fig:overview}, we provide an overview of the contents of this thesis. In \cref{sec:contributions}, we summarise our contributions.
+
+
+% TODO! argue why we are considering the combination of diversity theory and random forests -- in that it is particularly relevant there
 % cf also homog ensembles, avg bias equals ens bias? could imply the variance reduction through ens improvement
 
 \section{Overview}
+\label{sec:overview}
+
+We begin with a brief introduction to supervised learning and the statistical language used to analyse it
+(\cf \cref{sec:supervised-learning,sec:statistics}). We motivate and define the well-known bias-variance decomposition for the squared-error loss and proceed to generalise it to arbitrary loss functions
+(\cf \cref{sec:bias-variance-effects}).  
+We define a particular family of loss functions called Bregman divergences
+(\cf \cref{sec:bregman-divergences}).
+
+We then turn our attention towards ensemble learning (\cf \cref{chapter:ensemble-learning}). We review several results that indicate when and why ensemble learning is effective. A key insight is that the ensemble performance depends on the diversity of predictions of the member models. We note that many of these results have been derived only for specific loss functions, or under assumptions. As a prominent example of ensemble learning techniques we introduce Random Forests (\cf \cref{sec:random-forests}).
+
+In \cref{sec:diversity}, we work towards formally expressing diversity as a component of the ensemble generalisation error. We first review some \textit{ad-hoc} diversity measures. We then consider the \textit{ambiguity decomposition} which was initially proven independently for the squared-error loss and the KL-divergence. We show that ambiguity, like bias and variance, can be generalised to arbitrary loss functions in terms of its effect on the error. This leads to a decomposition of the ensemble generalisation error into average member bias, average member variance and \textit{diversity}, which is the expected ambiguity. Equipped with the tools to rigorously analyse ensemble diversity, we consider two main settings: Bregman divergences for regression tasks and the \zeroone-loss for classification tasks. 
+
+The developed theory is then applied in Random Forest ensembles. We argue that diversity is a highly relevant aspect of Random Forests, much more so than for neural network ensembles (\cf \cref{sec:diversity-rfs-nns}). We introduce a method to regulate diversity in \zeroone-classification ensembles via example weights (\cf \cref{sec:dynamic-random-forests}).
+
+Finally, we propose a full generalisation of the Negative Correlation Learning scheme for neural networks (\cf \cref{sec:guided-parallel-training}).
+
+
+
+
+
+
+
+
 
 % TODO use the below text as basis?
 
@@ -240,9 +292,31 @@
 
 % Eine bereits bekannte Wachstumsstrategie für Ensembles von neuronalen Netzen ist "Negative Correlation Learning". Darin wird eben auch Diversität zwischen den einzelnen Lernern erzeugt. Es gab in der Vergangenheit einige Versuche, NCL, ursprünglich für den Squared Error Loss definiert, zu verallgemeinern. Ich argumentiere, dass die obengenannte Zerlegung eine natürliche Verallgemeinerung ist.
 
-\section{Contributions}
+\begin{figure}[hb!]
+  \includegraphics[width=\textwidth]{figma-illustrations/thesis-overview.pdf}
+  \caption{Overview of the main theoretical topics in this thesis.}
+  \label{fig:overview}
+\end{figure}
 
-% Can motivate many of the choices in decision tree learning from the perspective of bregman divergences
+\section{Contributions}
+\label{sec:contributions}
+
+We give a thorough and coherent introduction to ensemble diversity. We derive the fully general diversity-{effect} decomposition (\cf \ref{thm:bias-variance-diversity-effect-decomp}) from first principles and then show how the diversity decomposition (\cf \ref{thm:bregman-diversity-decomp}) is a special case of it. This is a different approach to the original publication \cite{wood_UnifiedTheoryDiversity_2023}. \citeauthor{wood_UnifiedTheoryDiversity_2023} start from assuming that there exists \textit{a} bias-variance decomposition and \textit{an} ambiguity decomposition.
+Seeing that effect-decompositions trivially hold for any loss, we develop an alternate line of argument.
+For Bregman divergences, the effect-terms coincide with the corresponding terms in the specialised decomposition (\cf \cref{thm:bregman-collapse-bias,thm:bregman-collapse-variances}). For loss functions such as the \zeroone-loss for which this is not possible, the general decomposition is still useful.
+
+We review several arguments on ensemble diversity and relate them to the diversity theory. We illustrate that many statements which were previously only proven for specific loss functions or under assumptions are covered by the diversity theory (\cf \cref{sec:diversity}). Informed by this theory, we infer practical guidelines for ensemble learning.
+
+For decision trees, we give a rigorous theoretical foundation for the most widely used impurity measures (\cf \ref{thm:decision-trees-impurity}).  We show that constructing a tree according to an impurity measure implies that tree construction greedily optimises a specific loss function. Further, we show that the choice of impurity measure implies the leaf combiner function.
+
+For Random Forests, we illustrate a simple way to express the ensemble generalisation error in terms of the structure of the model (\cf \ref{thm:random-forest-structure}). Likewise, we can express the components of the bias-variance-diversity decomposition in terms of the structure of the Random Forest model (\cf \ref{thm:random-forest-structure-decomp}). This is a first step towards bringing characteristics of a specific model into the general theory of ensemble diversity. 
+
+For \zeroone-loss classification, we review and relate two assumptions that enable bounds on the generalisation error: the weak-learner assumption and competence. We show that the former is a special case of the latter (\cf \ref{thm:weak-learner-competence}). We then consider competence in detail. While competence is a sufficient condition for non-negative diversity-effect, it is not a necessary condition in non-binary classification problems. We define a generalisation of competence that we call $k$-competence and show that $k$-competence is equivalent to non-negative diversity-effect (\cf \cref{def:k-competence,thm:k-competence-diversity-effect}). This connects the theory on diversity developed by \citeauthor{wood_UnifiedTheoryDiversity_2023} \cite{wood_UnifiedTheoryDiversity_2023} to the analysis and bounds proven by \citeauthor{theisen_WhenAreEnsembles_2023} \cite{theisen_WhenAreEnsembles_2023}.
+
+We motivate and propose schemes to regulate diversity in Random Forest ensembles. We show empirically that it is indeed possible to encourage diversity in Random Forests. While the theory informs us that a more diverse ensemble is not necessarily better, we do observe that for specific benchmark datasets our regularisation schemes allow us to obtain better and smaller forests as compared to the standard construction procedure.
+
+Original theoretical results are marked with a $\star$-glyph. 
+
 
 % Alternate proof of the classic bias-variance-decomposition via effect-decompositions and Bregman divergences. This shows that it is but an example for a much broader structure and gives much clearer intuition (instead of just doing the magic in the direct proof).
 
@@ -252,9 +326,10 @@
 
 
 \section{Statistics}
+\label{sec:statistics}
 
 % TODO maybe remove probability space etc definitions and just assume expected value is known.
-We want to reason in a general manner about algorithms which act on data. We use statistical language for this. Consider a data point $X$ that is provided as input to an algorithm. Our intention is to say that $X$ could be essentially \textit{any} data point from some kind of data source. In other words, we can consider $X$ to be \textit{random}, that is, $X$ is a random variable (a symbol) that can take different values. 
+We want to reason in a general manner about algorithms which act on data. We use statistical language for this. Consider a data point $X$ that is provided as input to an algorithm. Our intention is to say that $X$ could be \textit{any} data point from some kind of data source. In other words, we can consider $X$ to be \textit{random}, that is, $X$ is a random variable that can take different values. 
 Which values exactly it can take depends on the data source -- the \textit{distribution} of the data. If our data source is a fair $6$-sided die, $X$ can take values in $\Omega = \{ 1, \dots, 6 \}$ and the distribution of values is constant where each outcome has probability $\frac{1}{6}$, i.e. $\prob{}{1} = \dots  = \prob{}{6} = \frac{1}{6}$.
 \marginnote{
     A
@@ -285,7 +360,8 @@ In the following, we assume an underlying probability space implicitly.
   \to M\) (commonly, we have \(M=\mathbb{R}\)).
   % that assigns a value to each outcome.
 \end{definition}
-Further, we not only want to reason about the behaviour of an algorithm with respect to one point $X$ but many such points. A basic notion is the \textit{expected value} of $X$. Further, since $X$ is considered random, $f(X)$ is also a random variable and we can talk about the expected value of functions of random variables.
+Further, we not only want to reason about the behaviour of an algorithm with respect to one point $X$ but many such points. A basic notion is the \textit{expected value} of $X$. 
+% Further, since $X$ is considered random, $f(X)$ is also a random variable and we can talk about the expected value of functions of random variables.
 \begin{definition}
   The \textit{probability density function} $f_X$ of a random variable $X$ is a
   nonnegative function such that
@@ -353,7 +429,7 @@ and we write $\mathbb{E}_{X,Y}\left[ g(X,Y) \right] \defeq \mathbb{E}_{X}\left[ 
 
 A random variable is \textit{discrete} if its set of outcomes is a countable set $\{ x_{i}, \dots, x_{n} \}$ with probabilities $\{ p_{i}, \dots, p_{n} \}$. The probability density function then is $f_X(x_i) = \mathbb{P}(X = x_i) = p_i$. The expected value of a discrete random variable is given by a sum.
 $$
-\mathbb{E}_{}\left[ X \right]  = \sum p_{i} x_{i}
+\mathbb{E}_{}\left[ X \right]  = \sum_{i=1}^n p_{i} x_{i}
 $$
 
 The expected value is a statement depending on the entire distribution. Usually, we do not know the distribution itself, but only have a limited set of samples of it. For instance, we may have a certain number of data points or run an algorithm a certain number of times and observe its output. We can use this set of samples to approximate the value of the expectation. Given that the samples are independent and identically distributed, the arithmetic mean of samples approximates the expected value.
@@ -366,10 +442,10 @@ $$
 \section{Supervised Learning}
 \label{sec:supervised-learning}
 
-Our goal is to find an algorithm that is able to map objects from $\mathcal{X}$ to outcomes in $\mathcal{Y}$. Objects
+Our goal is to find an algorithm that maps objects from $\mathcal{X}$ to outcomes in $\mathcal{Y}$. Objects
 are described by their \textit{features}. These are commonly numerical, so $\mathcal{X}$ can be thought of as $\mathbb{R}^d$ where $d$ is the number of features. We will call such a representation of an object an \textit{example}.
 
-In \textit{classification} problems, the outcomes are discrete among $k$ possible outcomes and we refer to them as \textit{labels} or \textit{classes}. For sake of simplicity, we identify these with integers, i.e. $\mathcal{Y}$ can be thought of as the set $\{ 1, \dots, k \}$. In \textit{binary} classification, there are only two possible outcomes. Depending on what is more convenient in the mathematical context, we assume either $\mathcal{Y} = \{0,1\}$ or $\mathcal{Y} = \{-1, 1\}$.
+In \textit{classification} problems, the outcomes are discrete among $k$ possible outcomes and we refer to them as \textit{labels} or \textit{classes}. For sake of simplicity, we identify these with integers, i.e. $\mathcal{Y}$ can be thought of as the set $\{ 1, \dots, k \}$. In \textit{binary} classification, there are only two possible outcomes. Depending on what is more convenient, we assume either $\mathcal{Y} = \{0,1\}$ or $\mathcal{Y} = \{-1, 1\}$.
 In \textit{regression} problems, the outcomes are continous. We can think of $\mathcal{Y}$ as $\mathbb{R}$.
 
 \begin{marginfigure}
@@ -378,23 +454,22 @@ In \textit{regression} problems, the outcomes are continous. We can think of $\m
 	\caption{Illustration of the main components of supervised learning. A learning algorithm $\mathcal{A}$ produces a model $q_D$ given some input $D$. The model is then evaluated on example-outcome pairs of the original data distribution.}
 \end{marginfigure}
 
-The desired mapping $q: \mathcal{X} \to \mathcal{Y}$ may be nontrivial such that it is not feasible to come up with explicit rules of how to map examples to outcomes. However, we may try to algorithmically infer such a mapping from a given set of examples and their known outcomes. More specifically, we want to find a deterministic \textit{learning algorithm}, also called \textit{learner}, that, given a random input $D$, produces a mapping $q_D$
+The desired mapping $q: \mathcal{X} \to \mathcal{Y}$ may be such that it is not feasible to come up with explicit rules of how to map examples to outcomes. However, we may try to algorithmically infer such a mapping from a given set of examples and their known outcomes. More specifically, we want to find a deterministic \textit{learning algorithm}, also called \textit{learner}, that, given a random input $D$, produces a mapping $q_D$
 \sidenote{
 	For the statistical analysis it is essential that the learning algoritm is regarded as deterministic. However, any kind of randomness can be introduced by providing it with random input.
 }
 .
-We call $q_D$ a \textit{model} and note that it is dependent on $D$ .
+We call $q_D$ a \textit{model} and note that it is dependent on $D$.
 The task of choosing and configuring a learning algorithm is known as \textit{supervised learning}.
 
-To be useful, a model should not only accurately estimate outcomes for the given training examples, but also provide reasonable predictions for examples that were not part of the input to the learning algorithm. To express this formally in a general setting, we use statistical language.
-
+To be useful, a model should not only accurately estimate outcomes for the given training examples, but also provide reasonable predictions for examples that were not part of the input to the learning algorithm. 
 Consider a probability distribution $P(\mathcal{X}, \mathcal{Y})$ from which realisations of example-training pairs are drawn. We write this as $(X, Y) \sim P(\mathcal{X}, \mathcal{Y})$ where $(X,Y)$ are random variables from a joint distribution.
 This distribution is unknown -- else the problem is trivially solved already. In order for our solution to be widely applicable, we strive to make as few assumptions about the distribution $P$ as possible. 
 
-The training dataset $\{ (\vec{x}_{i}, y_{i}) \}_{i=1}^n$ is considered a random vector $D$ drawn from $P(\mathcal{X}, \mathcal{Y})^n$ where $n$ is the number of data points. If there are other sources of randomness in model construction such as, for instance, weight initialisation or neural networks, these can also be considered components of $D$.
+The training dataset $\{ (\vec{x}_{i}, y_{i}) \}_{i=1}^n$ is considered a random vector $D$ drawn from $P(\mathcal{X}, \mathcal{Y})^n$ where $n$ is the number of data points. If there are other sources of randomness in model construction such as, for instance, weight initialisation for neural networks, these can also be considered components of $D$.
 
 \begin{definition}
-A \textit{model} is a function $q: \mathcal{X} \to \mathcal{Y}$. In supervised learning the model depends on the training input $D$. Its output (prediction) when queried with a random variable $X$ taking values in $\mathcal{X}$ is written as
+A \textit{model} is a function $q: \mathcal{X} \to \mathcal{Y}$. In supervised learning, the model depends on the training input $D$. Its output (prediction) when queried with a random variable $X$ taking values in $\mathcal{X}$ is written as
 $$
 q_{D}(X)
 $$
@@ -407,16 +482,16 @@ To shorten notation, we sometimes omit explicitly specifying either random varia
 % }. 
 
 %
-The quality of a single model prediction is measured by means of a \textit{loss function} $\ell: \mathcal{Y} \to \mathcal{Y}$ whose value should be low if the predicted outcome is close to the true outcome. 
+The quality of a single model prediction is measured by a \textit{loss function} $\ell: \mathcal{Y} \to \mathcal{Y}$ whose value should be low if the predicted outcome is close to the true outcome. 
 To describe the expected loss across the entire distribution, we consider a pair of random variables $(X,Y) \sim P(\mathcal{X}, \mathcal{Y})$. 
 
 \begin{definition} (Risk and Generalisation Error)
-The \textit{risk} of a model is the expected loss over all example-outcome pairs.
+The \textit{risk} of a model $q_D$ is the expected loss over all example-outcome pairs.
 $$
 \text{Risk}(q_{D}) \defeq \mathbb{E}_{(X,Y)\sim P}\left[ \ell(Y, q_{D}(X)) \right] 
 $$
 %
-The quality of a given learning algorithm $\mathcal{A}$ is the expected risk over all possible inputs. We refer to this as the \textit{generalisation error}. 
+The quality of a given learning algorithm $\mathcal{A}$ is the expected risk over all possible inputs $D$. We refer to this as the \textit{generalisation error}. 
 $$
 \text{GE}(\mathcal{A}) \defeq \mathbb{E}_{D}\left[ \text{Risk}(q_{D}) \right]  = \mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}(X)) \right] 
 $$
@@ -426,7 +501,7 @@ Note that the choice of the loss function $\ell$ is fundamental to the evaluatio
 \section{Bias, Variance and their Effects}
  \label{sec:bias-variance-effects}
 
-Since we are ultimately interested in the generalisation error of a learning algorithm, the question arises what forces influence it. To this end, one can strive to mathematically express the generalisation error in terms of specific meaningful quantities. A classical decomposition is the \textit{bias-variance-decomposition}. 
+Since we are ultimately interested in the generalisation error of a learning algorithm, the question arises what forces influence it. To this end, one can strive to mathematically express the generalisation error in terms of meaningful quantities. A classical decomposition is the \textit{bias-variance-decomposition}. 
 % Informally, the generalisation error can be decomposed as
 % $$
 % \text{(error)} = \text{(noise)} + \text{(bias)} + \text{(variance)}
@@ -438,17 +513,18 @@ We will begin by considering the widely known bias-variance-decomposition for re
 \begin{marginfigure} 
   \label{fig:bias-variance-tradeoff}
     \includegraphics[width=\textwidth]{bias-variance/bias_variance_decomposition_with_decision_trees.png}
-    \caption{foo!}
+    \caption{Bias and variance of decision tree models of increasing maximum tree depth. With increasing tree depth, \tcircle{orange} bias tends to decrease, as \tcircle{green} variance tends to increase.}
     % TODO
 \end{marginfigure}
 
 % % TODO bias and variance are measures independent of particular data sample, can use to compare (on same data*set*)
 
 \begin{marginfigure} \label{fig:variance-trees}
+  % TODO! tight layout of fig
     \includegraphics[width=\textwidth]{bias-variance/test_error_of_individual_trees.png}
     \caption{
     Visualising the variance of \tikzcircle[fill=blue]{3pt} decision tree and \tikzcircle[fill=orange]{3pt} Random Forest models. Each glyph corresponds to the test error of one model trained on a random subset of the full available data. The variation of the test error around the mean test error across many dataset samples is exactly the variance.
-    Not only do Random Forests show lower test errors on average, they seem to also have lower variance.
+    Not only do Random Forests show lower test errors on average, they also have lower variance.
     %  We will explain this observation in \ref{todo}
     % TODO because, in fact, ensemble improvement is solely due to reduction in variance
     %   since var(qbar) = mean(var(qi)) - div/div-eff
@@ -466,18 +542,18 @@ As such, $\mathbb{E}_{X}\left[ X \right]$ is a centroid to the different realisa
 $$
 \mathbb{E}_{X}\left[ X \right] = \arg\min _{z} \mathbb{E}_{X}\left[ (X-z)^2 \right] 
 $$
-Recall that a model is a function dependent on the training input $D$. The variance is a measure of how different the models produced by the learning algorithm will be in terms out outputs if supplied with different realisations of training input $D$.
+Recall that a model is a function dependent on the training input $D$. The variance is a measure of how different the models produced by the learning algorithm will be in terms of outputs if supplied with different realisations of training input $D$.
 $$
-\Var{D}{q_{D}(X)} = \mathbb{E}_{D}\left[ (q_{D}(X) - \mathbb{E}_{D}\left[ q_{D}(X) \right] )^2 \right] 
+\Var{D}{q_{D}(X)} = \mathbb{E}_{X,D}\left[ (q_{D}(X) - \mathbb{E}_{D}\left[ q_{D}(X) \right] )^2 \right] 
 $$
 $q^\star(X) \defeq \mathbb{E}_{D}\left[ q_{D}(X) \right]$ is the \textit{central model} and does not depend on $D$.
 
 Further, recall that we are considering a joint distribution of example-output pairs $(X,Y)$. We can not assume that the outcomes are not ambiguous. Let $y(X)$ be the outcome associated with $X$.
 We measure the variance of actual outcomes $y(X)$ for a given example $X$ around the expected outcome.
 $$
-\Var{Y}{y(X)} = \mathbb{E}_{Y}\left[ (Y-\mathbb{E}_{Y}\left[ y(X) \right] )^2 \right] 
+\Var{Y\mid X}{Y} = \mathbb{E}_{Y}\left[ (Y-\mathbb{E}_{Y\mid X}\left[ Y \right] )^2 \right] 
 $$
-$y^\star(X) \defeq \mathbb{E}_{Y}\left[ y(X) \right]$ is the \textit{central label} and does not depend on $Y$.
+$y^\star(X) \defeq \mathbb{E}_{Y \mid X}\left[ Y \right]$ is the \textit{central label} and does not depend on $Y$.
 
 % This is the expected squared error between a random value ($q_{D}$) and the closest non-random value ($\mathbb{E}_{D}\left[q_{D}\right]$). 
 % $$
@@ -503,40 +579,44 @@ $y^\star(X) \defeq \mathbb{E}_{Y}\left[ y(X) \right]$ is the \textit{central lab
 % $$
 Using this notation, the bias-variance decomposition for the squared-error loss is given as follows.
 Note that each variance term is the expected distance in terms of loss to a certain centroid.
-\begin{align} \label{thm:sqerr-bias-variance-decomp}
+\begin{align} 
+  \begin{split}
+\label{thm:sqerr-bias-variance-decomp}
+\underbrace{
 \mathbb{E}_{(X,Y), D}\left[ (Y-q_{D}(X))^2 \right]  
+}_{\text{generalisation error}}
 % &= 
 %   \mathbb{E}_{(X,Y)}\left[ (Y-y^\star(X))^2 \right]  
 % + \mathbb{E}_{X, D}\left[ (y^\star(X) - q_{D}(X))^2 \right]  \\
 &= \underbrace{\mathbb{E}_{(X,Y)}\left[ (Y-y^\star(X))^2 \right]   }_{\Var{}{Y} ~~ \text{("noise")}} \\
 &+ \underbrace{ \mathbb{E}_{X}\left[  (y^\star(X) - q^\star(X))^2\right]  }_{\BiasSq{Y, q} ~~ \text{("learner bias")}} \\
 &+ \underbrace{\mathbb{E}_{X, D}\left[ (q^\star(X) - q_{D}(X))^2 \right]   }_{\Var{}{q} ~~ \text{("learner variance")}}
+  \end{split}
 \end{align}
 % #todo change BiasSq to just "Bias" -- square is only artifact of squared error
 \marginnote{
-This decomposition is usually derived by expanding the square \cite{todo}. The cross-terms then vanish due to that $  q^\star = \mathbb{E}_{_{D}}\left[ q_{D} \right]$ and $y^\star = \mathbb{E}_{Y}\left[ y(X) \right]$.
+This decomposition is usually derived by expanding the square \cite{tibshirani_ElementsStatisticalLearning_2017}. The cross-terms then vanish due to that $  q^\star = \mathbb{E}_{_{D}}\left[ q_{D} \right]$ and $y^\star = \mathbb{E}_{Y}\left[ y(X) \right]$.
 This is but a special case of a more general structure applying to a certain class of losses. We will provide a more general proof in lemmas \ref{thm:bregman-collapse-bias} and \ref{thm:bregman-collapse-variances}.
 }
 
 The first term, $\Var{}{Y}$ is independent of $D$ and $q_{D}$. This means we have no means of influencing it with our choice of $q_{D}$.
-$\Var{}{Y}$ is also referred to as \textit{noise}, \textit{bayes error} or \textit{irreducible error}. 
-The second term, $\Var{}{q}$ measures the variance of our model around its non-random centroid with respect to different realisations of the random training dataset $D$. This can be understood as a measure of spread of the learning algorithm with respect to different realisations of $D$.
-The third term, $\BiasSq{q_{D}, Y}$ is the distance in terms of loss between the expected classifier and the expected label. This can be thought of as a measure of precision of the learning algorithm. 
+It is also referred to as \textit{noise}, \textit{bayes error} or \textit{irreducible error}. 
+The second term, $\Var{}{q}$ measures the variance of our model around its non-random centroid model with respect to different realisations of the random training dataset $D$. This can be understood as a measure of spread of the learning algorithm with respect to different realisations of $D$.
+The third term, $\BiasSq{q_{D}, Y}$ is the distance in terms of loss between the central model and the central label. This can be thought of as a measure of precision of the learning algorithm. 
 
 Note that we developed two things:
-On the one hand, we derived quantities that measure the notions of bias and variance. On the other hand, by virtue of these quantities appearing in the error decomposition, we have expressed the \textit{effect} these quantities have on the generalisation error.
+On the one hand, we derived quantities that measure the notions of bias and variance. On the other hand, by virtue of these quantities appearing in the error decomposition \ref{thm:sqerr-bias-variance-decomp}, we have expressed the \textit{effect} of these quantities on the generalisation error.
 % This distinction is often overlooked because, like here, for many commonly used losses the quantities and their effects coincide. However, in general this is not necessarily true. 
 
 While the bias-variance decomposition for the squared-error loss is widely accepted, there are many competing decompositions for a range other loss functions 
-\cite{
-  kohavi_BiasVarianceDecomposition_,
-  hansen_GeneralBiasVariance_2000,
-  wood_BiasVarianceDecompositionsMargin_2022,
-  didaci_DiversityClassifierEnsembles_2013,
-  domingos_UnifiedBiasVarianceDecomposition_,
-  pfau_GeneralizedBiasVarianceDecomposition_
-  }. For instance, we are particularly interested in the \zeroone-loss for classification. A decomposition of it where the model variance is independent of the outcome variable as in term \ref{eq:variance-term} is been proven to not exist \cite{wood_UnifiedTheoryDiversity_2023}. We will now argue that approaching the matter from the perspective of such \textit{loss-effects} allows us to state a general bias-variance decomposition that holds for any loss function. The decomposition for the squared-error loss is a special case of it.
-
+\cite{kohavi_BiasVarianceDecomposition_,hansen_GeneralBiasVariance_2000,wood_BiasVarianceDecompositionsMargin_2022,didaci_DiversityClassifierEnsembles_2013,domingos_UnifiedBiasVarianceDecomposition_,pfau_GeneralizedBiasVarianceDecomposition_}.  
+  In this work, we are particularly interested in the \zeroone-loss for classification. A decomposition of it where the model variance is independent of the outcome variable has been proven to not exist \cite{wood_UnifiedTheoryDiversity_2023}. We will now argue that approaching the matter from the perspective of such \textit{loss-effects} allows us to state a general bias-variance decomposition that holds for any loss function. The decomposition for the squared-error loss is a special case of it.
+\begin{definition} (Loss-Effect) For a loss functon $\ell$, and random variables $Y, Z, Z'$, we define the change in loss between $Z$ and $Z'$ in relation to $Y$ as:
+  $$
+  \LE{Z}{Z'} \defeq \ell(Y, Z') - \ell(Y, Z)
+  $$
+  \label{def:loss-effect}
+\end{definition}
 \marginnote{
   Note that the arguments of loss-effect appear in inverse order in the difference. This is to give the expression a suggestive shape since in section \ref{sec:bregman-divergences}, we will show that, for a Bregman divergence $B_\phi$, it holds that
   $$
@@ -544,18 +624,11 @@ While the bias-variance decomposition for the squared-error loss is widely accep
   % TODO check order of arguments
   $$
 }
-\begin{definition} (Loss-Effect) For a loss functon $\ell$, and random variables $Y, Z, Z'$, we define the change in loss between $Z$ and $Z'$ in relation to $Y$ as:
-  $$
-  \LE{Z}{Z'} \defeq \ell(Y, Z') - \ell(Y, Z)
-  $$
-  \label{def:loss-effect}
-\end{definition}
-
 \begin{definition}
 \label{def:central-model}
 (Central model) Given a model $q$, it's central model is the centroid with respect to $D$:
 $$
-q^\star \defeq \arg\\min_{z} \mathbb{E}_{D}\left[ \ell(z, q_{D}) \right] 
+q^\star \defeq \arg\min_{z} \mathbb{E}_{D}\left[ \ell(z, q_{D}) \right] 
 $$
 \end{definition}
 
@@ -567,12 +640,12 @@ y^\star \defeq \mathbb{E}_{Y|X}\left[ Y \right]
 $$
 \end{definition}
 
-The \textit{variance-effect} is the expected change in loss caused by using $q_{D}$ instead of the non-random centroid $q^\star(X)$. Likewise, the \textit{bias-effect} is the expected change in loss caused by using the expected model instead of the expected label. In the following, to lighten notation, we will omit explicitly stating the dependence on $X$.
-\sidenote{In the original publication \cite{james_GeneralizationsBiasVariance_}, bias-effect is called the \textit{systematic effect}, i.e. the effect of the systematic components. However, it is clearer to call this \textit{bias-effect}, particularly when we begin to introduce notions of diversity in \ref{sec:diversity-measures}.}
+The \textit{variance-effect} is the expected change in loss due to using $q_{D}$ instead of the non-random centroid $q^\star$. Likewise, the \textit{bias-effect} is the expected change in loss due to using the expected model instead of the expected label. In the following, to lighten notation, we will omit explicitly stating the dependence on $X$.
+\marginnote{In the original publication \cite{james_GeneralizationsBiasVariance_}, bias-effect is called the \textit{systematic effect}, i.e. the effect of the systematic components. However, it is clearer to call this \textit{bias-effect}, particularly when we begin to introduce notions of diversity in \ref{sec:diversity-measures}.}
 Formally:
 \begin{align*}
-\text{Bias-Effect} &\defeq \mathbb{E}_{D,Y}\left[ \ell(Y, q^\star) - \ell(Y, y^\star) \right] \\
-\text{Variance-Effect} &\defeq \mathbb{E}_{D,Y}\left[ \ell(Y, q_{D}) - \ell(Y, q^\star) \right] 
+\text{Bias-Effect} &\defeq \mathbb{E}_{(X,Y)}\left[ \ell(Y, q^\star) - \ell(Y, y^\star) \right] \\
+\text{Variance-Effect} &\defeq \mathbb{E}_{(X,Y),D}\left[ \ell(Y, q_{D}) - \ell(Y, q^\star) \right] 
 \end{align*}
 
 
@@ -615,15 +688,14 @@ For any loss function $L$, it holds that
 \mathbb{E}_{(X,Y), D}\left[ \ell(Y, q_{D}) \right]  
 &= 
 \underbrace{\mathbb{E}_{(X,Y)}\left[ \ell(Y, y^\star) \right]  }_{\text{noise}}
-+ \underbrace{\mathbb{E}_{X)}\left[ \LE{q^\star, y^\star} \right] }_{\text{bias-effect}}
-+ \underbrace{\mathbb{E}_{X,D}\left[ \LE{q_D, q^\star} \right] }_{\text{variance-effect}}  \\
++ \underbrace{\mathbb{E}_{(X,Y)}\left[ \LE{q^\star, y^\star} \right] }_{\text{bias-effect}}
++ \underbrace{\mathbb{E}_{(X,Y),D}\left[ \LE{q_D, q^\star} \right] }_{\text{variance-effect}}  \\
 % \\ 
 % \text{for} \hspace{1em}
 % & \LE{q^\star}{y^\star} = \ell(Y, q^\star) - \ell(Y, y^\star) \\ \\
 % &\LE{q^\star}{q_D} = \ell(Y, q_{D}) - \ell(Y, q^\star)
 \end{align*}
 \end{theorem}
-This decomposition holds for \textit{any} loss function since, by linearity of expectation, the individual terms on the right-hand-side simply cancel out. Further, this decomposition is independent of the definitions of $y^\star$ and $q^\star$.
 
 
 
@@ -633,23 +705,18 @@ This decomposition holds for \textit{any} loss function since, by linearity of e
 \section{Bregman Divergences and Centroids}
 
 To measure the difference between predicted and ground-truth outcomes, we use a loss function $\ell$. The choice of loss function depends on the data domain, the learning task and computational considerations. 
-
-Often, learners are analysed with respect to a specific loss function, such as the squared-error loss \cite{scornet_ConsistencyRandomForests_2015} for regression or the \zeroone-loss \cite{theisen_WhenAreEnsembles_2023} or the KL-divergence \cite{webb_EnsembleNotEnsemble_2019} for classification. The well-known bias-variance decomposition for the squared-error loss is usually shown directly in teaching materials \cite{tibshirani_ElementsStatisticalLearning_2017, weinberger_Lecture12Bias_}. The question then arises which properties are specific to the loss function and which are part of a more general structure.
-
-We will now define a family of loss functions, called \textit{Bregman divergences}, that encompasses many widely used loss functions in supervised learning (see table \ref{tab:bregman-examples}). 
-% We are interested in when and how one can improve the generalisation error by combining multiple models into an ensemble. We will consider generally for arbitrary loss functions, and then identify Bregman divergences of an important special case.
-
+Examples are the squared-error loss \cite{scornet_ConsistencyRandomForests_2015} for regression, or the \zeroone-loss \cite{theisen_WhenAreEnsembles_2023} or the KL-divergence \cite{webb_EnsembleNotEnsemble_2019} for classification. The well-known bias-variance decomposition for the squared-error loss is usually shown directly in teaching materials \cite{tibshirani_ElementsStatisticalLearning_2017, weinberger_Lecture12Bias_}. The question then arises which properties are specific to the loss function and which are part of a more general structure.
 \begin{marginfigure} \label{fig:bregman-div-intuition}
     \includegraphics[width=\textwidth]{figma-illustrations/bregman-div-intuition}
     \caption{Given a strictly convex generator $\phi$, the Bregman divergence for points $p, q$ is the difference between the linear approximation around $p$ and $\phi$ at the point $q$. }
 \end{marginfigure}
-% TODO never pagebreak in theorem/definition boxes
+We will now define a family of loss functions, called \textit{Bregman divergences}, that encompasses many widely used loss functions in supervised learning (see \cref{tab:bregman-examples}). 
 \begin{definition} \label{def:bregman-divergence}
-\textit{(Bregman Divergence \cite{pfau, adlam22})} The Bregman divergence $\Breg{p}{q} : \mathcal{S} \times \mathcal{S}\to \mathbb{R}$ is defined based on a generator function $\phi$ as follows:
+\textit{(Bregman Divergence \cite{pfau_GeneralizedBiasVarianceDecomposition_, adlam_UnderstandingBiasvarianceTradeoff_2022})} The Bregman divergence $\Breg{p}{q} : \mathcal{S} \times \mathcal{S}\to \mathbb{R}$ is defined based on a generator function $\phi$ as follows:
 $$
-\Breg{p}{q} \defeq \phi(\vec{p}) - \phi(\vec{q}) - \inner{\nabla \phi(q)}{(\vec{p} - \vec{q})}
+\Breg{p}{q} \defeq \phi(p) - \phi(q) - \inner{\nabla \phi(q)}{(p-q)}
 $$
-where $\inner{\cdot}{\cdot}$ is the inner product, $\nabla \phi(\vec{q})$ is the gradient vector of $\phi$ at $\vec{q}$ and $\phi: \mathcal{S} \to \mathbb{R}$ is a strictly convex function on a convex set $\mathcal{S} \subseteq \mathbb{R}^k$ such that it is differentiable on the relative interior of $\mathcal{\S{}}$.
+where $\inner{\cdot}{\cdot}$ is the inner product, $\nabla \phi(q)$ is the gradient vector of $\phi$ at $q$ and $\phi: \mathcal{S} \to \mathbb{R}$ is a strictly convex function on a convex set $\mathcal{S} \subseteq \mathbb{R}^k$ such that it is differentiable on the relative interior of $\mathcal{S}$.
 \end{definition}
 
 
@@ -660,6 +727,7 @@ where $\inner{\cdot}{\cdot}$ is the inner product, $\nabla \phi(\vec{q})$ is the
       \cite{banerjee_ClusteringBregmanDivergences_2004, wood_UnifiedTheoryDiversity_2023} 
     }
     % TODO formatting of table
+    % TODO fix variables in rows (should be p and q)
     \begin{tabular}{|l|l|l|l|}
     \hline
         Divergence $\Breg{p}{q}$ & Generator $\phi(q)$ & Domain $S$ & Loss function \\ \hline
@@ -700,6 +768,8 @@ where $\inner{\cdot}{\cdot}$ is the inner product, $\nabla \phi(\vec{q})$ is the
 % We will see that all these quantities can indeed be expressed as variances due to a specific property of Bregman divergences. For the \zeroone-loss, this takes a different form.
 % TODO somewhere else: this means that bias-variance-covariance decomposition is an artifact of squared error (pullling out the covariance, I think) -- although expressing in terms of disagreement is still possible, cf bounds by theisen.
 %
+
+% TODO motivate variances better
 In order to talk about variances with respect to Bregman divergences, we need a notion of a centroid with respect to a Bregman divergence. Bregman divergences are in general not symmetric and hence there is a \textit{left} and \textit{right} centroid.
 
 \begin{lemma} (Left and right Bregman centroids, \cite{pfau_GeneralizedBiasVarianceDecomposition_})
@@ -716,6 +786,7 @@ In order to talk about variances with respect to Bregman divergences, we need a 
   The left Bregman centroid is the expected value in the dual space implied by $\nabla\phi$. Due to this, we define the dual expectation as  
   $$\mathcal{E}\left[X\right] \defeq (\nabla \phi)^{-1}\mathbb{E}_{}\left[ \nabla \phi(X) \right]$$ 
 \end{definition}
+In accordance with \cref{def:central-model}, for Bregman divergences, $q^\star$ is the left Bregman centroid and $y^\star$ is the right Bregman centroid.
 
 % The left Bregman centroid will be important for considering the variance of a learner around its parametrisation $\Theta$.
 % TODO a visual here
@@ -746,13 +817,13 @@ $$
 ~ ~ \rightarrow ~ ~  I_{\phi}(X) = 
 \sum_{i=1}^n \sum_{j=1}^m p\left(u_i, v_j\right) \log \frac{p\left(u_i, v_j\right)}{p\left(u_i\right) p\left(v_j\right)}
 $$
-% TODO entropy and log-loss
-% see https://chat.openai.com/c/26e594d3-91f1-4bec-9f9a-8cb866ede63a
-% (can give this as starred proof)
 
-% TODO properly, generally define q^star -- should be dual expectation! (also in case of effect-decomp?)
 % TODO diversity is upper-bounded by *average* variance (not just ensemble variance) (as consequence of qstar lemma in homogeneous)
 
+
+
+
+% TODO note that ambiguity-effect could then be a generalised variance for 0/1-loss
 
 
 
@@ -760,7 +831,7 @@ $$
 \chapter{Ensemble Learning}
 \label{chapter:ensemble-learning}
 
-\textit{Ensemble Learning} is the method of training $M$ individual models $q_{1}, \dots, q_{M}$ for a given task and aggregating their output via an \textit{ensemble combiner} $\bar{q}$ to form an ensemble prediction \cite{zhou_EnsembleMethodsFoundations_2012}.
+\textit{Ensemble Learning} is the method of training $M$ individual models $q_{1}, \dots, q_{M}$ for a given task and aggregating their outputs via an \textit{ensemble combiner} $\bar{q}$ to form an ensemble prediction \cite{zhou_EnsembleMethodsFoundations_2012}.
 The individual models $q_{1}, \dots, q_{M}$ are referred to as \textit{members}. When all members are constructed using the same learning algorithm, we call it a \textit{homogeneous} ensemble. The learning algorithm is then referred to as the \textit{base learner}. Otherwise the ensemble is \textit{heterogeneous}. 
 % When analysing the generalisation error, we refer to $\bar{q}$ as the \textit{ensemble model}. When considering how to actually combine ensemble predictions, we also refer to $\bar{q}$ as the \textit{combiner}. 
 
@@ -801,17 +872,17 @@ In the supervised learning setting with a single model, we have defined the mode
   }
 \end{marginfigure}
 Analysing ensembles means analysing differences between the members. There are two dimensions in which ensemble members can differ. First, in terms of provided training data. 
-\sidenote{For instance, each learner may be trained on a random subset of the available training data (see section \ref{sec:random-forest-scheme})}
+\sidenote{For instance, each learner may be trained on a random subset of the available training data (see \cref{sec:random-forest-scheme})}
 Second, in terms of other randomness used in model construction.
-\sidenote{For instance, random numbers used in decision tree construction (see section \ref{sec:decision-trees}).}
-To distinguish these two sources, we sometimes denote the training data as a random vector $D = (D_{1}, \dots, D_{M})$ and other parameters as $\Theta = (\Theta_{1}, \dots, \Theta_{M})$. 
-\begin{definition} (Ensemble member model) The $i$-th ensemble member model $q_{i}: \mathcal{X} \to \mathcal{Y}$ is a function depending on training input $D_{i}$ and additional parameters $\Theta_{i}$.
+\sidenote{For instance, random numbers used in decision tree construction (see \cref{sec:decision-trees}).}
+To distinguish these two sources, we sometimes denote the training data as a random vector $D = (D_{1}, \dots, D_{M})$ and other member parameters as $\Theta = (\Theta_{1}, \dots, \Theta_{M})$. 
+\begin{definition} (Ensemble member model) The $i$-th ensemble member model $q_{i}$ is a function depending on training input $D_{i}$ and additional parameters $\Theta_{i}$.
 $$
-q_{D_{i}, \Theta_{i}}(X)
+q_{D_{i}, \Theta_{i}}(X): \mathcal{X} \to \mathcal{Y}
 $$
 To shorten notation, we also write $q_{i} \defeq  q_{D_{i}, \Theta_{i}}(X)$.
 \end{definition}
-Due to that the $i$-th member then depends only on $D_{i}$ and $\Theta_{i}$ and is independent of $D_{j}$ and $\Theta_{j}$ for $j \not= i$, using the law of total expectation (see lemma \ref{thm:law-of-total-expectation}), we can write
+Due to that the $i$-th member depends only on $D_{i}$ and $\Theta_{i}$ and is independent of $D_{j}$ and $\Theta_{j}$ for $j \not= i$, using the law of total expectation (see \cref{thm:law-of-total-expectation}), we can write
 $$
 \mathbb{E}_{D}\left[ q_{i} \right] = \mathbb{E}_{D_{j \not= i}}\left[ \mathbb{E}_{D_{i}}\left[ q_{i} \right]   \right]  = \mathbb{E}_{D_{i}}\left[ q_{i} \right] 
 $$
@@ -843,12 +914,14 @@ $$
 \bar{q} \defeq \arg\min_z \mathbb{E}_\Theta \left[ \ell(z, q_\Theta) \right]
 $$
 \end{definition}
-Note that this is the central model with respect to $\Theta$ (compare definition \ref{def:central-model}).
-For Bregman divergences, this shows to be the dual expectation (def. \ref{def:dual-expectation}). This definition agrees with combiners commonly used in practise (plurality vote, arithmetic mean). It links combiners to loss functions. Further, it suggests combiners for other loss functions. In each case, using a combiner as defined here enables a very general and expressive theory of ensemble diversity and a decomposition of the ensemble generalisation error exactly measuring ensemble improvement due to diversity.
+Note that this is the central model with respect to $\Theta$ (\cf \ref{def:central-model}).
+For Bregman divergences, this is the left Bregman centroid, i.e. the the dual expectation (\cf \ref{def:dual-expectation}). This definition agrees with combiners commonly used in practise (plurality vote, arithmetic mean). It links combiners to loss functions. Further, it suggests combiners for other loss functions. In each case, using a combiner as defined here enables a very general and expressive theory of ensemble diversity and a decomposition of the ensemble generalisation error exactly measuring ensemble improvement due to diversity.
 
-An ensemble is homogeneous iff $\Theta_{1}, \dots, \Theta_{M}$ are identically and independently distributed. This is the case if the member models are constructed according to the same base learner and do not influence each other. 
+An ensemble is homogeneous if and only if $\Theta_{1}, \dots, \Theta_{M}$ are identically and independently distributed. This is the case if the member models are constructed according to the same base learner and do not influence each other. 
 
 \begin{lemma}
+  % TODO generalised from louppe? or, given in wood23?
+  % TODO! before corollay 4.2.3, we use this for LE, but in the proof here we assume Bregman divergence
  \label{thm:qstars-same} 
   $\star$ In homogeneous ensembles, the central models of any two members and the combiner are the same. That is, for any $i, j \in \{ 1, \dots, M \}$ it holds that
 $$
@@ -870,16 +943,14 @@ For the ensemble combiner, it holds that
 &= \mathcal{E}_{\Theta}\left[ \mathcal{E}_{D}\left[ q_{D, \Theta} \right]  \right] = \mathcal{E}_{\Theta}\left[ q_{\Theta}^\star \right] 
 \end{align*}
 Due to the result above, $q_{\Theta}^\star$ is constant over $\Theta$ and thus $\mathcal{E}_{\Theta}\left[ q_{\Theta}^\star \right] = q_{\Theta}^\star$.
-
-Both properties also hold for dual expectations for Bregman divergences defined in definition \ref{thm:bregman-centroids}.
 \end{proof}
 
 A basic measure for classification ensembles under the \zeroone-loss is the winning margin of the majority vote.
 % TODO resolve ambiguous terms majority/plurality
 \begin{definition} (Ensemble margins for majority voting \cite{breiman_RandomForests_2001})
-The margin for class $y$ of an example $x$ is the difference between the number of member votes for class $Y$ and the number of votes for the next-best class.
+The margin for class $Y$ of an example $X$ is the difference between the number of member votes for class $Y$ and the number of votes for the next-best class.
 	$$
-\mr(x,y) \defeq \Mavg \ind{q_{i} = y} - \max_{j \neq y} \Mavg \ind{q_{i} = j} \in [-1, 1]
+\mr(X,Y) \defeq \Mavg \ind{q_{i} = Y} - \max_{j \neq y} \Mavg \ind{q_{i} = j} \hspace{1em} \in [-1, 1]
 $$
 % TODO maybe express with expectations instead
 \label{def:ensemble-margin}
@@ -944,7 +1015,7 @@ $$
 \section{Motivation}
 \label{sec:ensemble-learning-motivation}
 
-We will now review some classical arguments that motivate ensemble learning. We do this to provide context to the results in chapter \ref{sec:diversity}, which also show when and how ensemble learning is beneficial.
+We will now review some classical arguments that motivate ensemble learning. We do this to provide context to the results in \cref{sec:diversity}, which also show when and how ensemble learning is beneficial.
 
 \paragraph{Ensemble improvement is non-negative} The arithmetic mean combiner can be seen as approximating an expectation over member models, i.e. $\bar{q} = \mathbb{E}_{\Theta} \left[q_{\Theta}\right] \approx \Mavg q_i$.
 This motivated \cite{abe_PathologiesPredictiveDiversity_2023} to invoke Jensen's inequality
@@ -953,7 +1024,7 @@ $$
 \phi \text{~convex} \rightarrow \phi\left(\mathbb{E}_{}\left[ X \right] \right) \leq \mathbb{E}_{}\left[ \phi(X) \right] 
 $$
 }
-. For a loss function $\ell$ that is convex in its first argument, it holds that
+. For a loss function $\ell$ that is convex in its second argument, it holds that
 $$
 \underbrace{
 \ell(Y, \mathbb{E}_{\Theta}\left[ q_{\Theta}(X)\right] ) 
@@ -961,26 +1032,26 @@ $$
 ~ ~ \leq ~ ~ 
 \mathbb{E}_{\Theta}\left[ 
 \underbrace{
-\ell(q_{\Theta}(X), Y)  
+\ell(Y,q_{\Theta}(X))  
 }_{\text{"member loss"}}
 \right]
 $$
 and thus
 $$
-\mathbb{E}_{{\Theta}}\left[ \ell (q_{\Theta}(X),Y) \right]  -
-\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right] ,Y ) \geq 0
+\mathbb{E}_{{\Theta}}\left[ \ell (Y, q_{\Theta}(X)) \right]  -
+\ell(Y, \mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right]) \geq 0
 $$
 \begin{corollary}
   For convex loss functions and using the arithmetic mean combiner, ensembling can never hurt performance: The ensemble loss is always smaller-equal than the average member error.
 \end{corollary}
 % This shows that, for convex loss functions and the arithmetic mean combiner, the ensemble loss is always smaller-equal than the average member error.
-\citeauthor{abe_PathologiesPredictiveDiversity_2023} \cite{abe_PathologiesPredictiveDiversity_2023} interpret the difference between these quantities, as a measure of ensemble improvement. 
+\citeauthor{abe_PathologiesPredictiveDiversity_2023} \cite{abe_PathologiesPredictiveDiversity_2023} interpret the difference between these quantities, as a measure of ensemble improvement, i.e. the gain from using an ensemble instead of a single member.
 
 \paragraph{Ensemble bias equals average member bias}
 It can be shown that the bias of a homogeneous ensemble is equal to the average bias of the ensemble members. We will give an illustrative argument for the arithmetic mean combiner here.
 We will show this in detail in a more general and inuitive way in chapter \ref{sec:diversity}.
 
-\begin{lemma} (Ensemble bias equals average member bias under arithmetic mean combiner \cite{louppe_UnderstandingRandomForests_2015})
+\begin{lemma} (Ensemble bias equals average member bias under arithmetic mean combiner in homogeneous ensembles \cite{louppe_UnderstandingRandomForests_2015})
   \label{thm:ensemble-bias-equals-average-bias}
 $$
 \mathbb{E}_{X}\left[ \ell(y^\star(X), \bar{q}^\star(X)) \right] 
@@ -989,7 +1060,7 @@ $$
 $$
 \end{lemma}
 \begin{proof}
-Consider individual learner inputs $D = (D_{1}, \dots, D_{M})$. Each member depends on some $D_{i}$ and the combiner $\bar{q}$ depends only on $D$. Assuming that $D_{1}, \dots, D_{M}$ are independent and identically distributed, we can write
+Consider individual learner inputs $D = (D_{1}, \dots, D_{M})$. Each member depends on some $D_{i}$ and the combiner $\bar{q}$ depends on $D$. Assuming that $D_{1}, \dots, D_{M}$ are independent and identically distributed, we can write
 $$
 \mathbb{E}_{D, \Theta}\left[ \bar{q} \right] = \mathbb{E}_{D}\left[ \Mavg q_{D_{i}} \right] = \Mavg \mathbb{E}_{D_{i}}\left[ q_{D_{i}} \right] = \mathbb{E}_{D'}\left[ q_{D'} \right]
 $$
@@ -1009,6 +1080,7 @@ This argument depends on the linearity of expectations, the arithmetic mean comb
 For homogeneous ensembles under the arithmetic mean combiner, ensemble improvement is solely due to variance reduction.
 % TODO clarify! what is ensemble improvement?
 \end{corollary}
+% TODO some more illustration on why that is
 % TODO and later see that variance reduction is exactly measured by diversity -- summarise that clearly somewhere -- maybe even put it in a theorem
 % really in this thesis, we're the first to provide a comprehensive picture onto all this from the lens of the diversity decomp
 
@@ -1020,7 +1092,7 @@ Assume $q_{1}, \dots, q_{M}$ are identically and independently distributed with 
 $$
 	\Var{}{\bar{q}} = \Var{}{\Mavg q_{i}} = \frac{1}{M^2} \sum_{i=1}^M \Var{}{q_{i}} = \frac{1}{M} \sigma^2
 $$
-As the number of members $M$ increases, the ensemble variance is reduced. Further, one can also see that the interactions between members determine the variance reduction. Assume ensemble members have equal pairwise covariance $\rho$. Then 
+As the number of members $M$ increases, the ensemble variance is reduced. Further, one can also see that the interactions between members determine the variance reduction. Assume ensemble members have equal pairwise covariance. Then 
 $$
 \rho \defeq \frac{\text{Cov}(q_{i}, q_{j})}{\sigma^2} ~ ~ \leftrightarrow \text{Cov}(q_{i}, q_{j}) = \rho \sigma^2
 $$
@@ -1047,20 +1119,17 @@ One can show that $\rho \geq 0$ \cite{louppe_UnderstandingRandomForests_2015}.
 % TODO recap in margin
 % TODO definition of error in terms of margins > 0
 % TODO give chebychev in margin
-We open with Chebychev's inequality to bound the generalisation error in terms of the variance of the ensemble margin.
+The analysis is enabled by imposing an assumption on the performance of member models.
+Let $s \defeq \mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$ be the \textit{strength} of the ensemble.
+We assume $s$ to be be non-negative. Intuitively, this means that the ensemble is more likely to be correct than incorrect. For binary classification, this is equivalent to the assumption that a member predicts the correct class with probability $\nicefrac{1}{2}$. This is exactly the the weak-learner assumption which we treat in detail in \cref{def:weak-learner}.
+
+The assumption that $s \geq 0$ enables us to open with Chebychev's inequality to bound the generalisation error in terms of the variance of the ensemble margin. 
 % TODO this mg > 0 is for 0/1-loss, right?
 $$
 \mathbb{E}\left[ \ell(Y, \bar{q}(X)) \right]  = \prob{}{\mr(X, Y; D) < 0 }  ~ ~ \leq ~ ~ \frac{\Var{}{\mr(X, Y; D)  }}{\mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]^2}
 $$
-We can already see that we have an interaction between the performance of the individual members, as reflected in the ensemble margin $\mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$ and the variance of the margin.
+We can already see that we have an interaction between the performance of the individual members, as reflected in the ensemble margin $\mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$, and the variance of the margin.
 The generalisation error is in part determined by the ratio of these two quantities.
-
-\marginnote{
-$s \defeq \mathbb{E}_{X,Y}\left[ \mr(X, Y; D)  \right]$ is also called the \textit{strength} of the ensemble.
-$s$ is assumed to be non-negative. For binary classification, this is equivalent 
-% TODO make sure
-to the weak-learner assumption (see \ref{def:weak-learner}).
-}
 
 Note that
 $$
@@ -1099,7 +1168,7 @@ By the definition of variance, have
 &= \mathbb{E}_{Z}\left[ \mr(Z)^2 \right] - \mathbb{E}_{Z}\left[ \mr(Z) \right] ^2 \\
 \end{align*}
 
-For the left term, by the rule of iterated expectation and the fact that $Z$ and $\Theta$ are independent (see lemma \ref{thm:law-of-total-expectation}), it holds that
+For the left-hand-side term, by the rule of iterated expectation and the fact that $Z$ and $\Theta$ are independent (see lemma \ref{thm:law-of-total-expectation}), it holds that
 $$
 \mathbb{E}_{Z}\left[ \mr(Z) ^2 \right]  = \mathbb{E}_{Z}\left[ \mathbb{E}_{\Theta}\left[ \rmg(\Theta) \mid Z \right] ^2  \right] = \mathbb{E}_{Z, \Theta}\left[ \rmg(\Theta)^2 \right] % by law of total \exp ectation
 = \mathbb{E}_{\Theta}\left[ \mathbb{E}_{Z}\left[ \rmg(\Theta) ^2 \right]  \right] 
@@ -1211,7 +1280,7 @@ Unfortunately, due to the initial application of Chebychev's inequality, this is
 
 % evtl tabelle, systematisch mit überblick über algs etc
 
-It is evident that the interactions between members are a driving force behind member performance (see, for example, section \ref{sec:ensemble-learning-motivation}). Understanding ensembles means understanding how individual member models can be related to each other and how these relationships affect the ensemble performance. In this section, we will give an overview over some of the measures proposed to quantify ensemble diversity. We focus on the classification task. 
+It is evident that the interactions between members are a driving force behind member performance (see, for example, \cref{sec:ensemble-learning-motivation}). Understanding ensembles means understanding how individual member models can be related to each other and how these relationships affect the ensemble performance. In this section, we will give an overview over some of the measures proposed to quantify ensemble diversity. We focus on the classification task. 
 
 \section{Measures of Diversity}
 \label{sec:diversity-measures}
@@ -1250,42 +1319,171 @@ For a $a,b,c \in X$, due to the triangle inequality and symmetry of $d$, it hold
 \end{proof}
 In particular, the \zeroone-loss is symmetric and satisfies the triangle inequality.
 
+
+
+% TODO some soft talk about how diversity is essential for RFs, more so than e.g. NNs
+% the entire clou behind RFs is diversity (old: variance reduction)
+
+%  theisen: "This indicates that trees are particularly well-suited to ensembling across all hyper-parameter values, in contrast to other parameterized types of classifiers."
+
+% TODO cf theisen sec 5 -- may show how diversity makes more sense for tree than for NN ensembles
+
+
+% https://www.semanticscholar.org/paper/Understanding-and-Improving-Ensemble-Adversarial-Deng-Mu/59790c35eb5a228f85846728bb1bcd0351c226db
+% https://www.semanticscholar.org/paper/Improving-Adversarial-Robustness-via-Promoting-Pang-Xu/676e40050453ddeb1387f8314478c0ac3681a8c6
+
+
+
+
+\chapter{Growth Strategies}
+
+% TODO would be good to mention that thing where they show that with SFS/SBS selection scheme they find a better subset of trees
+
+% TODO would really be nice to mention and explain ADF scheme...
+
+% Some general intuition on the idea behind encouraging diversity (always tradeoff with avg member error)
+
+In the previous chapters, we have developed an understanding of how diversity affects the ensemble generalisation error. We have seen that the ensemble error is determined by a tradeoff between the average member error and the diversity, a measure of variance between member predictions. We will now consider how to influence this tradeoff during ensemble construction. The basic idea is to guide the construction of an ensemble member with respect to its interactions with the ensemble constructed so far.
+
+% We begin by considering the question what it means for an ensemble to be diverse. 
+% The theory around ensemble diversity allows us to explain previously published approaches and inform new ones. 
+% TODO rest of chapter overview
+
+% TODO review SFS, SBS, human-in-the-loop
+
+% Consider two: weighting (sequential) and NCL (parallel) -- Alternating random forests would also be parallel
+
+% \section{Review} 
+% Maybe here also review on existing methods, or otherwise relate and motivate where needed.
+% or put that in section "diversity is measure of model fit"
+
+\section{Diversity is a measure of model fit}
+% TODO maybe already look at BVD decomp plots here
+% zhou2012 5.3.4 "limitation of diversity measures"
+% already been observed that flat-out optimising for diversity does not increase model performance
+% -- also unlikely, since it's just a dimension, wouldn't necessarily expect that from bias / variance either
+% cf obsidian "sweet spot for diversity" and other notes
+% TODO (some refs where people try to find these correlations, also for member selection (SFS, SBS))
+
+There has been a line of ongoing research about capturing the notion of diversity in general ensembles
+\cite{kuncheva_MeasuresDiversityClassifier_2003,zhang_EnsembleMachineLearning_2012,melville_CreatingDiversityEnsembles_2005}
+in Random Forests 
+\cite{panhalkar_NovelApproachBuild_2022,zouggar_SimplifyingRandomForests_2019,adnan_ComplementRandomForest_2015}
+or in neural networks
+\cite{liu_EnsembleLearningNegative_1999,li_NeuralNetworkEnsembles_2021,abe_PathologiesPredictiveDiversity_2023,abe_BestDeepEnsembles_2022}
+(see also the review in section \ref{sec:diversity-measures}). One of the early insights was that many \textit{ad-hoc} diversity measures are not clearly correlated to the ensemble performance
+\cite{kuncheva_MeasuresDiversityClassifier_2003}. We claim that the search for a diversity measure that is always directly correlated with ensemble performance is misguided. As can be seen from the diversity decomposition, there is a trade-off between average member error (in turn decomposed into average member bias and variance) and diversity. As such, diversity is a measure of model fit, just like bias and variance.
+This was already observed empirically  for the case of Negative Correlation Learning with neural network ensembles \cite{buschjager_ThereNoDoubleDescent_2021} (as introduced in section \ref{sec:guided-parallel-training}). By varying the regularisation strength parameter $\lambda$, one can obtain ensembles with varying diversity but equal ensemble performance.
+We can also observe this in Random Forests for \zeroone-classification problems. Plotting the average member error versus diversity for each ensemble shows a linear trend, see for example \cref{fig:err_div}. 
+
+However, diversity is an essential component of ensemble \textit{growth}. For instance in \cref{fig:err_div}, we can see that, as the number of trees in the ensemble increases, average member bias and average member variance stay almost constant. This is to be expected since all members are constructed using the same base learner (decision trees). In other words the ensemble is homogeneous. Since the two components stay equal, the improvement in ensemble performance is \textit{exactly} given by the improvement in diversity.
+
+\begin{marginfigure}
+  % TODO see wood23 fig 14
+  \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_standard_rf/mnist_subset/bvd-standard_rf.png}
+  \caption{
+    Development of the \ensembleErrorCircle~ensemble error of a standard Random Forest ensemble as an increasing number of trees are added (evaluated on \textit{mnist} under \zeroone-loss). One can see that \avgBiasCircle~average member bias and \avgVarianceCircle~average member variance stay roughly equal while \diversityCircle~diversity increases, causing the ensemble error to decrease.
+  }
+  \label{fig:err_div}
+\end{marginfigure}
+\begin{marginfigure}
+% TODO see wood23 fig 14
+% TODO make plots nicer
+\includegraphics[width=\textwidth]{symlinks/zero-one-plots/err_div/err_div/bioresponse/bvd-standard_rf.png}
+\includegraphics[width=\textwidth]{symlinks/zero-one-plots/err_div/err_div/qsar-biodeg/bvd-standard_rf.png}
+\caption{
+  Random Forests with varying number of trees plotted across average member error (vertical axis) and diversity (horizontal axis). 
+}
+\end{marginfigure}
+
+% \marginnote{
+% The ambiguity-effect decomposition states that
+% $$
+% ...
+% $$
+% For Bregman divergences, this becomes
+% $$
+% \Breg{y}{\bar{q}} = \Mavg \Breg{y}{q_{i}} - \Breg{\bar{q}}{q_{i}}
+% $$
+% (see theorem \ref{thm:ambig-effect-decomp})
+% }
+The diversity-effect decomposition holds for both the \zeroone-loss and Bregman divergences. The key difference is that Bregman divergences are non-negative and thus there are no points which contribute negatively to the ambiguity-effect term. In other words, any kind of ambiguity is "beneficial" under Bregman divergences -- as was previously observed empirically for the squared-error loss \cite{abe_PathologiesPredictiveDiversity_2023}.
+However, the tradeoff between average member error and ambiguity still holds. Since 
+$ \Mavg \Breg{y}{q_{i}} - \Breg{\bar{q}}{q_{i}} = \Breg{y}{\bar{q}} \geq 0$, 
+diversity is upper-bounded by the average member error. This means that any improvement due to diversity can only happen by reducing the amount of error introduced by the individual member error. If there is little average member error to begin with, encouraging diversity will not necessarily improve ensemble performance. 
+% Empirical experiments \cite{buschjager_ThereNoDoubleDescent_2021} have confimed that, as diversity is increased, there exist regions where the overall ensemble error stays constant -- that is, increasing diversity leads to increased member error but the two perfectly outweigh each other. In other words, one can find a wide range of ensemble models with equal performance but varying diversity.
+
+\begin{observation} ~~
+\begin{itemize}
+\item A more diverse ensemble is not necessarily better. The ensemble performance depends on the trade-off between member performance and diversity.
+\item Diversity behaves fundamentally differently when measured in terms of a Bregman divergence or the \zeroone-loss. For Bregman divergences, diversity in predictions on a single example is always beneficial (\cf \ref{sec:bregman-divergences}). For the \zeroone-loss, additional assumption on the member performance are required (\cf \ref{sec:diversity-zeroone}). 
+\end{itemize}
+\end{observation}
+
+
+% TODO maybe look at ens-bias-variance plots for standard_rf
+% \paragraph{Ensemble bias and variance} 
+% %
+% The initial increase in average bias is also reflected in an initial increase in ensemble bias. At the same time, ensemble variance is decreased. 
+% Note how the average variance stays almost constant, while the ensemble variance varies greatly. 
+% This is the "outside view" on how diversity is a component of ensemble variance.
+
+% As the number of trees grows, for some datasets, ensemble variance is higher. For others, it is similar to standard Random Forests.
+
 \section{Diversity in Random Forests and in Neural Networks}
 \label{sec:diversity-rfs-nns}
 
 \paragraph{Interpolating and non-interpolating models} 
 
 In the majority of this section, we have considered general ensembles without assumptions on the actual member learners. It appears much of the work on ensemble diversity has been done in the context of neural networks
-\cite{
-diversity-nns
-}
-, potentially due to the early publishing of Negative Correlation Learning \cite{liu_EnsembleLearningNegative_1999} in \citeyear{liu_EnsembleLearningNegative_1999} and the easy of encouraging diversity simply via a regularisation term. 
+\cite{liu_EnsembleLearningNegative_1999,li_NeuralNetworkEnsembles_2021,abe_PathologiesPredictiveDiversity_2023,abe_BestDeepEnsembles_2022}, potentially due to the early publishing of Negative Correlation Learning \cite{liu_EnsembleLearningNegative_1999} in \citeyear{liu_EnsembleLearningNegative_1999} and the easy of encouraging diversity simply via a regularisation term. 
 However, it has been observed that encouraging diversity is not always beneficial for neural networks
-\cite{
-adnan_ComplementRandomForest_2015
-liu_EnsembleLearningNegative_1999,
-li_NeuralNetworkEnsembles_2021
-% TODO check these, add more
-}. 
+\cite{adnan_ComplementRandomForest_2015,liu_EnsembleLearningNegative_1999,li_NeuralNetworkEnsembles_2021}. 
 We will now provide a brief explanation on when and why diversity in neural network ensembles is beneficial. Further, we will argue that diversity is an essential component of Random Forests, even more so than for neural network ensembles.
 
-Recall the lower and upper bounds for diversity-effect in theorems \cite{thm:theisen-lower, thm:theisen-upper}. In simplified form for $k=2$ classes, these are
+Recall the lower and upper bounds for diversity-effect in \cref{thm:theisen-lower,thm:theisen-upper}. 
+Dividing by the member error rate and in simplified form for $k=2$ classes, we have
 $$
-D(q_{\rho}, q_{\rho'}) \geq 
-\underbrace{
+\frac{
+D(q_{\rho}, q_{\rho'}) 
+}{\mathbb{E}\left[W\right]}
+\geq 
+\overbrace{
+\frac{
 \mathbb{E}_{}\left[ W \right]  - \prob{}{W \geq \kappa} 
-}_{\text{diversity-effect / ensemble improviement} }
-\geq D(q_{\rho}, q_{\rho'}) - 1
+}{\mathbb{E}\left[W\right]}
+}^{\text{diversity-effect / ensemble improviement} }
+\geq 
+\frac{
+D(q_{\rho}, q_{\rho'}) 
+}{\mathbb{E}\left[W\right]}
+-1
+$$ 
+where $D(q_{\rho}, q_{\rho'}) = \mathbb{E}_{X, \Theta}\left[ ~\ind{q_{\rho} \not= q_{\rho'}} \right]$ is the \textit{disagreement rate}.
+Considering the quantities in relation to $\mathbb{E}\left[W\right]$ normalises the error rates in relation to the problem difficulty and gives a more informative measure of ensemble improvement, the ensemble improvement \textit{rate}.
 $$
-where $D(q_{\rho}, q_{\rho'}) = \mathbb{E}_{X}\left[ ~\ind{q_{\rho} \not= q_{\rho'}} \right]$ is the \textit{disagreement rate}. If $D < 1$, then the lower bound is less than zero and the ensemble improvement can potentially be negative, i.e. ensembling may hurt performance. If $D \geq 1$, the power bound is greater than zero and ensembling can not hurt performance. \citeauthor{theisen} analyse the behaviour of $D$ with varying model complexity. Of particular interest is the behaviour around the \textit{interpolation threshold}, which is the minimum model complexity that allows a zero training error. They show that, in neural networks and bagged logistic regression ensembles, disagreement rate and ensemble improvement are maximised at the interpolation threshold and decrease beyond. In other words, higher-capacity models benefit less from diversity, or diversity may even hurt performance. The same conclusion was reached after empirical investigation in neural network ensembles by \citeauthor{abe} \cite{abe}.
-In Random Forests, on the other hand, the model complexity is inherently bounded by the data \cite{buschj}. A decision tree can only be grown until each leaf is perfectly pure, which corresponds to zero training error. In other words, Random Forests naturally can not go \textit{into} the interpolation regime.
+\text{EIR} \defeq \frac{
+\mathbb{E}_{}\left[ W \right]  - \prob{}{W \geq \kappa} 
+}{\mathbb{E}\left[W\right]}
+$$
+The normalised variant of the disagreement is the \textit{disagreement-error-ratio}:
+$$
+\text{DER} \defeq 
+\frac{
+D(q_{\rho}, q_{\rho'}) 
+}{\mathbb{E}\left[W\right]}
+$$
 
-Further, decision trees could be understood to be of much lower capacity than deep neural networks. This likely reflects in the average member error, although a quantitative comparison has to be left for future work. Ensemble improvement can only be high if the average member error is high to begin with. In other words, ensembling can be expected to be much more beneficial for low-capacity models. This was also observed by \citeauthor{abe} \cite{abe} for the case of neural networks.
+If $\text{DER} < 1$, then the lower bound is lower than zero and the ensemble improvement can potentially be negative, i.e. ensembling may hurt performance. If $\text{DER} \geq 1$, the power bound is greater than zero and ensembling can not hurt performance. \citeauthor{theisen_WhenAreEnsembles_2023} \cite{theisen_WhenAreEnsembles_2023} analyse the behaviour of $\text{DER}$ with varying model complexity. Of particular interest is the behaviour around the \textit{interpolation threshold}, which is the minimum model complexity that allows a zero training error. They show that, in neural networks and bagged logistic regression ensembles, disagreement rate and ensemble improvement are maximised at the interpolation threshold and decrease beyond. In other words, higher-capacity models benefit less from diversity, or diversity may even hurt performance. The same conclusion was reached after empirical investigation in neural network ensembles by \citeauthor{abe_BestDeepEnsembles_2022} \cite{abe_BestDeepEnsembles_2022}.
+In Random Forests, on the other hand, the model complexity is inherently bounded by the data \cite{buschjager_ThereNoDoubleDescent_2021,theisen_WhenAreEnsembles_2023}. A decision tree can only be grown until each leaf is perfectly pure, which corresponds to zero training error. In other words, Random Forests naturally can not go \textit{into} the interpolation regime.
 
-\paragraph{Expressing diversity and average member error in terms of tree structure} As we have seen in section \ref{sec:tree-and-forest-partitions}, the generalisation error can be expressed as a weighted sum over forest cells. 
-We can also express the ambiguity decomposition (see \ref{thm:ambig-effect-decomp}) in terms of forest cells.
+Further, decision trees could be understood to be of much lower capacity than deep neural networks. This likely reflects in the average member error, although a quantitative comparison has to be left for future work. Ensemble improvement can only be high if the average member error is high to begin with. In other words, ensembling can be expected to be much more beneficial for low-capacity models. This was also observed by \citeauthor{abe_BestDeepEnsembles_2022} \cite{abe_BestDeepEnsembles_2022} for the case of neural networks.
+
+\paragraph{Expressing diversity and average member error in terms of tree structure} As we have seen in \cref{sec:tree-and-forest-partitions}, the generalisation error can be expressed as a weighted sum over forest cells. 
+We can also express the ambiguity decomposition (\cf \ref{thm:ambig-effect-decomp}) in terms of forest cells.
 For sake of clarity we omit the expectation over $D$ and write $Z \defeq (X,Y)$.  
 \begin{proposition} $\star$
+  \label{thm:random-forest-structure-decomp}
 Let
 $Z = Z_{1} \dot\cup \dots \dot\cup Z_{P}$ be a forest partition of $Z=(X,Y)$.
 \begin{align*}
@@ -1317,9 +1515,9 @@ $\prob{}{Z_{p}}$ corresponds to the area of the forest cell $p$ and can be deter
 $\text{div}(Z_{p})$ depends solely on the outputs of the tree cells that constitute $Z_{p}$. It is simply the generalised variance (see \ref{def:bregman-information}) of these leaf outputs. If leaf outputs are saved with the tree model after construction, these can be directly read off the model. However, these values still depend directly on the training data. Instead, we would like to infer the value based on the decision boundaries alone.
 In Random Forests, trees are grown \textit{deeply}, that is, until each leaf contains only a single point. Consequently, if the number of data points $n$ is large, leaf cells will become small. Provided that the regression function $m(x) = \mathbb{E}_{}\left[ Y ~| X=x \right]$ is uniformly continous, small leaf cells imply that the variation of $m$ throughout a leaf is bounded. 
 % TODO will need that actual forest regression function will approximate $m$? (consistency)
-In fact \citeauthor{scornet_ConsistencyRandomForests_2015} show
+In fact \citeauthor{scornet_ConsistencyRandomForests_2015} \cite{scornet_ConsistencyRandomForests_2015} show
 % TODO make clear that there are additional assumptions involved
-that, as $n$ grows, the variation in a leaf becomes arbitrarily small.
+that, as $n$ grows, the variation in a leaf becomes arbitrarily small (under assumptions).
 % TODO maybe give prop 2 here
 This motivates that, instead of the data-dependent leaf output $q_{i}(x)$, one could instead use the center of the cell $\tilde{q_{i}}(x)$, depending only on the decision boundaries. If the variation inside a cell vanishes, then also the error of using $\tilde{q}_{i}(x)$ over $q_{i}(x)$ vanishes.
 
@@ -1333,138 +1531,18 @@ This motivates that, instead of the data-dependent leaf output $q_{i}(x)$, one c
 % TODO mention that there are "good" and "bad" flowers
 
 
-% TODO some soft talk about how diversity is essential for RFs, more so than e.g. NNs
-% the entire clou behind RFs is diversity (old: variance reduction)
-
-%  theisen: "This indicates that trees are particularly well-suited to ensembling across all hyper-parameter values, in contrast to other parameterized types of classifiers."
-
-% TODO cf theisen sec 5 -- may show how diversity makes more sense for tree than for NN ensembles
-
-
-% https://www.semanticscholar.org/paper/Understanding-and-Improving-Ensemble-Adversarial-Deng-Mu/59790c35eb5a228f85846728bb1bcd0351c226db
-% https://www.semanticscholar.org/paper/Improving-Adversarial-Robustness-via-Promoting-Pang-Xu/676e40050453ddeb1387f8314478c0ac3681a8c6
-
-
-
-
-\chapter{Growth Strategies}
-
-% TODO would be good to mention that thing where they show that with SFS/SBS selection scheme they find a better subset of trees
-
-% TODO would really be nice to mention and explain ADF scheme...
-
-% Some general intuition on the idea behind encouraging diversity (always tradeoff with avg member error)
-
-In the previous chapters, we have developed an understanding of how diversity affects the ensemble generalisation error. We have seen that the ensemble error is determined by a tradeoff between the average member error and the diversity, a measure of variance between member predictions. We will now consider how to influence this tradeoff during ensemble construction. The basic idea is to guide the construction of an ensemble member with respect to its interactions with the ensemble constructed so far.
-
-We begin by considering the question what it means for an ensemble to be diverse. 
-The theory around ensemble diversity allows us to explain previously published approaches and inform new ones. 
-
-% TODO rest of chapter overview
-
-% TODO review SFS, SBS, human-in-the-loop
-
-% Consider two: weighting (sequential) and NCL (parallel) -- Alternating random forests would also be parallel
-
-% \section{Review} 
-% Maybe here also review on existing methods, or otherwise relate and motivate where needed.
-% or put that in section "diversity is measure of model fit"
-
-\section{Diversity is a measure of model fit}
-% TODO maybe already look at BVD decomp plots here
-% zhou2012 5.3.4 "limitation of diversity measures"
-% already been observed that flat-out optimising for diversity does not increase model performance
-% -- also unlikely, since it's just a dimension, wouldn't necessarily expect that from bias / variance either
-% cf obsidian "sweet spot for diversity" and other notes
-% TODO (some refs where people try to find these correlations, also for member selection (SFS, SBS))
-
-There has been a line of ongoing research about capturing the notion of diversity in general ensembles
-\cite{
-kuncheva_MeasuresDiversityClassifier_2003,
-zhang_EnsembleMachineLearning_2012,
-melville_CreatingDiversityEnsembles_2005
-}
-in Random Forests 
-\cite{
-panhalkar_NovelApproachBuild_2022,
-zouggar_SimplifyingRandomForests_2019,
-adnan_ComplementRandomForest_2015
-}
-or in neural networks
-\cite{
-adnan_ComplementRandomForest_2015,
-liu_EnsembleLearningNegative_1999,
-li_NeuralNetworkEnsembles_2021
-}
-in particular (see also the review in section \ref{sec:diversity-measures}). One of the early insights was that many \textit{ad-hoc} diversity measures are not clearly correlated to the ensemble performance
-\cite{kuncheva_MeasuresDiversityClassifier_2003}. We claim that the search for a diversity measure that is directly correlated with ensemble performance is misguided. As can be seen from the diversity decomposition, there is a trade-off between average member error (in turn decomposed into average member bias and variance) and diversity. As such, diversity is a measure of model fit, just like bias and variance.
-This was already observed empirically by \citeauthor{buschjager_ThereNoDoubleDescent_2021} \cite{buschjager_ThereNoDoubleDescent_2021} for the case of Negative Correlation Learning with neural network ensembles (as introduced in section \ref{sec:guided-parallel-training}). They showed that by varying the regularisation strength parameter $\lambda$, one can obtain ensembles with varying diversity but equal ensemble performance.
-We can also observe this in Random Forests for \zeroone-classification problems. Figure \ref{fig:err_div} often shows a linear trend between average member error and diversity. 
-\begin{marginfigure}
-  % TODO see wood23 fig 14
-  \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_standard_rf/mnist_subset/bvd-standard_rf.png}
-  \caption{
-    Development of the \ensembleErrorCircle~ensemble error of a standard Random Forest ensemble as an increasing number of trees are added (evaluated on \textit{mnist} under \zeroone-loss). One can see that \avgBiasCircle~average member bias and \avgVarianceCircle~average member variance stay roughly equal while \diversityCircle~diversity increases, causing the ensemble error to decrease.
-  }
-  \label{fig:err_div}
-\end{marginfigure}
-\begin{marginfigure}
-% TODO see wood23 fig 14
-% TODO make plots nicer
-\includegraphics[width=\textwidth]{symlinks/zero-one-plots/err_div/err_div/bioresponse/bvd-standard_rf.png}
-\includegraphics[width=\textwidth]{symlinks/zero-one-plots/err_div/err_div/qsar-biodeg/bvd-standard_rf.png}
-\caption{
-  Random Forests with varying number of trees plotted across average member error (vertical axis) and diversity (horizontal axis). 
-}
-\end{marginfigure}
-
-
-
-\marginnote{
-The ambiguity-effect decomposition states that
-$$
-...
-$$
-For Bregman divergences, this becomes
-$$
-\Breg{y}{\bar{q}} = \Mavg \Breg{y}{q_{i}} - \Breg{\bar{q}}{q_{i}}
-$$
-(see theorem \ref{thm:ambig-effect-decomp})
-}
-The ambiguity-effect decomposition holds for both the \zeroone-loss and Bregman divergences. The key difference is that Bregman divergences are non-negative and thus there are no points with "bad" diversity which contribute negatively to the ambiguity-effect term. In other words, any kind of ambiguity is "beneficial" under Bregman divergences -- as previously observed empirically for the squared-error loss in \cite{abe_PathologiesPredictiveDiversity_2023}.
-However, there is still the tradeoff between average member error and ambiguity. Since 
-$ \Mavg \Breg{y}{q_{i}} - \Breg{\bar{q}}{q_{i}} = \Breg{y}{\bar{q}} \geq 0$, 
-ambiguity is upper-bounded by the average member error. This means that any improvement due to diversity can only happen by reducing the amount of error introduced by the individual member error. If there is little average member error to begin with, encouraging diversity will not necessarily improve ensemble performance. 
-% Empirical experiments \cite{buschjager_ThereNoDoubleDescent_2021} have confimed that, as diversity is increased, there exist regions where the overall ensemble error stays constant -- that is, increasing diversity leads to increased member error but the two perfectly outweigh each other. In other words, one can find a wide range of ensemble models with equal performance but varying diversity.
-
-\begin{observation} ~~
-\begin{itemize}
-\item A more diverse ensemble is not necessarily better. The ensemble performance depends on the trade-off between member performance and diversity.
-\item Diversity behaves fundamentally differently when measured in terms of a Bregman divergence or the \zeroone-loss. For Bregman divergences, diversity in predictions on a single example is always beneficial (section \ref{sec:bregman-divergences}). For the \zeroone-loss, additional assumption on the member performance have to be required (section \ref{sec:diversity-zeroone}). 
-\end{itemize}
-\end{observation}
-
-
-% TODO maybe look at ens-bias-variance plots for standard_rf
-% \paragraph{Ensemble bias and variance} 
-% %
-% The initial increase in average bias is also reflected in an initial increase in ensemble bias. At the same time, ensemble variance is decreased. 
-% Note how the average variance stays almost constant, while the ensemble variance varies greatly. 
-% This is the "outside view" on how diversity is a component of ensemble variance.
-
-% As the number of trees grows, for some datasets, ensemble variance is higher. For others, it is similar to standard Random Forests.
-
-
 
 \section{Guided sequential training of member models}
 \label{sec:dynamic-random-forests}
 
-The statistical analysis in chapter \ref{sec:diversity} has always considered a given ensemble of fixed size. 
+The statistical analysis in \cref{sec:diversity} has always considered a given ensemble of fixed size. 
 We consider the question on how to make use of the diversity theory to guide ensemble construction.
 
 \paragraph{Can we encourage diversity in Random Forests?} 
 In previous chapters, we have seen that diversity is \textit{the} essential force that makes Random Forests work. In the standard Random Forest scheme as introduced by \citeauthor{breiman_RandomForests_2001}, individual trees are diverse due to random choices made during tree construction. Can we instead guide tree construction such that the Random Forest ensemble is more diverse?
-Encouraging diversity informed by the ambiguity decomposition has already been investigated for neural networks under the Negative Correlation Learning framework. For Random Forests, there are many proposed variations that are thought to influence an intuitive notion of diversity but to the best of our knowledge none so far have considered the theory based on the ambiguity decomposition we introduced here.
+Encouraging diversity informed by the ambiguity decomposition has already been investigated for neural networks under the Negative Correlation Learning framework (\cf \ref{sec:guided-parallel-training}). For Random Forests, there are many proposed variations that are thought to influence an intuitive notion of diversity 
+\cite{ yang_DiversityBasedRandomForests_2019, gupta_GuidedRandomForest_2019, akhand_DecisionTreeEnsemble_2014, panhalkar_NovelApproachBuild_2022, adnan_EffectsDynamicSubspacing_2017, zouggar_SimplifyingRandomForests_2019}
+but to the best of our knowledge none so far have considered the theory based on the ambiguity decomposition we introduced here.
 
 % Simple arguments such as \ref{cor:members-uncorrelated} and the bias-variance-covariance decomposition (\ref{thm:bias-variance-covariance}) show that uncorrelatedness is a special case of diversity.
 
@@ -1476,14 +1554,14 @@ Early experiments have shown that diversity-informed training strategies can ind
 
 \subfile{chapters/dynamic-random-forests.tex}
 
-\subsection{"Boosting" rationale for example weighting in classifier ensembles}
+% \subsection{"Boosting" rationale for example weighting in classifier ensembles}
 
-re. spike: not super surprising, if there are only 1, 2, 3 trees, weights as ratio of incorrect trees are super extreme -- motivation to dampen
--- okay yeah actually is surprising since simply capping is also enough!!
+% re. spike: not super surprising, if there are only 1, 2, 3 trees, weights as ratio of incorrect trees are super extreme -- motivation to dampen
+% -- okay yeah actually is surprising since simply capping is also enough!!
 
-would be good to put here to explain "spike". Can such a spike be observed in boosting methods?
+% would be good to put here to explain "spike". Can such a spike be observed in boosting methods?
 
-initial increase in bias also observed for classical boosting models? (wood23 p26)
+% initial increase in bias also observed for classical boosting models? (wood23 p26)
 
 % TODO weighted bootstrapping actually *too* extreme? all happens in first handful of trees. super hard increase in bias. might be better if slower. (cf learning rate for boosting)
 % can (probably) dampen weights by inputting them to a linear function (see sketch)
@@ -1505,11 +1583,107 @@ initial increase in bias also observed for classical boosting models? (wood23 p2
 
 
 \chapter{Conclusion}
-...
 
-summarise main results
+\section{Summary}
 
-% "practical advice" on how loss implies all the other choices
+We have derived a fully general bias-variance-diversity-effect decomposition of the ensemble generalisation error from first principles. 
+We argued that, among many of the proposed measures, diversity is \textit{the} unifying theory.
+We were able to reframe various classical results on ensemble learning in the context of this decomposition. 
+We have seen that many commonly used loss functions share common structure via the concept of Bregman divergences and have argued that, for Bregman divergences, ensembling cannot hurt performance if the combiner is defined in accordance with the divergence, i.e. as the left Bregman centroid. In \zeroone-classification, we have considered three different conditions: the Weak Learner condition, $2$-competence and $k$-competence -- and have shown that each is a special case of the next. We were able to see that $k$-competence is exactly equivalent to non-negative diversity-effect (also known as ensemble improvement). In other words $k$-competent ensembles never perform worse than an average member. Further, we have seen that bounds originally derived under $2$-competence also hold for $k$-competent ensembles. 
+
+The main contributions of this work are summarised in \cref{sec:contributions}. In \cref{sec:outlook}, we provide some ideas for future work. In \cref{sec:drf-full-results}, we provide all experimental results. In \cref{sec:proofs}, we provide proofs for some statements that were not included in the main text to maintain brevity. Further, we provide some additional thoughts on impurity in decision tree construction.
+
+\section{Outlook}
+\label{sec:outlook}
+
+%  \paragraph{Boosted Regression Forests}
+% just drop derivation and results in here...
+% advantages of boosting but without the risk of overfitting?
+% -
+
+\paragraph{The role of diversity in learning problems} We have seen that diversity is a central aspect of ensembles and determines the ensemble error in great part. However, it has become clear that a more diverse ensemble is not necessarily better on all tasks. In \cref{sec:diversity-rfs-nns}, we have considered this question under the light of the capacity of the base models. However, the characteristics of the underlying data are another variable that have not been considered at all. Two approaches seem interesting:
+\begin{enumerate}
+\item \textbf{Noise}: We have already seen that combining decision trees to a Random Forest can be understood to mitigate the tight fit of a tree to the training dataset. For instance, it has been observed that limiting the maximum depth has a regularisation effect and helps dealing with noisy data \cite{zhou_TreesForestsChickens_2023}. What is the effect of diversity in relationship to the signal-to-noise ratio?
+\item \textbf{Adversarial Robustness}: It has already been observed that diverse neural network ensembles are more robust against adversarial attacks \cite{pang_ImprovingAdversarialRobustness_2019,amada_AdversarialRobustnessFace_}. However, these approaches do not consider a diversity decomposition and their measures of diversity are \textit{ad-hoc} and disconnected from the ensemble error.
+\end{enumerate}
+
+
+\paragraph{A diversity-aware splitting criterion} Imagine growing $M$ trees simultaneously as follows: In each iteration, one split is determined for each tree. Which node is being split is left to the choice of the splitting criterion. 
+%When trees are grown independently of each other, splitting one node never influences the predictions of other nodes, since they form a disjoint partition. 
+One could then attempt to derive a splitting criterion that optimises not only for a split that is pure (improves the prediction performance of the tree), but also one that implies predictions different to those of other trees (improves diversity). Each split of a tree node yields a new forest partition $Z_{1}, \dots, Z_{P}$. 
+We have already seen that splitting criteria in standard Random Forests optimise a loss function. Hence, the objective function for a general splitting criterion for the $i$-th member could be written as  $\ell(y, q_{i})$, which is simply the member error. However, informed by the above discussion, one could define the splitting criterion in coordination to other ensemble members, i.e.
+$$
+\ell(y, q_{i}) - \lambda \ell(\bar{q}, q_{i})
+% TODO reconcile with for\mu lation for NCL objective
+$$
+which is directly analog to the NCL objective. In the NCL objective, however, this criterion is evaluated per point. In our case, it is evaluated per split, and (under some assumptions), only depends on previous splits in the forest and no extra sampling to determine the values.
+% TODO some notes on how to actually make an algorithm from this, i.e. small cell assumption certainly does not hold for first couple of splits, and splits on extremely small cells maybe wont really affect diversity anymore? lets see
+% \marginnote{
+% Continuing from here, probably many other simplificiations could be made on how to actually faster / more simply determine these values...
+% }
+
+\paragraph{Connection to theory of boosting methods} The guided sequential training of member models as introduced in \cref{sec:dynamic-random-forests} can be viewed as gradient descent in function space. That is, by training the next member, we are searching for a function $f_{i+1}$ such that the ensemble output $\bar{q} = \sum \alpha_i q_i + \alpha_{i+1} q_{i+1}$ is improved.
+\marginnote{
+Here, $\alpha_i$ are weights. These can be chosen such that $\bar{q}$ is a mean; then this corresponds to the combination methods of Random Forests. Otherwise, particularly with decreasing weights $\alpha_i$ this is exactly the formulation of boosting (\cite{mason_BoostingAlgorithmsGradient_,schapire_BoostingFoundationsAlgorithms_2012}). 
+}
+This is the case exactly when $q_{i+1}$ corresponds to a step in the direction of the (negative) gradient of the loss ensemble loss, i.e.
+$$
+\max_q  \langle - \nabla \bar{q}, q \rangle
+$$
+In boosting methods for classification, $q$ is obtained by setting adequate example weights. Likewise, the weights in the growth schemes presented herein correspond to a gradient step with respect to a loss function that resembles the NCL objective.
+
+
+\paragraph{Functional derivatives} The basic subject of analysis has been the function $q: X \to Y$ that corresponds to a member model. However, we have seen with the effect decomposition that it only ever appears in it's effect on the loss, i.e. as an argument to the loss function $\ell$. In supervised learning, we are always concerned with finding a function $q$ that minimises a loss or cost function $\ell$. 
+Framing boosting (or any ensemble construction procedure) as gradient descent in function space means that we are considering the gradient of $\ell(q(X))$ with respect to argument $X$. This means that a gradient descent step amounts to modifying the training data (weights in classification or pseudo-targets in boosting). However, what we really are looking for is a better \textit{model}. One can understand $\ell$ as a functional, i.e. a function that maps a given function (the model $q$) to a scalar value (the model's expected loss). One could then use \textit{functional derivatives} 
+\cite{frigyik_IntroductionFunctionalDerivatives_} to analyse questions such as "What function $q$ will minimise $\ell(q)$?". Based on this idea, one can define \textit{functional Bregman Divergences} \cite{frigyik_FunctionalBregmanDivergence_2008} which considers Bregman divergences between \textit{functionals}. It would be interesting to see whether the learning objectives can be expressed in these terms and whether this can provide any insight.
+% An Introduction to Functional Derivatives https://vannevar.ece.uw.edu/techsite/papers/documents/UWEETR-2008-0001.pdfA
+% Functional Bregman Divergence and Bayesian Estimation of Distributions
+
+
+\paragraph{Diverse Bregman ensembles} In this thesis, we have only considered growth strategies for classification ensembles under the \zeroone-loss. The theory laid out in \cref{sec:bregman-divergences} on Bregman divergences and \cref{sec:guided-parallel-training} on Negative Correlation Learning suggests that similar methods can be developed for regression tasks (this includes tasks where class probabilites are to be estimated). We have already seen hints that diversity behaves fundamentally different in this regime since the ensemble improvement can never be non-negative. We hypothesize that obtaining higher diversity and possibly also achieving lower ensemble error is easier in the regression regime due to the continuous nature of the outcome space. 
+
+% \paragraph{$k$-way splits} We have seen that the purity gain objective corresponds to the $k$-means objective for $k=2$. This raises the question whether one may consider $k$-way splits instead of binary splits when constructing a tree. \citeauthor{tibshirani_ElementsStatisticalLearning_2017} \cite{tibshirani_ElementsStatisticalLearning_2017} suggest that finer splits may fragment the data "too early"
+
+\paragraph{Diverse Forests}
+In general, diversity is defined in terms of model predictions. In \cref{sec:diversity-rfs-nns} we suggest that, instead, diversity for Random Forests could be expressed in terms of \textit{model parameters}, that is, the tree structures. Exploring this further seems worthwhile and it seems likely that diversity could be expressed purely in terms of model parameters. 
+
+\paragraph{Clustering trees}
+We have established that ensemble diversity is measured in terms of diversity-effect for general loss functions or diversity for Bregman divergences. We have seen that this is simply a measure of variance around the ensemble combiner $\bar{q}$ as implied by the divergence $\LE{\bar{q}}{q_{i}}$ or $\Breg{\bar{q}}{q_{i}}$. 
+\marginnote{
+	For the squared-error, one can express the variance in terms of pairwise distances, see e.g. 
+	\cite{ shakya_WhatMeansObjective_2018, daniel_RelationPairwiseDistance_2019, ttnphns_LinkVariancePairwise_2015}.
+   This is enabled by the square producing cross-terms.
+	For other loss functions, it may be interesting to look for upper bounds (\cf \cref{thm:theisen-upper}).
+}
+While this does not directly imply pairwise distances $\LE{q_{i}}{q_{j}}$, this still gives us a way to think about distances between ensemble members that is deeply connected to the ensemble error.
+
+Given an ensemble, can we be sure that really all members are essential to the ensemble performance? Could we find a subset of members with matching performance? This is \textit{ensemble pruning} 
+\cite{zouggar_SimplifyingRandomForests_2019, yang_MarginOptimizationBased_2012, zhou_EnsembleMethodsFoundations_2012}.
+
+One interesting insight is that clustering strategies such as $k$-means require only distances to centroids. The $k$-means scheme can be generalised to Bregman divergences.
+Let $I_{\phi}$ be the Bregman information as defined in definition \ref{def:bregman-information}. Note that applied to ensemble members this is exactly the diversity.
+Let $X$ be a random variable representing data points. Let $C$ be a random variable taking values in $\mathcal{C}$ representing the set of cluster centroids. Then the objective for generalised $k$-means hard clustering \cite{banerjee_ClusteringBregmanDivergences_2004} is to minimise the loss in Bregman information due to the quantisation induced by $M$:
+$$
+ \ell_{\phi}(C) \defeq I_{\phi}(X) - I_{\phi}(C)
+$$
+One can show \cite{banerjee_ClusteringBregmanDivergences_2004} that
+$$
+\ell_{\phi}(C) = \mathbb{E}_{}\left[ I_{\phi}(X_{k}) \right]  \approx \sum_{h=1}^K \sum_{x_{i} \in \mathcal{X_{k}}} \mathcal{v}_{i} \Breg{x_{i}}{\mu_{h}}
+% TODO what is pi?
+$$
+
+\marginnote{
+This is in line with "overproduce-and-select" strategies commonly applied in ensemble pruning (see e.g. \cite{zouggar_SimplifyingRandomForests_2019,bernard_SelectionDecisionTrees_2009}), which so far are based on heuristic measures and lack a clear theoretical relationship to the generalisation error.
+}
+where $K$ is the number of clusters, $\mathcal{X}_{k}$ are the cells of the clustering, $\mathcal{v}_{i}$ is the distribution of the $x_{i}$ and $\mu_{k}$ is the right Bregman centroid of $\mathcal{X}_{k}$.
+Classical $k$-means is a special case of this for the squared-error divergence. The KL-divergence implies the mutual information as a variance and yields \textit{information-theoretic clustering}. The Ikura-Saito divergence yields the \textit{LBG algorithm} \cite{banerjee_ClusteringBregmanDivergences_2004}.
+Using this approach, could we cluster ensemble members and replace each cluster of members with its central representative member? The quantisation error $\ell_{\phi}(C)$ then directly measures the loss in diversity. This means that a good clustering corresponds to a diverse sub-ensemble.
+
+% % TODO the idea of generalised variance is already introduced in introduction on bregman divs -- maybe move ideas about clustering to there; here only bring the corollary that choice of loss implies impurity measure (and leaf combiner, ought to be bregman centroid)
+% % or maybe move to outlook
+
+% Particularly relevant for decision trees is the following insight: The choice of Bregman divergence implies a measure of variance (see \ref{def:bregman-information} for examples). Optimising for this measure of variance implies the splitting criterion \sidenote{The leaf combiner, which corresponds to the right Bregman centroid is independent on the chosen divergence, see \ref{def:bregman-centroids}.}. This gives a theoretical rationale for choosing splitting function and leaf combiner in decision trees.
+% TODO put down this practical advise more prominently!
 
 
 
@@ -1539,20 +1713,19 @@ summarise main results
 \chapter{Full experiment results}
 \label{sec:drf-full-results}
 
-\section{DRF weighting function}
 
 \begin{figure*}
     % results for "a simple weighting function for binary clasification"
     \includegraphics{symlinks/zero-one-plots/bvd-decomps/plot_bvd_drf/bvd.png}
     \caption{
-        ...
+      Full results for \cref{sec:simple-weighting-function}. \bvdlegend
     }
     \label{fig:plot_bvd_drf}
 \end{figure*}
 
-\subsection{Comparison to \cite{bernard_DynamicRandomForests_2012}} 
+\paragraph{Comparison to \cite{bernard_DynamicRandomForests_2012}} 
 \label{sec:comparison-to-bernard-drf}
-\citeauthor{bernard_DynamicRandomForests_2012} evaluated only the following combined approach: They would perform both weighted bootstrapping and weighted tree construction. Further, weights would be determined only on out-of-bag-trees (see section \ref{sec:experiment-setup}). Additionally, unrelated to the question at hand, they also employed a different way to determine candidate split features. Unlike in standard random forests, where a fixed number of candidate split features is sampled from all available features, the number of sampled candidate features was left fully random here. It was left unanswered which of these components actually affect the ensemble to what extent. Further, they did not provide any explanation or empirical analysis in terms of diversity.
+\citeauthor{bernard_DynamicRandomForests_2012} evaluated only the following combined approach: They would perform both weighted bootstrapping and weighted tree construction. Further, weights would be determined only on out-of-bag-trees. Additionally, unrelated to the question at hand, they also employed a different way to determine candidate split features. Unlike in standard random forests, where a fixed number of candidate split features is sampled from all available features, the number of sampled candidate features was left fully random here. It was left unanswered which of these components actually affect the ensemble to what extent. Further, they did not provide any explanation or empirical analysis in terms of diversity.
 Looking at our results, the following points seem likely:
 \begin{itemize}
     \item An improvement in generalisation error is still obtained with standard candidate split feature sampling.
@@ -1592,17 +1765,24 @@ It may seem reasonable to expect that this [DRF] improves the average member err
 This tradeoff is exactly reflected in the ambiguity decomposition.
 
 
-\section{Sigmoid weighting functions}
-
 \begin{figure*}
     % results for sigmoids
     \includegraphics{symlinks/zero-one-plots/bvd-decomps/plot_bvd_capped_lerped_sigmoid/bvd.png}
     \caption{
         % Controlling $b$ sucessfullly mitigates spike but lower diversity for some reason. Capping then reaches higher diversity again. 
         % dvc-experiments/classification/zero-one/plots/bvd-decomps/plot_bvd_drf/bvd.png
-        backref \ref{sec:sigmoids-comparison}
+        Full results for \cref{sec:binary}. \bvdlegend
     }
     \label{fig:sigmoids-full-results}
+\end{figure*}
+
+\begin{figure*}
+    % results for nonbinary
+    \includegraphics{symlinks/zero-one-plots/bvd-decomps/plot_bvd_multiclass/bvd.png}
+    \caption{
+      Full results for \cref{sec:nonbinary}. \bvdlegend
+    }
+    \label{fig:nonbinary-full-results}
 \end{figure*}
 
 % TODO diversity-effect by example plots if possible
@@ -1632,10 +1812,8 @@ This tradeoff is exactly reflected in the ambiguity decomposition.
 %     \label{fig:zero-one-ens-plots}
 % \end{figure*}
 
-% TODO also write down all the other random experiments (sigmoid, regression, ...)
-% !!! sigmoid is actually promising (well yeah, because it does not matter *how* correct ensemble is)
-\section{Proofs}
-
+\chapter{Proofs and additional Results}
+\label{sec:proofs}
 
 \subsection{Proof of lemma \ref{thm:bregman-collapse-variances}}
 \label{proof:bregman-collapse-variances}
@@ -1705,7 +1883,197 @@ Note that for $k \geq 2$, $\kappa > 1-\kappa$ and thus $\mathbb{E}_{}\left[ ~\in
 \end{align*}
 \end{proof}
 
-\section{Implementation}
+\subsection{More motivation for impurity measures}
+\label{sec:splitting-criteria-greedily-minimise-loss-functions}
+
+In this section, we give some additional arguments that motivate common impurity measures. The motivation is somewhat less rigorous than the one provided in \cref{sec:decision-trees}, but it might be more intuitive and is closer to how impurity measures for decision trees are commonly introduced in teaching materials \cite{tibshirani_ElementsStatisticalLearning_2017}.
+
+Consider a parent node $P$ that, due to some split, was partitioned into the disjoint union $L~\dot{\cup}~R$.
+Let $y_{P}, y_{L}$ and $y_{R}$ be the output values of the parent and the two new leaf nodes, produced by the leaf aggregation function. Since the leaf output is constant over a single cell, the gain in loss due to a split is the difference between the loss of the parent node and the sum of losses of the two individual child nodes.
+For brevity, we write $\ell_{P}(y) \defeq \sum_{i \in P} \ell(y, y_{i})$.
+\begin{align*}
+\text{\textit{Loss Gain}: } \hspace{1em} &
+\sum_{i \in P} \ell(y_{P}, y_{i}) - \left(  \sum_{i \in L} \ell(y_{L}, y_{i}) + \sum_{i \in R} \ell(y_{R}, y_{i}) \right) \\[1.5em]
+&= \ell_P(y_P) - \left(\ell_L(y_L) + \ell_R(y_R) \right)
+\end{align*}
+In order for a split to yield positive loss gain, the leaf aggregation function needs to be such that the loss does not increase as constraints are removed, i.e. the set of considered examples is reduced. Recall that $\bar{z}$ is a centroid with respect to a loss function $\ell$ and a set of outcomes $P$ if and only if $\bar{z} = \arg\min_{z} \sum_{i \in P} \ell(z, y_{i}) = \arg\min_z \ell_P(z)$ (\ref{prelims:centroids}).
+\begin{lemma}
+\label{lemma:loss-gain-nonnegative}
+For a loss function $\ell$, if the leaf aggregator of a node $P$ is $y_{P} \defeq \arg\min_{z} \sum_{i \in P} \ell(z, y_{i})$, i.e. the centroid with respect to $\ell$, the loss gain is nonnegative.
+% TODO double-check ~positive~ -> nonnegative.
+\end{lemma}
+\begin{proof}
+Let $\ell_{P}(y) \defeq \sum_{i \in P} \ell(y, y_{i})$. Since $P = L \dot{\cup}R$, we need to show that $\ell_{P}(y_{P}) = \ell_{L}(y_{P}) + \ell_{R}(y_{P}) \geq \ell_{L}(y_{L}) + \ell_{R}(y_{R})$. Assume $\ell_{L}(y_{P}) < \ell_{L}(y_{L})$. This contradicts the definition of $y_{L}$ as the minimizer, and as such $\ell_{L}(y_{P}) \geq \ell_{L}(y_{L})$. Likewise, we can conclude that $\ell_{R}(y_{P}) \geq \ell_{R}(y_{R})$. Combining the two inequalities yields the statement.
+\end{proof}
+
+This rigorously motivates the specific choice of leaf aggregation function. The majority vote is a centroid with respect to the \zeroone-loss for classification, while the arithmetic mean is the centroid with respect to the squared error loss for regression.
+
+
+% define stopping criteria
+% defin leaf aggregations
+
+
+In the best possible case, all training examples in a given cell correspond to the same (classification) or very similar (regression) outcomes. If a query point then falls within that cell, i.e. it has similar features, one can say with high confidence that the query point should have the same (similar) outcome. In the spirit of greedy optimisation, we aim to split cells such that the resulting child cells are more \textit{pure} with respect to their outcomes. 
+
+\marginnote{
+    % TODO this is somewhat superfluous with "loss gain" since that is evaluated on the training data.
+    The notion of local purity is linked to the training error: If a leaf cell is perfectly pure, all training examples in that cell correspond to the same outcome. Hence, the leaf aggregation function, which us usually implemented as some kind of mean, will produce exactly that outcome for any query point that belongs to this cell, in particular any training points. Consequently, for a suitable definition of "error", perfectly pure cells have zero training error.
+}
+
+% TODO diagram with tables, how a split makes the outcomes more pure
+
+
+Consider a split, parameterised by $\Theta$, that partitions a parent node $P$ into the disjoint union $L_{\Theta} ~\dot{\cup}~R_{\Theta}$. Let $n, n_{L}, n_{R}$ be the cardinalities of the parent and the two child nodes. Let $H$ be an impurity measure. We will select the split that yields the lowest impurity.
+$$
+\arg \min_{\Theta} ~ \frac{n_{L}}{n} H(L_{\Theta}) + \frac{n_{R}}{n} H(R_{\Theta})
+$$
+The gain in purity is then the difference between impurities before and after the split.
+\begin{align}
+\text{\textit{Purity Gain}: } \hspace{1em}
+H(P) - \left(  \frac{n_{L}}{n} H(L_{\Theta}) + \frac{n_{R}}{n}H(R_{\Theta}) \right)
+\label{eq:purity-gain}
+\end{align}
+Note that this is not necessarily the same as the gain in \textit{loss} achieved due to a split. 
+
+\marginnote{
+    $P$ is the parent node before the split with combiner $y_P$. $L$ and $R$ are the two child nodes after a split with combiners $y_L$ and $y_R$. 
+}
+
+\subsubsection{Variance Reduction}
+A commonly used impurity measure for regression is the squared-error variance. 
+$$
+H_{\text{var}}(P) \defeq \frac{1}{n_{P}} \sum_{i \in P} (y_{i} - y_{P})^2 \hspace{2em} \text{for} \hspace{1em} y_{P} \defeq \frac{1}{n_{p}}\sum_{i\in P}y_{i}
+$$
+To motivate this impurity measure, it remains to be shown that a split guided by this impurity measure actually reduces the value of a specific loss function and which one that is. Luckily, it is easy to see that this holds for the squared error loss. Plugging the definition into the purity gain (eq. (\ref{eq:purity-gain})) yields
+$$
+H(P) = \frac{1}{n_{P}} \sum_{i \in P} (y_{i} - y_{P})^2
+= \frac{1}{n_{P}}  
+\underbrace{
+ \sum_{i \in L} (y_{i} - y_P)^2 
+ }_{\ell_{L}(y_{P})}
+ +
+\frac{1}{n_{P}}
+ \underbrace{
+ \sum_{i \in R} (y_{i} - y_{P}) ^2
+ }_{\ell_{R}(y_{P})}
+$$
+and
+$$
+\frac{n_{L}}{n_{P}} H(L) +
+\frac{n_{R}}{n_{P}} H(R) = 
+\frac{n_{L}}{n_{P}} \frac{1}{n_{L}} 
+\underbrace{
+\sum_{i \in L} (y_{i} - y_{L})^2
+}_{\ell_{L}(y_{L})}
+~ + ~ 
+\frac{n_{R}}{n_{P}} \frac{1}{n_{R}}
+\underbrace{
+ \sum_{i \in R} (y_{i} - y_{R})^2
+}_{\ell_{R}(y_{R})}
+$$
+By lemma \ref{lemma:loss-gain-nonnegative}, we can directly conclude that the loss gain is positive for any split if the arithmetic mean is used as a leaf combiner.
+
+\subsubsection{Gini impurity}
+We will argue that the Gini impurity split criterion, which finds a split such that the Gini impurity is reduced, maximises the classification margins.
+
+\begin{definition} (Classifier margins \cite{tibshirani_ElementsStatisticalLearning_2017}) The margin for class $k$ of an example $X$ is the difference between the model's confidence that $X$ is of class $k$ and the next-best class:
+$$
+m(x,y) \defeq \prob{}{y|x} - \max_{j\not=y} \prob{}{j|x}
+$$
+\begin{itemize}
+    \item The vector $m(x) = [m_{1}(x), \dots, m_{K}(x)]^\top$, where $K$ is the total number of classes, is called a \textit{margin vector} iff its components sum to zero. 
+    \item For a pair $(X,y)$ of example and true outcome, the model's prediction is correct iff $m_y(x) > 0$ 
+\end{itemize}
+\label{def:classifier-margin}
+\end{definition}
+
+\begin{proposition} $\star$
+Minimising the Gini impurity is equivalent to maximising the classification margins as measured by the squared error.
+$$
+\min H_{\text{Gini} } \equiv \max \sum_{k} (p_{k} - u_{k}) ^2
+$$
+where $u \defeq [ \nicefrac{1}{k}, \dots, \nicefrac{1}{k}]$
+\end{proposition}
+
+\begin{proof}
+Let $p$ be a probability distribution and $u \defeq [ \nicefrac{1}{k}, \dots, \nicefrac{1}{k}]$ a uniform distribution. Then
+$$
+\sum_{k} (p_{k} - u_{k})^2 = \sum_{k} p_{k}^2 - 2\sum_{k}p_{k}u_{k} + \sum_{k} u_{k}^2
+$$
+$\sum_{k} u_{k}^2$ does not depend on $p$. Further, because $p$ is a probability distribution and sums to one, $2 \sum_{k}p_{k}u_{k}$ is constant. In summary
+$$
+\max \sum_{k}(p_{k} - u_{k})^2 \equiv \max \sum_{k}p_{k}^2
+$$
+Let us now consider the Gini impurity. It holds that
+$$
+H_{\text{Gini} } = \sum_{k} p_{k}(1-p_{k}) = 1 - \sum_{k}p_{k}^2
+$$
+and consequently
+$$
+\min \sum_{k} p_{k}(1-p_{k}) \equiv \max \sum_{k} p_{k}^2
+$$
+\end{proof}
+
+% TODO this is a separable bregman divergence, where else have we seen that?
+% TODO this seems to be the "generalised square euclidean distance", see https://franknielsen.github.io/BregmanDivergenceDualIGGenConvexity-25Nov2021.pdf / Scalar and separable Bregman divergences
+% TODO cite "on the universality of the logistic loss function"
+
+A common approach in training classification models
+is \textit{margin maximisation} \cite{schapire_BoostingFoundationsAlgorithms_2012}
+in which we aim to maximise the margin of the true label $m_{y}(X)$. 
+A margin loss function $\ell : \mathbb{R} \to \mathbb{R}$ is a \textit{margin-maximising} loss if $\ell'(m_{y}(X)) \leq 0$ for all values of $m_{y}$ \cite{leistner_SemiSupervisedRandomForests_2009}.
+\marginnote{
+    An example for a margin-maximising loss function is the \textit{hinge loss} defined as
+    $\ell(m_{y}(x)) \defeq  \max \{ 0, 1-p \}$. Its subderivative is 
+    $$
+    \frac{\partial\ell}{\partial p} = \begin{cases}
+    -1 & p \leq 1 \\
+    0 & \text{else}
+    \end{cases}
+    $$ and hence it is a margin-maximising loss.
+}
+% \begin{marginfigure} \label{fig:hinge-loss}
+%     \includegraphics[width=\textwidth]{symlinks/illustrations/mini-fn-plots/hinge-loss.png}
+%     \includegraphics[width=\textwidth]{symlinks/illustrations/mini-fn-plots/hinge-loss-grad.png}
+%     % TODO put these in same figure after all and mention that hinge loss can be seen as upper bound of 0-1-loss
+%     % TODO too hard to read, should have different colours
+% \end{marginfigure}
+%
+A decision tree can also be evaluated based on a margin loss.
+The empirical error of a decision tree node $P$ with respect to a margin loss $\ell$ can be written as $L(P) = \frac{1}{|P|} \sum_{i \in P} \ell\left(m_{y}(x_{i})\right)$ where $m_{y}(x_{i})$ is the value of the true margin. Then the following holds \cite{leistner_SemiSupervisedRandomForests_2009}.
+\begin{align*}
+L(P) &= \frac{1}{|P|}\sum_{i \in P} \sum_{k} \ind{y_{i}=k} ~ ~ \cdot ~ ~  \ell   \left( m_k(x_i) \right)  \\
+&= \sum_{k}  
+\frac{1}{|P|} \sum_{i \in P} \ind{y_{i}=k}
+~ ~ \cdot ~ ~ 
+\ell(m_{k}(x_{i})) \\
+&= \sum_k p_k(x_i) \ell(m_k(x_i))
+\end{align*}
+In summary, the Gini impurity splitting criterion greedily optimises classification margins and thus margin-maximising losses.
+
+\begin{proposition} $\star$ ~ Let $p$ be a probability distribution and $u$ an arbitrary vector.
+   % TODO not fully arbitrary,needs to be a valid argument for breg 
+    Let $G =\sum_{k} p_{k}(1-p_{k})$ be the Gini impurity. Then $-G$ is the generator for the Bregman divergence
+$$
+\sBreg{-G}{p}{u} = \sum_{k}(p_{k}-u_{k})^2
+$$
+\label{thm:gini-bregman}
+\end{proposition}
+\begin{proof}
+Let $\phi(q) \defeq (-1) \sum_{k} p_{k}(1-p_{k})$ as assumed.
+ \begin{align*}
+\sBreg{-G}{p}{u} &=  
+\underbrace{(-1) \sum_{k} p_{k}(1-p_{k})}_{\phi(p)} 
+ ~ ~ - ~ ~  
+\underbrace{(-1) \sum_{k} u_{k}(1-u_{k})}_{\phi(u)}  
+~ ~ - ~ ~  
+\underbrace{\sum_{k} (2u_{k}-1)(p_{k}-u_{k})}_{\langle \nabla \phi(u), p-u \rangle} \\  
+ &= \sum_{k} (p_{k}-u_{k})^2
+\end{align*}
+the first equality follows by definition of a Bregman divergence (see \ref{def:bregman-divergence}) and the second equality by arithmetic.
+\end{proof}
+
+\chapter{Implementation}
 
 Ensemble error decompositions were computed using the \textit{decompose} library
 \footnote{
@@ -1717,7 +2085,7 @@ Experiments were managed using \textsc{DVC} \footnote{\url{https://dvc.org}}. Th
 
 \paragraph{Compared datasets} We give a brief motivation for the classification datasets we have selected for evaluation. 
 \cover is a dataset with a relatively high number of examples and low feature dimensionality. \mnist is a dataset with a moderate number of examples and high dimensionality. \diabetes is a dataset with relatively high error rates. \bioresponse is a small dataset with a very high number of features ($d \approx \nicefrac{1}{2}n$). \qsar is a small dataset used for quick testing.
-Further, \cite{bernard, xuChen} evaluated on \textit{mnist} (although not just a subset of it), \textit{spambase}, \digits and \diabetes.
+Further, \cite{bernard_DynamicRandomForests_2012, xu_ImplementationPerformanceOptimization_2017} evaluated on \textit{mnist} (although not just a subset of it), \textit{spambase}, \digits and \diabetes.
 
 \paragraph{Approximating statistical quantities} 
 % how exactly are we approximating E_D and diversity stuff (3 trials)
@@ -1743,61 +2111,9 @@ If $D$ is a random variable corresponding to the input to a learner, for instanc
 % \textit{drf-weighted-fit-oob-classifier}: The example weights for a point $x_i$ are determined based only on \textit{out-of-bag} trees for $x_i$. These are those trees whose bootstrap sample has not included $x_i$.
 % % TODO don't forget to mention others here if we add some
 
-\chapter{Outlook}
-
-% diversity and noise!!
 
 
-% \paragraph{Boosted Regression Forests}
-% just drop derivation and results in here...
-% advantages of boosting but without the risk of overfitting?
-% -
-
-\paragraph{The role of diversity in learning problems} We have seen that diversity is a central aspect of ensembles and determines the ensemble error in great part. However, it has become clear that a more diverse ensemble is not necessarily better on all tasks. In \cref{sec:diversity-rfs-nns}, we have considered this question under the light of the capacity of the base models. However, the characteristics of the underlying data are another variable that have not been considered at all. Two approaches seem interesting:
-\begin{enumerate}
-\item \textbf{Noise}: We have already seen that combining decision trees to a Random Forest can be understood to mitigate the tight fit of a tree to the training dataset. For instance, it has been observed that limiting the maximum depth has a regularisation effect and helps dealing with noisy data \cite{zhou_TreesForestsChickens_2023}. What is the effect of diversity in relationship to the signal-to-noise ratio?
-\item \textbf{Adversarial Robustness}: It has already been observed that diverse neural network ensembles are more robust against adversarial attacks \cite{pang_ImprovingAdversarialRobustness_2019,amada_AdversarialRobustnessFace_}. However, these approaches do not consider a diversity decomposition and their measures of diversity are \textit{ad-hoc} and disconnected from the ensemble error.
-\end{enumerate}
-
-
-\paragraph{Generalised impurity measures}
-Variance-effect is a natural generalisation of variance. We have seen that commonly used impurity measures are in fact variances implied by different Bregman divergences, i.e. special cases of variance-effect. This motivates (a) using other corresponding Bregman divergences if another loss is used, and (b) considering the variance-effect as an impurity measure if no specialisation is available (as is the case for the \zeroone-loss).
-
-\paragraph{A diversity-aware splitting criterion} Imagine growing $M$ trees simultaneously as follows: In each iteration, one split is determined for each tree. Which node is being split is left to the choice of the splitting criterion. 
-%When trees are grown independently of each other, splitting one node never influences the predictions of other nodes, since they form a disjoint partition. 
-One could then attempt to derive a splitting criterion that optimises not only for a split that is pure (improves the prediction performance of the tree), but also one that implies predictions different to those of other trees (improves diversity). Each split of a tree node yields a new forest partition $Z_{1}, \dots, Z_{P}$. 
-We have already seen that splitting criteria in standard Random Forests optimise a loss function. Hence, the objective function for a general splitting criterion for the $i$-th member could be written as  $\ell(y, q_{i})$, which is simply the member error. However, informed by the above discussion, one could define the splitting criterion in coordination to other ensemble members, i.e.
-$$
-\ell(y, q_{i}) - \lambda \ell(\bar{q}, q_{i})
-% TODO reconcile with for\mu lation for NCL objective
-$$
-Note that this is directly analog to the NCL objective. In the NCL objective, however, this criterion is evaluated per point. In our case, it is evaluated per split, and (under some assumptions), only depends on previous splits in the forest and no extra sampling to determine the values.
-% TODO some notes on how to actually make an algorithm from this, i.e. small cell assumption certainly does not hold for first couple of splits, and splits on extremely small cells maybe wont really affect diversity anymore? lets see
-% \marginnote{
-% Continuing from here, probably many other simplificiations could be made on how to actually faster / more simply determine these values...
-% }
-
-\paragraph{Connection to boosting methods} The guided sequential training of member models as introduced in \cref{sec:dynamic-random-forests} can be viewed as gradient descent in function space. That is, by training the next member, we are searching for a function $f_{i+1}$ such that the ensemble output $\bar{q} = \sum \alpha_i q_i + \alpha_{i+1} q_{i+1}$ is improved.
-\marginnote{
-Here, $\alpha_i$ are weights. These can be chosen such that $\bar{q}$ is a mean; then this corresponds to the combination methods of Random Forests. Otherwise, particularly with decreasing weights $\alpha_i$ this is exactly the formulation of boosting (\cite{anyboost, ...}). 
-}
-This is the case exactly when $q_{i+1}$ corresponds to a step in the direction of the (negative) gradient of the loss ensemble loss, i.e.
-$$
-\max_q  \langle - \nabla \bar{q}, q \rangle
-$$
-In boosting methods for classification, $q$ is obtained by setting adequate example weights. Likewise, the weights in the growth schemes presented herein correspond to a gradient step with respect to a loss function that resembles the NCL objective.
-
-
-\paragraph{Functional derivatives} The basic subject of analysis has been the function $q: X \to Y$ that corresponds to a member model. However, we have seen with the effect decomposition that it only ever appears in it's effect of the loss, i.e. as an argument to the loss function $\ell$. In supervised learning, we are always concerned with finding a function $q$ that minimises a loss or cost function $\ell$. The 
-Framing boosting (or any ensemble construction procedure) as gradient descent in function space means that we are considering the gradient of $\ell(q(X))$ with respect to argument $X$. This means that a gradient descent step amounts to modifying the training data (weights in classification or pseudo-targets in boosting). However, what we really are looking for is a better \textit{model}. One can understand $\ell$ as a functional, i.e. a function that maps a given function (the model) to a scalar value (the model's error). One could then use \textit{functional derivatives} 
-\cite{frigyik_IntroductionFunctionalDerivatives_} to analyse questions such as "What function $q$ will minimise $\ell(q)$?". Based on this idea, one can define \textit{functional Bregman Divergences} \cite{frigyik_FunctionalBregmanDivergence_2008} which considers Bregman divergences between \textit{functionals}. It would be interesting to see whether the learning objectives can be expressed in these terms and whether this can provide new insight.
-% An Introduction to Functional Derivatives https://vannevar.ece.uw.edu/techsite/papers/documents/UWEETR-2008-0001.pdfA
-% Functional Bregman Divergence and Bayesian Estimation of Distributions
-
-
-\paragraph{Diverse Bregman ensembles} In this thesis, we have only considered growth strategies for classification ensembles under the \zeroone-loss. The theory laid out in \cref{sec:bregman-divergences} on Bregman divergences and \cref{sec:negative-correlation-learning} on Negative Correlation Learning suggests that similar methods can be developed for regression tasks (this includes tasks where class probabilites are to be estimated). We have already seen hints that diversity behaves fundamentally different in this regime since the ensemble improvement can never be non-negative. We hypothesize that obtaining higher diversity and possibly also achieving lower ensemble error is easier in the regression regime due to the continuous nature of the outcome space. 
-
-\paragraph{Generalised $k$-means} We have seen that the purity gain objective corresponds to the $k$-means objective for $k=2$. This raises the question whether one may consider $k$-way splits instead of binary splits when constructing a tree.
+%
 
 
 %----------------------------------------------------------------------------------------

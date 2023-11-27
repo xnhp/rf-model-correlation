@@ -6,7 +6,7 @@
 % TODO highlight that we're not really for *negative* correlation learning but uncorrelated
 % maybe use sth else as section title and then in text "also known as negative correlation learning"
 
-Consider the bias-variance-covariance decomposition for the squared error loss given in theorem \ref{thm:bias-variance-covariance}.
+Consider the bias-variance-covariance decomposition for the squared error loss given in \cref{thm:bias-variance-covariance}.
 % \begin{align*}
 % \mathbb{E}_{D}\left[ (y - \bar{q}(x))^2 \right]  &= (\mathbb{E}_{D}\left[ \bar{q}(x) \right] - y)^2 \\
 % & + \mathbb{E}_{D}\left[ \frac{1}{M^2}\sum_{i=1}^M (q_{i}(x) - \mathbb{E}_{D}\left[ q_{i}(x) \right] )^2 \right]  \\
@@ -14,18 +14,18 @@ Consider the bias-variance-covariance decomposition for the squared error loss g
 % \end{align*}
 % TODO remove explicit dependence on x
 The covariance term contributes positively to the ensemble error if the outputs of the members are positively  correlated. This suggests the idea that it might be beneficial to train ensemble members in coordination such that their outputs are uncorrelated.
-\cite{liu_EnsembleLearningNegative_1999} provide an implementation of this idea for neural network ensembles called \textit{Negative Correlation Learning} (NCL).
+\citeauthor{liu_EnsembleLearningNegative_1999} \cite{liu_EnsembleLearningNegative_1999} provide an implementation of this idea for neural network ensembles called \textit{Negative Correlation Learning} (NCL).
 \marginnote{
   Note that the name is misleading here. The goal is not that members are negatively correlated, but \textit{un}correlated.
 }
 Neural network training involves a \textit{forward} and a \textit{backward} pass. In the forward pass, the neural network in its current state is queried with training data. Its prediction is evaluated according to a loss function. 
 Then, the model parameters are updated according to the gradient of the loss function with respect to the parameters. 
 %
-A common practise is to add a \textit{regularisation term} to this loss function in order to bias the model towards e.g. sparse predictions \cite{todo}. 
+A common practise is to add a \textit{regularisation term} to this loss function in order to bias the model towards e.g. sparse predictions \cite{tibshirani_ElementsStatisticalLearning_2017}. 
 %
 In Negative Correlation Learning, forward and backward pass are performed synchronously for all members. This enables using loss functions that depend not only on an individual member but the entire ensemble.
 
-The $i$-th member network is trained using a loss function $\ell_{i}$ that contains a regularisation term $p_{i}$, which is intended to influence the training of the $i$-th member such that its predictions are uncorrelated with the other members. The hyperparameter $\lambda \in \mathbb{R}$ determines how much weight is put on either of the two components. The training objective for the $i$-th network is be written as
+The $i$-th member network is trained using a loss function $e_{i}$ that contains a regularisation term $p_{i}$, which is intended to influence the training of the $i$-th member such that its predictions are uncorrelated with the other members. The hyperparameter $\lambda \in \mathbb{R}$ determines how much weight is put on either of the two components. The training objective for the $i$-th network is defined as
 $$
  e_i \defeq ( y - q_{i})^2 ~ ~ + ~ ~ \lambda ~ p_{i}
 $$
@@ -52,10 +52,10 @@ p_{i} \defeq \left(
 $$
 This is reminiscent in shape of the contribution of the $i$-th member to the covariance term in the bias-variance-covariance decomposition --- however, the expectation over $D$ is replaced with the ensemble combiner $\bar{q}$! Seeing that here the ensemble combiner is the arithmetic mean of member outputs, this means that instead of a variance under variations in $D$, this considers the variance between member model outputs. 
 
-Note that the penalty term corresponds to the contribution of the $i$-th member to the ambiguity (\ref{thm:ambiguity-decomp}).
+Note that the penalty term corresponds to the contribution of the $i$-th member to the ambiguity (\cf \ref{thm:ambig-effect-decomp}).
 % TODO these formulas dont make too much sense right now -- go through notes again with care. I think brown and liu_EnsembleLearningNegative_1999 are not exactly equivalent.
 % TODO highlight somewhere that this links bias-variance-covariance decomp and ambiguity -- i.e. expression via covarance is actually artifact of squared error -- and more importantly, that we are comparing model outputs and not losses -- which, at first, seems confusing
-Indeed, as \cite{brown_ManagingDiversityRegression_2005} noted, the NCL approach can be motivated more soundly via the ambiguity decomposition. 
+Indeed, as \citeauthor{brown_ManagingDiversityRegression_2005} \cite{brown_ManagingDiversityRegression_2005} noted, the NCL approach can be motivated more soundly via the ambiguity decomposition. 
 
 % The error of the full ensemble can be written as \sidenote{We additionally use a factor of $\nicefrac{1}{2}$. This makes it easier to express gradients of this function and is equivalent for optimisation. }
 % $$
@@ -82,12 +82,12 @@ $$
 \end{align}
 $$
 
-Several authors have attempted to generalise Negative Correlation Learning or transfer it to other loss functions. For instance, \cite{webb21} directly prove an ambiguity decomposition for the KL-divergence $K$ and propose the objective
-$$
-e_{i}(x,y) \defeq \Mavg K(y \mid\mid q_{i}) ~ ~ - ~ ~ \lambda ~ \Mavg K(\bar{q} \mid\mid q_{i})
-$$
+Several authors have attempted to generalise Negative Correlation Learning or transfer it to other loss functions. For instance, \citeauthor{webb_EnsembleNotEnsemble_2019} \cite{webb_EnsembleNotEnsemble_2019} directly prove an ambiguity decomposition for the KL-divergence $K$ and propose an analogous objective
+% $$
+% e_{i}(x,y) \defeq \Mavg K(y \mid\mid q_{i}) ~ ~ - ~ ~ \lambda ~ \Mavg K(\bar{q} \mid\mid q_{i})
+% $$
 % TODO consistent notation for KL-divergence
-where $\bar{q}$ is the geometric mean combiner (see \ref{todo}). The proof is not trivial and does not give insight into whether such a decomposition and learning strategy might also exist for other loss functions.
+where $\bar{q}$ is the geometric mean combiner. The proof is not trivial and does not give insight into whether such a decomposition and learning strategy might also exist for other loss functions.
 
 \citeauthor{buschjager_GeneralizedNegativeCorrelation_2020} \cite{buschjager_GeneralizedNegativeCorrelation_2020} approached the problem by attempting to derive a generalised decomposition of the ensemble error that incorporates diversity. The basic idea is to consider a Taylor approximation around the ensemble combiner, which is assumed to be the arithmetic mean combiner. $\bar{q} \defeq \mathbb{E}_{\Theta}\left[ q_{\Theta} \right] \approx \frac{1}{M}\sum_{i=1}^M q_i$.
 \begin{align*}
@@ -99,8 +99,8 @@ where $\bar{q}$ is the geometric mean combiner (see \ref{todo}). The proof is no
 \end{align*}
 $R_{3}$ is the remainder of the Taylor approximation, which vanishes if the third derivative of $\ell$ is zero.
 By definition of $\bar{q}$, $\mathbb{E}_{\Theta}\left[ \nabla_{\bar{q}}(\ell(\bar{q})) \right] = \nabla_{\bar{q}}(\ell(\bar{q}))$ and $\mathbb{E}_{\Theta}\left[ q-\bar{q} \right] = 0$ and thus the second term vanishes.
-\marginnote{
-The expectations can be approximated as follows:
+
+The expectations are approximated as follows:
 $$
 \bar{q} = \mathbb{E}_{{\Theta}}\left[ q_{\Theta} \right] \approx \Mavg q_{i}
 $$
@@ -112,7 +112,8 @@ $$
 $$
 \mathbb{E}_{\Theta}\left[ R_{3}(x) \right]  \approx \tilde{R}
 $$
-}
+
+
 Note that here they \textit{assume} the expected model $\bar{q}$ to also be the ensemble combiner, i.e. $\bar{q} \approx \Mavg q_{i}$. 
 % TODD can we relate this to the qstar lemma?
 Based on this, they propose the following generalised training objective.
@@ -145,16 +146,16 @@ the third derivative is bounded and while the decomposition is not exact, it can
 % TODO clarify
 \end{itemize}
 
-It is evident however, {that we already have a fully general ambiguity decomposition at hand}, namely the ambiguity-effect decomposition (\ref{thm:ambiguity-effect-decomp}). 
+It is evident however, {that we already have a fully general ambiguity decomposition at hand}, namely the ambiguity-effect decomposition (\cf \ref{thm:ambig-effect-decomp}). 
 This decomposition is exact and holds for \textit{any} loss function (including the \zeroone-loss). 
-For Bregman divergences, this reduces to the ambiguity decomposition \ref{thm:bregman-ambiguity-decomp}.
+For Bregman divergences, this reduces to the ambiguity decomposition.
 % TODO direct comparison to those above, e.g. NLL, CE -- need to study wood23 a bit more
 %
 We claim that the adequate generalisation of the NCL objective follows this structure.
 \begin{proposition} $\star$ We propose the following generalisation of the NCL neural network objective. For general loss functions $\ell$:
 $$
 e_{i} \defeq \ell(y, q_{i}) ~ ~ - \lambda \left( 
- \ell y, q_{i}) - L(y, \bar{q})
+ \ell y, q_{i}) - \ell(y, \bar{q})
 \right)
 $$
 For Bregman divergences:
@@ -162,19 +163,16 @@ $$
 e_{i} \defeq \Breg{y}{q_{i}} ~ ~ - \lambda  \Breg{\bar{q}}{q_{i}}
 $$
 \end{proposition}
-NCL for the squared error loss as introduced by \cite{liu_EnsembleLearningNegative_1999} and \cite{brown_ManagingDiversityRegression_2005}, as well as for the KL-divergence as given by \cite{webb_EnsembleNotEnsemble_2019} are special cases of this.
+NCL for the squared error loss as originally proposed \cite{liu_EnsembleLearningNegative_1999,brown_ManagingDiversityRegression_2005}, as well as for the KL-divergence \cite{webb_EnsembleNotEnsemble_2019} are special cases of this.
 
-This provides a general framework for Negative Correlation Learning with arbitrary loss functions. Because it is founded on the exact and intuitive bias-variance-diversity decomposition, this also yields a natural and intuitive means for understanding and analysing Negative Correlation Learning and its effects.
+This provides a general framework for Negative Correlation Learning with arbitrary loss functions. Because it is founded on the exact bias-variance-diversity decomposition, this also yields a natural and intuitive means for understanding and analysing Negative Correlation Learning and its effects.
 
 % TODO maybe move this to the outlook section
-Note that the Dynamic Random Forest approach \ref{sec:before} implicitly optimises a very similar objective. The construction procedure of individual decision trees greedily optimises its own performance (\ref{sec:decision-trees greedily optimise a loss fn}), which corresponds to the first term in the NCL neural network objective. The introduction of example weights based on the ensemble diversity influences the decision tree construction to improve the ambiguity, which corresponds to the regularisation term. Note also that Negative Correlation learning already is "dynamic" in the sense that the ambiguity term is evaluated per point. 
+Note that the weighting strategies of \cref{sec:guided-parallel-training} implicitly optimise a very similar objective. The construction procedure of individual decision trees greedily optimises its own performance (\cf \ref{sec:decision-trees}), which corresponds to the first term in the NCL neural network objective. The introduction of example weights based on the ensemble diversity influences the decision tree construction to improve the ambiguity, which corresponds to the regularisation term. 
 
 Although the term \textit{Negative Correlation Learning} in the literature refers specifically to neural networks, we can now see that it is rather a style of training ensemble members with respect to the ambiguity decomposition.
-To the best of our knowledge, only one other algorithm has been published that realises this: \cite{negative-correlation-forests} proposes to refine the leaf predictions in a given Random Forest using using gradient descent according to the objective defined in definition \ref{def:buschj-ncl-objective}.
-
-% TODO also mention ADF, this is the same, although similar
-
-While an experimental evaluation has to be left for future work, we note that the case of KL-divergence was already investigated empirically in detail in \cite{webb_EnsembleNotEnsemble_2019}.
+To the best of our knowledge, only one other algorithm has been published that realises this: \citeauthor{buschjager_ThereNoDoubleDescent_2021} \cite{buschjager_ThereNoDoubleDescent_2021} proposes to refine the leaf predictions in a given Random Forest using using gradient descent according to the objective defined in definition \ref{def:buschj-ncl-objective}.
+While an experimental evaluation has to be left for future work, we note that the case of KL-divergence was already investigated empirically in detail \cite{webb_EnsembleNotEnsemble_2019}.
 
 % *only* if we really have the time to spare
 % \subsection{Experiments}
