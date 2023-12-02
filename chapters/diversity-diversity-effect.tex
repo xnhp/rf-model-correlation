@@ -10,22 +10,26 @@
 % - wood23
 % TODO clarify that were omitting E_(X,Y) herere
 % TODO in other places, randomness of models is within RV D, here we use Theta
-\paragraph{Generalising Ambiguity} In section \ref{sec:bias-variance-effects}, we have derived a generalised bias-variance decomposition by considering the effect on the loss of using a random variable instead of its non-random centroid. 
+\paragraph{Generalising Ambiguity} In \cref{sec:bias-variance-effects}, we have derived a generalised bias-variance decomposition by considering the effect on the loss of using a random variable instead of its non-random centroid. 
 For the variance, this would be the expected difference in loss between using a model dependent on the training input $D$ and the expected model, where the expectation is over $D$. 
 Consider now an ensemble of learners, in which each learner is constructed according to a random parameter $\Theta$. Similar to bias and variance, we may consider the distribution of models over $\Theta$ around a central model $\bar{q}$ that is non-random with respect to $\Theta$. 
 The expected \textit{effect} of using the central model instead of some single member is expressed as follows.
 $$
+\mathbb{E}_{\Theta} \left[
+\LE{\bar{q}}{q_\Theta}
+\right]
+=
 \mathbb{E}_{\Theta}\left[   \ell(Y, q_{\Theta}) -  \ell(Y, \bar{q})) \right] \approx \Mavg \ell(Y, q_i) - \ell(Y, \bar{q})
 $$
 
 
-Using the same strategy as for the bias-variance-effect decomposition of theorem \ref{thm:bias-variance-effect}, we can use this to formulate a decomposition of the generalisation error with respect to the central model.
+Using the same strategy as for the bias-variance-effect decomposition of \cref{thm:bias-variance-effect}, we can use this to formulate a decomposition of the generalisation error with respect to the central model.
 
 \marginfigfromsource{fig:ambiguity-spread}{symlinks/illustrations/ambiguity/rf-ambiguity}
 
 % TODO need to somewhere make clear that we write without noise everywhere
 
-\begin{theorem} \label{thm:ambig-effect-decomp} (Ambiguity-Effect decomposition \cite{todo}) For any loss function $L$, target label $Y$, ensemble members $q_{1}, \dots, q_{M}$ with combiner $\bar{q}$
+\begin{theorem} \label{thm:ambig-effect-decomp} (Ambiguity-Effect decomposition \cite{wood_UnifiedTheoryDiversity_2023}) For any loss function $\ell$, target label $Y$, ensemble members $q_{1}, \dots, q_{M}$ with combiner $\bar{q}$
 \begin{align*}
 \ell(Y, \bar{q}) &= \Mavg \ell(Y, q_{i}) -
 \underbrace{\left(\Mavg \ell(Y, q_{i}) - \ell(Y, \bar{q})\right)}_{\text{Ambiguity-Effect / Ensemble Improvement}} \\
@@ -37,10 +41,10 @@ Using the same strategy as for the bias-variance-effect decomposition of theorem
 Similar to variance, ambiguity and ambiguity-effect are measures of spread. 
 Variance measures the spread of training error across models trained with different draws of the training dataset $D$ around a model that is a centroid with respect to the distribution of $D$. Similarly, ambiguity measures the spread of individual member model errors around a model that is centroid with respect to the distribution of $\Theta$, namely the combiner $\bar{q}$. In case of squared loss, this is indeed the statistical variance around the arithmetic mean. For other losses, this is a different quantity.
 }
-If the ensemble combiner $\bar{q}$ is chosen to be the central model (as defined in def. \ref{def:ensemble-combiner}), this is a decomposition of the ensemble generalisation error and a generalisation of the ambiguity decomposition described in section \ref{sec:bias-variance-diversity-decomp}.
+If the ensemble combiner $\bar{q}$ is chosen to be the central model (\cf \ref{def:ensemble-combiner}), this is a decomposition of the ensemble generalisation error and a generalisation of the ambiguity decomposition described in \cref{sec:bias-variance-diversity-decomp}.
 
 % TODO show that majority vote is actually centroid to 0-1-loss (have that in touchnotes somewhere)
-We can then also find an intuitive interpretation of ambiguity-effect: It is the effect of ensembling on the error. If we consider the members to be constructed according to a parameter $\Theta$, a reasonable measure of the member performance is its loss in expectation over the parameter distribution: $\mathbb{E}_{\Theta}\left[ L(Y, q(X; \Theta))  \right] \approx \Mavg L(Y, q(X;\Theta_{i})$. What we gain or lose from using an ensemble $\bar{q}$ over just a single member model is exactly measured by ambiguity-effect. Due to this, this quantity is also known as \textit{ensemble improvement} \cite{theisen, and others?}.
+We can then also find an intuitive interpretation of ambiguity-effect: It is the effect of ensembling on the error. If we consider the members to be constructed according to a parameter $\Theta$, a reasonable measure of the member performance is its loss in expectation over the parameter distribution: $\mathbb{E}_{\Theta}\left[ \ell(Y, q(X; \Theta))  \right] \approx \Mavg \ell(Y, q(X;\Theta_{i})$. What we gain or lose from using an ensemble $\bar{q}$ over just a single member model is exactly measured by ambiguity-effect. Due to this, this quantity is also known as \textit{ensemble improvement} \cite{theisen_WhenAreEnsembles_2023,abe_BestDeepEnsembles_2022}.
 
 % TODO some sentence on how this was defined as ambiguity-effect in krogh or sth
 
@@ -53,32 +57,19 @@ We can then also find an intuitive interpretation of ambiguity-effect: It is the
 % \end{marginfigure}
 
 
-
-%\begin{theorem} \label{thm:ambiguity-decomp} (Ambiguity decomposition \cite{todo:krogh}) For any of the loss functions of \ref{thm:the-trick}, the ambiguity-effect term reduces to the target-independent \textit{ambiguity}
-%\begin{align*}
-%L(Y, \bar{q}) &= \Mavg L(Y, q_{i}) - \left(\Mavg L(Y, q_{i}) - L(Y, \bar{q})\right) \\
-% &= \Mavg L(Y, q_{i}) - \Mavg L(q_{i}, \bar{q})
-%\end{align*}
-%\end{theorem}
-% TODO has been discussed in the literature earlier
-
-%TODO need to argue more that this is indeed centroid? should come from generalised / bregman etc.?
-
-
-\paragraph{Diversity-Effect} The ambiguity decomposition divides the ensemble error into the average member error and the variance among members. How does this relate to the well-known bias-variance decomposition? Indeed, nothing prevents us from applying the bias-variance decomposition of theorem \ref{thm:bias-variance-effect} to the error of an individual member, resulting in a decomposition into \textit{average} bias, \textit{average} variance and expected ambiguity, which is also referred to as \textit{diversity} \cite{wood_UnifiedTheoryDiversity_2023}.
+\paragraph{Diversity-Effect} The ambiguity decomposition divides the ensemble error into the average member error and the variance among members. How does this relate to the well-known bias-variance decomposition? Indeed, nothing prevents us from applying the bias-variance decomposition of \cref{thm:bias-variance-effect} to the average member error, resulting in a decomposition into \textit{average} bias, \textit{average} variance and expected ambiguity, which is also referred to as \textit{diversity} \cite{wood_UnifiedTheoryDiversity_2023}.
 In summary, the decomposition is given in the following theorem. Note that it holds for \textit{any} loss function. 
 
 \begin{marginfigure}
-    % \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/mnist_subset/bvd-standard-rf-classifier}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_standard_rf/mnist_subset/bvd-standard_rf.png}
     \label{fig:spambase-standard-rf-classifier-bvd}
     % TODO legend
     \caption{
-        Components of the diversity-effect decomposition by number of trees in a standard Random Forest ensemble trained on \textit{mnist-subset}. Average bias and average variance stay (almost) constant with increasing number of trees, while diversity increases. The ensemble error is the difference between the average member error (which is the sum of average bias and average variance) and diversity.
+        Components of the diversity-effect decomposition by number of trees in a standard Random Forest ensemble trained on \textit{mnist-subset}. \avgBiasCircle~Average bias and \avgVarianceCircle~average variance stay (almost) constant with increasing number of trees, while \diversityCircle~diversity increases. The ensemble error is the difference between the average member error (which is the sum of average bias and average variance) and diversity.
     }
-    % TODO here, it would actually be good to increase x axis range to show that the entire thing stabilises
 \end{marginfigure}
 
-\begin{theorem} (Bias-Variance-Diversity-Effect decomposition \cite{wood_UnifiedTheoryDiversity_2023} )
+\begin{theorem} (Bias-Variance-Diversity-Effect decomposition \cite{wood_UnifiedTheoryDiversity_2023})
     \label{thm:bias-variance-diversity-effect-decomp}
     % TODO repeat what star, bar, Y is
 \begin{align*}
@@ -138,9 +129,8 @@ In summary, the decomposition is given in the following theorem. Note that it ho
 \label{sec:unchanged-bias}
 % TODO not really seeing this in my experiments??
 
-In section \ref{sec:ensemble-learning-motivation} we gave arguments for how in specific cases, the ensemble bias equals the bias of any member. We now have the tools to show this in a more general manner \cite{wood_UnifiedTheoryDiversity_2023}.
-
-For the ensemble bias, application of the ambiguity-effect decomposition (\ref{thm:ambig-effect-decomp}) to a set of centroid models $q_{i}^\star$ yields:
+In \cref{sec:ensemble-learning-motivation} we gave arguments for how in specific cases, the ensemble bias equals the bias of any member. We now have the tools to show this in a more general manner \cite{wood_UnifiedTheoryDiversity_2023}.
+For the ensemble bias, application of the ambiguity-effect decomposition (\cf \ref{thm:ambig-effect-decomp}) to a set of centroid models $q_{i}^\star$ yields:
 % TODO also use LE (loss-effect) notation in other places -- but make sure we're not confusing anything
 $$
 \underbrace{
@@ -173,7 +163,7 @@ $$
 \mathbb{E}_{D}\left[ \Mavg \LE{\bar{q}}{q_{i}} \right] 
 }_{\text{diversity}}
 $$
-Due to lemma \ref{thm:qstars-same} which states that in homogeneous ensembles $q_{i}^\star = q_{j}^\star = \bar{q}^\star$, we can conclude that $\Delta = 0$. 
+Due to \cref{thm:qstars-same} which states that in homogeneous ensembles $q_{i}^\star = q_{j}^\star = \bar{q}^\star$, we can conclude that $\Delta = 0$. 
 \begin{corollary} For homogeneous ensembles, we can conclude the following:
 \begin{itemize}
     \item The ensemble bias is equal to the average member bias:
@@ -218,14 +208,11 @@ $$
 % Other areas like domain adaptation may also involve maximizing divergences between distributions to learn robust features/mappings across domains.
 
 Note that bias-effect, variance-effect and ambiguity-effect are all of the form $\mathbb{E}_{}\left[ \LE{\circ}{\square} \right]$ and depend directly on the target label $Y$. 
-With variance-effect, we have captured the \textit{effect} of variations between different training datasets) on the prediction error.
+With variance-effect, we capture the {effect} of variations between different training datasets on the prediction error.
 With ambiguity-effect, we have captured the effect of variations between the different member models on the prediction error.
 We have already seen that for the squared error, the variance-effect coincides with familiar notion of "statistical" variance between the predictions.
-We will now argue that for Bregman divergences as defined in definition \ref{def:bregman-divergence}, the loss-effect terms reduce to the loss between the two objects.
+We will now argue that for Bregman divergences (\cf \ref{def:bregman-divergence}), the loss-effect terms reduce to the loss between the two objects.
 The class of Bregman divergences covers many widely used loss functions and thus allows us to formulate a unified bias-variance-decomposition. 
-
-% TODO put somewhere else
-% However, for some other losses -- in particular the 0-1-loss for classification -- such a decomposition is proven to not exist (see \cite{todo}). In these cases, we can still consider the more general effect decompositions (see \ref{sec:todo}).
 
 
 % TODO highlight how we are losing one expectation, and which one that is
@@ -249,9 +236,9 @@ $$
 \end{lemma}
 
 Using $q \gets q^\star$ shows that bias-effect collapses to bias for Bregman divergences: 
-$$\Breg{y^\star}{q^\star} = \mathbb{E}_{}\left[ \Breg{Y}{q^\star} - \Breg{Y}{y^\star} \right]$$
+$$\Breg{y^\star}{q^\star} = \mathbb{E}_{Y}\left[ \Breg{Y}{q^\star} - \Breg{Y}{y^\star} \right]$$
 
-\begin{lemma} \label{thm:bregman-collapse-variances} ($\star$, Generalised from \cite{wood_UnifiedTheoryDiversity_2023})
+\begin{lemma} \label{thm:bregman-collapse-variances}$\star$ (Generalised from \cite{wood_UnifiedTheoryDiversity_2023})
 Let $q$ be a function of random variable $Z$ and independent of $Y$. For $q^\star = \mathcal{E}_{Z}\left[ q \right]$, i.e. the left Bregman centroid w.r.t. $Z$, it holds that
 $$
 \mathbb{E}_{Z}\left[ \Breg{q^\star}{q} \right] 
@@ -267,15 +254,15 @@ The proof is given in \cref{proof:bregman-collapse-variances}.
 % TODO highlight somewhere that this is a slightly different way of showing the decomp -- was previously shown by directly showing bias-variance decomp for it; here we start with effect decomp which trivially holds and then apply bregman collapse trick (which is inherent in the other proof too, but certainly not as clear)
 
 % TODO write D, Theta in both equations, needs to be clearer I guess
-This shows that variance- and ambiguity-effect collapse to variance and ambiguity. The variance (in the bias-variance sense) is the variance of the estimates $q_D$ dependent on $D$ with respect to different realisations of $D$ around its $D$-centroid. 
+\cref{thm:bregman-collapse-variances} shows that variance- and ambiguity-effect collapse to variance and ambiguity. The variance (in the bias-variance sense) is the variance of the estimates $q_D$ dependent on $D$ with respect to different realisations of $D$ around its $D$-centroid. 
 $$
 \text{For $q^\star = \mathcal{E}_D\left[q_D\right]$:}\hspace{1em}
-\Breg{q^\star}{q} = \mathbb{E}_{}\left[ \Breg{Y}{q^\star} - \Breg{Y}{q} \right]
+\Breg{q^\star}{q} = \mathbb{E}_{}\left[ \Breg{Y}{q} - \Breg{Y}{q^\star} \right]
 $$
 Ambiguity/Diversity is the variance of the estimates $q_\Theta$ dependent on $\Theta$ with respect to different realisations of $\Theta$ around its centroid.
 $$
 \text{For $\bar{q} = \mathcal{E}_\Theta\left[q_\Theta\right]$:}\hspace{1em}
-\Breg{\bar{q}}{q} = \mathbb{E}_{}\left[ \Breg{Y}{\bar{q}} - \Breg{Y}{q} \right]
+\Breg{\bar{q}}{q} = \mathbb{E}_{Y}\left[ \Breg{Y}{q} - \Breg{Y}{\bar{q}} \right]
 $$
 % TOD do these have a geometric intuition?
 
@@ -293,10 +280,7 @@ $$
 \caption{Examples for the combiner $\mathcal{E}_\Theta \left[q_\Theta\right]$ implied by a Bregman divergence \cite{wood_UnifiedTheoryDiversity_2023}.}
 \end{figure}
 
-% TODO also give bregman ambiguity decomp somewhere
-% then mention that krogh showed this for KL-divergence and Geurts (as mentioned in Louppe p67) for squared error.
-
-This yields a generalised bias-variance-diversity decomposition for bregman divergences as a special case of the corresponding effect decomposition.
+This yields a generalised bias-variance-diversity decomposition for Bregman divergences as a special case of the corresponding effect decomposition.
 
 % TODO notation, (re)define symbols
 % TODO clarify: expectation over X
@@ -321,15 +305,15 @@ This yields a generalised bias-variance-diversity decomposition for bregman dive
 &= \underbrace{\mathbb{E}_{Y|X}\left[ \Breg{Y}{y^\star} \right]   }_{\text{noise}} \\
 &+
 \underbrace{
-    \frac{1}{M} \sum_{i=1}^M B_\phi\left(\overline{\mathbf{Y}}, \mathbf{q}_i^*\right)
+    \frac{1}{M} \sum_{i=1}^M B_\phi\left(y^\star, q_i^\star \right)
 }_{\overline{\text{bias}}} \\
 &+
 \underbrace{
-    \frac{1}{M} \sum_{i=1}^M \mathbb{E}_D\left[B_\phi\left(\mathbf{q}_i^*, \mathbf{q}_i\right)\right]
+    \frac{1}{M} \sum_{i=1}^M \mathbb{E}_D\left[B_\phi\left(q_i^\star, q_i\right)\right]
 }_{\overline{\text{variance}}} \\
 &-
 \underbrace{
-    \mathbb{E}_D\left[\frac{1}{M} \sum_{i=1}^M B_\phi\left(\overline{\mathbf{q}}, \mathbf{q}_i\right)\right]
+    \mathbb{E}_D\left[\frac{1}{M} \sum_{i=1}^M B_\phi\left(\bar{q}, q_i\right)\right]
 }_{\text{diversity}}
 \end{align*}
 \end{theorem}
@@ -347,10 +331,10 @@ This yields a generalised bias-variance-diversity decomposition for bregman dive
 
 In section \ref{sec:ensemble-learning-motivation}, we have used Jensen's inequality to show that the ensemble improvement is non-negative for some cases.
 $$
-\mathbb{E}_{{\Theta}}\left[ \ell (q_{\Theta}(X),Y) \right]  -
-\ell(\mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right] ,Y ) \geq 0
+\mathbb{E}_{{\Theta}}\left[ \ell (Y, q_{\Theta}(X)) \right]  -
+\ell(Y, \mathbb{E}_{\Theta}\left[ q_{\Theta}(X) \right]) \geq 0
 $$
-It is evident, that the Jensen gap is but a special case of ambiguity-effect (\ref{thm:ambig-effect-decomp}) for $\bar{q} \defeq \Mavg q_{i}$ and convex loss functions. 
+It is evident that the Jensen gap is but a special case of ambiguity-effect (\cf \ref{thm:ambig-effect-decomp}) for $\bar{q} \defeq \Mavg q_{i}$ and convex loss functions. 
 This shows that the ensemble loss is always smaller-equal than the expected member loss, but \textit{only} if the ensemble output is actually produced by an arithmetic mean. 
 
 However, it can not be assumed from the outset that the arithmetic mean is the best ensemble combiner. Indeed, for the cross-entropy loss, \citeauthor{abe_PathologiesPredictiveDiversity_2023} \cite{abe_PathologiesPredictiveDiversity_2023} proceed to note that the Jensen gap corresponds to a form that is "not immediately recognizable". Although they do find an interpretation of it, it is still necessarily dependent on the outcome $Y$ 
@@ -361,7 +345,7 @@ It seems reasonable to define the ensemble combiner in accordance to the Bregman
 % TODO actually talk about these combiners somewhere
 Non-negativity is then easily shown since in that case ambiguity-effect reduces to ambiguity.
 $$
-\Breg{\bar{q}}{q} = \mathbb{E}_{}\left[ \Breg{Y}{\bar{q}} - \Breg{Y}{q} \right]
+\Breg{\bar{q}}{q} = \mathbb{E}_{}\left[ \Breg{Y}{q} - \Breg{Y}{\bar{q}} \right]
 \hspace{1em} \text{for $\bar{q} = \mathcal{E}_\Theta\left[q_\Theta\right]$}
 $$ and the value of any Bregman divergence is always non-negative. Further, ambiguity is now independent of the outcome $Y$.
 
@@ -370,7 +354,7 @@ $$ and the value of any Bregman divergence is always non-negative. Further, ambi
     \begin{itemize}
         \item For any Bregman divergence, ensembling using the combiner implied by the divergence can not hurt performance.
         \item The diversity is an intuitive measure of ensemble improvement.
-        \item This ensemble improvement appears in an exact decomposition of the ensemble generalisation error.
+        \item This ensemble improvement (diversity) appears in an exact decomposition of the ensemble generalisation error.
     % TODO feel like theres more
     \end{itemize}
 \end{corollary}

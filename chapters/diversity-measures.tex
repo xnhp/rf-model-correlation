@@ -38,13 +38,14 @@ $Q_{ij} = 0$ if $q_{i}$ and $q_{j}$ are independent, positive if the members mak
 
 \subsection{Ambiguity}
 
-\cite{krogh_NeuralNetworkEnsembles_1995} propose a decomposition of the ensemble generalisation error into two terms: One describing the average error of ensemble members and a so-called \textit{ambiguity} term. 
+\citeauthor{krogh_NeuralNetworkEnsembles_1995} \cite{krogh_NeuralNetworkEnsembles_1995} propose a decomposition of the ensemble generalisation error into two terms: One describing the average error of ensemble members and a so-called \textit{ambiguity} term. 
 % TODO wrap this in theorem
 $$
 \mathbb{E}_{}\left[ \ell(y, \bar{q}) \right] = \Mavg \ell(y, q_{i}) - \Mavg \ell(\bar{q}, q_{i})
 $$
 This perfectly divides the ensemble error into error due to characteristics of the individual member models and error due to interactions between member predictions. Note that the contribution of the ambiguity term here is negative, that is, ambiguity is a beneficial influence. 
-This decomposition was originally given for the squared-error loss \cite{krogh_NeuralNetworkEnsembles_1995} and the KL-divergence \cite{todo}. We will treat this quantity in detail in the rest of this chapter. Right now, note that the ambiguity term can be interpreted as a measure of \textit{variance} where individual distances are measured by the loss $\ell$. For the squared-error loss and the arithmetic mean combiner, this is exactly the "statistical" variance over the members $\Mavg \left(q_{i} - \Mavg q_{i}\right)^2$. For other loss functions, this yields other well-known quantities (see definition \ref{def:bregman-information}).
+This decomposition was originally given for the squared-error loss \cite{krogh_NeuralNetworkEnsembles_1995} and later proven for the KL-divergence \cite{webb_EnsembleNotEnsemble_2019}.
+ We will treat this quantity in detail in the rest of this chapter. Right now, note that the ambiguity term can be interpreted as a measure of \textit{variance} where individual distances are measured by the loss $\ell$. For the squared-error loss and the arithmetic mean combiner, this is exactly the "statistical" variance over the members $\Mavg \left(q_{i} - \Mavg q_{i}\right)^2$. For other loss functions, this yields other well-known quantities (see definition \ref{def:bregman-information}).
 
 \subsection{Impurity} 
 \citeauthor{kohavi_BiasVarianceDecomposition_} \cite{kohavi_BiasVarianceDecomposition_} give a bias-variance decomposition of the \zeroone-loss as follows.
@@ -53,14 +54,15 @@ $$
 \mathbb{E}_{}\left[ \Lzo{Y}{q(X)} \right] &= 
 \mathbb{E}_{}\left[  
 \nicefrac{1}{2}\left( \sigma^2_{x} + \text{bias}(q) + \text{var}(q)   \right)
-\right] \\
+\right] \\ \\
 \text{for} ~ ~ & \text{bias}(q) =  \sum_{y} \left(  \prob{}{y^\star = y ~|~x} - \prob{}{q=y ~|~ x} \right)^2 \\
 & \text{var}(q) = 1 - \sum_{y} \prob{}{q=y ~|~x}^2  \\
 & \sigma^2 = 1 - \sum_{y} \prob{}{y^\star = y ~|~ x}
 \end{align}
 $$
-Note that the variance and noise terms are of the form of the Gini impurity (see \ref{sec:gini-impurity}) and can be interpreted as measures of impurity.
-\citeauthor{kuncheva_MeasuresDiversityClassifier_2003} \cite{kuncheva_MeasuresDiversityClassifier_2003} takes inspiration from this variance term and proceed as follows. Instead of considering the impurity over positive or negative labels, they instead consider the impurity over labels for which the ensemble is correct ($\tilde{y} = +1$) or incorrect ($\tilde{y} = -1$), respectively. As such, the probability is not with respect to the distribution of labels but the distribution $\Theta$ of members in the ensemble. Let the number of correct classifiers on an example be $m_{+}(x) \defeq \sum_{j}^M \ind{q_{j}(x) = y(x)}$ where $y(x)$ is the true label of $x$. This yields
+Note that the variance and noise terms are of the form of the Gini impurity (\cref{thm:decision-trees-impurity}) and can be interpreted as measures of impurity.
+\citeauthor{kuncheva_MeasuresDiversityClassifier_2003} \cite{kuncheva_MeasuresDiversityClassifier_2003} takes inspiration from this variance term and proceed as follows. Instead of considering the impurity over positive or negative labels, they instead consider the impurity over labels for which the ensemble is correct ($\tilde{y} = +1$) or incorrect ($\tilde{y} = -1$), respectively. As such, the probability is not with respect to the distribution of labels but the distribution $\Theta$ of members in the ensemble. 
+This yields
 $$
 \text{var}'_{x} \defeq 1 - \sum_{\tilde{y}} \prob{\Theta}{q = \tilde{y} ~ |~ x}^2
 $$
@@ -71,12 +73,12 @@ Averaging this over the entire training dataset, this can be understood as a mea
 
 \subsection{Entropy}
 % TODO what is diversity term for KL-divergence? entropy? or rather, mutual information? (see section on bregman information)
-\citeauthor{cunningham_DiversityQualityClassification_2000} \cite{cunningham_DiversityQualityClassification_2000}propose the entropy between member predictions as a diversity measure. For a single point, it is given as
+\citeauthor{cunningham_DiversityQualityClassification_2000} \cite{cunningham_DiversityQualityClassification_2000} propose the entropy between member predictions as a diversity measure. For a single point, it is given as
 $$
 \sum_{y \in \{ -1, +1 \}} - \prob{\Theta}{y ~|~x} \log \prob{\Theta}{y~|~x}
 $$
 where, for an ensemble, $\prob{\Theta}{y~|~x} \approx \Mavg \ind{q_{i}(x) = y}$.
-\citeauthor{shipp_RelationshipsCombinationMethods_2002} \cite{shipp_RelationshipsCombinationMethods_2002}propose a target-dependent measure that is reminiscent of the entropy. With $m_{+}(x) = \sum_{j=1}^M \ind{q_{i}(x) = y(x)}$:
+\citeauthor{shipp_RelationshipsCombinationMethods_2002} \cite{shipp_RelationshipsCombinationMethods_2002} propose a target-dependent measure that is reminiscent of the entropy. With $m_{+}(x) = \sum_{j=1}^M \ind{q_{i}(x) = y(x)}$:
 $$
 \frac{1}{M - \ceil{\frac{M}{2}}} \min \{ m_{+}(x), M-m_{+}(x) \}
 $$
@@ -84,11 +86,12 @@ $$
 \subsection{Covariance}
 \label{sec:bias-variance-covariance}
 
-In section \ref{sec:ensemble-learning-motivation}, we have already seen evidence that the covariance between members is an essential factor to ensemble performance. Indeed, the notion of covariance and uncorrelatedness has been a guiding thought in the literature \cite{didaci_DiversityClassifierEnsembles_2013, brown_ManagingDiversityRegression_2005, buschjager_GeneralizedNegativeCorrelation_2020}.
+In \cref{sec:ensemble-learning-motivation}, we have already seen evidence that the covariance between members is an essential factor to ensemble performance. Indeed, the notion of covariance and uncorrelatedness has been a guiding thought in the literature \cite{didaci_DiversityClassifierEnsembles_2013, brown_ManagingDiversityRegression_2005, buschjager_GeneralizedNegativeCorrelation_2020}.
 We will now introduce an exact decomposition of the ensemble error for the squared-error loss that includes the average covariance between member predictions.
-\begin{theorem} (Bias-Variance-Covariance decomposition \ref{ueda_GeneralizationErrorEnsemble_1996, brown_ManagingDiversityRegression_2005})
+\begin{theorem} (Bias-Variance-Covariance decomposition \cite{ueda_GeneralizationErrorEnsemble_1996, brown_ManagingDiversityRegression_2005})
   \label{thm:bias-variance-covariance}
 It holds that
+% TODO! use qstar instead
 $$
 \begin{align}
 \mathbb{E}_{(X,Y),D}\left[ (y - \bar{q})^2 \right]  &= \overtext{bias}^2 + \frac{1}{M} \overtext{var} + \left( 1 - \frac{1}{M} \right) \overtext{covar} \\ \\ 
@@ -98,23 +101,24 @@ $$
 \end{align}
 $$
 \end{theorem}
-\begin{proof}
+\begin{proof} 
 We begin by applying the bias-variance decomposition (theorem  \ref{thm:bias-variance-effect}) to the ensemble model $\bar{q}$.
 \begin{align*}
 \mathbb{E}_{}\left[ \ell(y, \bar{q})  \right]  
 &= \mathbb{E}_{}\left[ \ell(Y, y^\star) \right]  + \mathbb{E}_{}\left[ \ell(\bar{q}^\star, y^\star) \right] + \mathbb{E}_{}\left[ \ell(\bar{q}^\star, \bar{q}) \right]  \\
 \end{align*}
-For the bias term, it holds that
+For the bias term, it holds that \cite{ueda_GeneralizationErrorEnsemble_1996}
 \begin{align*}
 \text{bias} (\bar{q}) = 
 \ell(\bar{q}^\star, y^\star)
-&=  (\mathbb{E}_{D}\left[ \bar{q} \right]  - y^\star)  \\
-&=  \mathbb{E}_{D}\left[ \left(\left(\Mavg q_{i}\right) - y^\star\right)^2 \right]   \\
-&=  \left(\Mavg \mathbb{E}_{D}\left[ q_{i} - y^\star \right] \right)^2   \\
+% TODO fix?
+% &=  (\mathbb{E}_{D}\left[ \bar{q} \right]  - y^\star)  \\
+% &=  \mathbb{E}_{D}\left[ \left(\left(\Mavg q_{i}\right) - y^\star\right)^2 \right]   \\
+% &=  \left(\Mavg \mathbb{E}_{D}\left[ q_{i} - y^\star \right] \right)^2   \\
 &=  \overline{\text{bias} }^2   
 \end{align*}
 The variance of the ensemble can be decomposed into terms describing variances of individual members and covariances between members.
-\sidenote{
+\marginnote{
 Using that
 $$
 \left( \sum_{i=1}^n a_{i}\right)^2 = \sum_{i=1}^n a_{i} + \sum_{j \not= i} a_{i} a_{j}
@@ -122,21 +126,20 @@ $$
 }
 \begin{align*}
 \Var{}{\bar{q}} 
-&= \mathbb{E}_{D}\left[ \ell(\bar{q}, \bar{q}^\star) \right] \\
-&= \mathbb{E}_{D}\left[ (\bar{q} - \mathbb{E}_{D}\left[ \bar{q} \right] )^2 \right]  \\
+&= \mathbb{E}_{D}\left[ \ell(\bar{q}, \bar{q}^\star) \right] 
+= \mathbb{E}_{D}\left[ (\bar{q} - \mathbb{E}_{D}\left[ \bar{q} \right] )^2 \right]  \\
 &= \mathbb{E}_{D}\left[ \left(  \Mavg q_{i} - \mathbb{E}_{D}\left[ \Mavg q_{i} \right]  \right)^2 \right] \\
 &= \frac{1}{M^2} \sum_{i=1}^M \mathbb{E}_{D}\left[ (q_{i} - \mathbb{E}_{_{D}}\left[ q_{i} \right] )^2 \right] 
 + \frac{1}{M^2} \sum_{j \not=i} \mathbb{E}_{D}\left[ (q_{i} - \mathbb{E}_{D}\left[ q_{i} \right] ) (q_{j} - \mathbb{E}_{D}\left[ q_{j} \right] ) \right] 
 \end{align*}
 Rearraging the coefficients yields the form of the theorem.
-\sidenote{
-The coefficients are rearranged using
+\marginnote{
 $$
 \frac{1}{M^2} = \left( 1-\frac{1}{M} \right) \frac{1}{M(M-1)}
 $$
 }
 \end{proof}
-The Bias-Variance-Covariance decomposition can be interpreted as a decomposition into characteristics of individual learners (mean bias and variance), plus a quantity describing the interactions between diferent learners. Again, one can see that ensemble performance profits if members are uncorrelated.
+The Bias-Variance-Covariance decomposition can be interpreted as a decomposition into characteristics of individual learners (mean bias and variance), plus a quantity describing the interactions between learners. Again, one can see that ensemble performance profits if members are uncorrelated.
 However, this decomposition is only given for the squared error and the arithmetic mean combiner. 
 
 
@@ -157,12 +160,13 @@ However, this decomposition is only given for the squared error and the arithmet
 
 \subsection{Relationship between Ambiguity and Covariance}
 
-Ambiguity as a generalised notion of variance, and the well-known covariance decomposition.  Can see that strictly speaking, these belong to the "variance" section.
+% Ambiguity as a generalised notion of variance, and the well-known covariance decomposition.  Can see that strictly speaking, these belong to the "variance" section.
 
 We have now seen two approaches to expressing the ensemble generalisation error:
 \begin{itemize}
 \item In terms of \textit{covariance} as in the bias-variance-covariance decomposition of theorem \ref{thm:bias-variance-covariance}. A very similar notion also appears in when considering ensemble margins as in \ref{thm:breiman}
-\item In terms of variation around a centroid with respect to some loss function as in the diversity decomposition of theorems \ref{thm:bias-variance-diversity-effect-decomp}. For the squared-error loss, this is exactly the variance. The generalisations to Bregman divergences and arbitrary loss functions can be understood as generalised measures of variance. 
+\item In terms of variation around a centroid with respect to some loss function as in the diversity decomposition of  \cref{thm:bias-variance-diversity-effect-decomp}. 
+% For the squared-error loss, this is exactly the variance. The generalisations to Bregman divergences and arbitrary loss functions can be understood as generalised measures of variance. 
 \sidenote{
 For any loss function:
 $$
@@ -182,7 +186,7 @@ Inspecting the proofs of theorems \ref{thm:bias-variance-covariance} and \ref{th
 In other words, \textit{the covariance term is an artifact of the squared-error loss}. The notion of variance is more general.
 % TODO corollary: uncorrelatedness is a special case of diversity
 
-For the case of squared-error loss, \citeauthor{brown_ManagingDiversityRegression_2005} \cite{brown_ManagingDiversityRegression_2005} relate the ambiguity decomposition (\ref{thm:ambig-effect-decomp}) and the bias-variance-covariance decomposition (theorem \ref{thm:bias-variance-covariance}) directly. 
+For the case of squared-error loss, \citeauthor{brown_ManagingDiversityRegression_2005} \cite{brown_ManagingDiversityRegression_2005} relate the ambiguity decomposition (\cf \ref{thm:ambig-effect-decomp}) and the bias-variance-covariance decomposition (\cf \ref{thm:bias-variance-covariance}) directly. 
 \begin{align*}
 \mathbb{E}_{}\left[ \Mavg (y - q_{i})^2 - \Mavg (\bar{q} - q_{i})^2 \right]  = \overline{\text{bias} } + \frac{1}{M} \overline{\text{var} } + \left( 1 - \frac{1}{M} \right) \overline{\text{covar} }
 \end{align*}
@@ -194,5 +198,6 @@ which yields
 \end{align*}
 The first quantity describes the average member error, the second the diversity of the ensemble. The appearance of $\Omega$ in both terms illustrates that there is a trade-off between individual member error and diversity. 
 In other words, one cannot maximise diversity without also affecting other parts of the ensemble error. Vice versa, optimising for other components of the error will also affect diversity.
+% TODO! check
 
 \end{document}

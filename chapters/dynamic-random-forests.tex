@@ -31,16 +31,19 @@ We focus on classification problems evaluated by the \zeroone-loss. Due to the i
 % }
 % TODO motivated by fact that \zeroone is richer, and DTs already have this sort of very discrete structure
 Arguably one of the simplest ways to influence a learning algorithm is by assigning \textit{weights} $w: X \to [0,1]$ to examples. During any computations that involve a term corresponding to an example, for instance the impurity for a tree node (\cf \ref{sec:decision-trees}), the term is multiplied by the example weight. 
-For random forests, example weights can possibly come into effect via two mechanisms. We perform experiments for both approaches.
+For random forests, example weights can possibly come into effect via two mechanisms. 
 % TODO main motivation for this weighting stuff was also that it is usable in RFs -- cannot just backprop or whatever
 % -- although certanly thinkable, see negative correlation forests -- would actually expect to see a much stronger effect there
 \begin{itemize}
     \item \textit{Weighted bootstrapping}: Instead of drawing the bootstrap samples uniformly, draw a sample with probability according to its weight. If the bootstrap sample is large, examples with higher weight are more likely to be oversampled and thus appear multiple times in the bootstrap sample. 
-    \item \textit{Weighted tree construction}: We have seen in \ref{sec:decision-trees} that tree construction according to some impurity measure greedily optimises a loss function. Likewise, weighting examples during computation of the impurity measure optimises a weighted loss.
+    \item \textit{Weighted tree construction}: We have seen in \cref{sec:decision-trees} that tree construction according to some impurity measure greedily optimises a loss function. Likewise, weighting examples during computation of the impurity measure optimises a weighted loss.
     % TODO I think I have that formally in boosting motivation
 \end{itemize}
+We perform experiments for both approaches.
 
 Note that if a next member is constructed based on the performance of a previous members, the member models are no longer statistically independent and the ensemble is no longer homogeneous. This does not prevent us from considering their bias-variance-diversity decomposition (it holds just as well for heterogeneous ensembles).
+
+In the following sections we visualise the development of the components of the diversity decomposition as trees are added to a Random Forest ensemble. All quantities are averaged over $3$ trials to resemble the expectation over $D$.
 
 % TODO dont need to consider leaf combiner because trees are deep
 
@@ -56,6 +59,7 @@ Note that if a next member is constructed based on the performance of a previous
 
 
 \subsection{A simple weighting function for binary classification}
+\label{sec:simple-weighting-function}
 
 We begin by considering a simple weighting function that is already given in the literature without theoretical motivation. We explain this weighting function from the perspective of diversity and argue that, while its application can be beneficial, it is in contradiction to theory. This motivates further weighting functions which show equal or better performance. We further close some gaps in the original publication. 
 % The authors did not evaluate the weighting scheme in isolation but only in combination with other changes to the Random Forest scheme, and left it unclear how exactly the weights are used.
@@ -102,12 +106,12 @@ Assuming the weights are used effectively, $w_{\text{DRF}}$ and $w_{\text{XuChen
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_drf/spambase-openml/bvd-standard_rf}
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_drf/spambase-openml/bvd-drf_weighted_bootstrap}
     \caption{
-        Standard Random Forest and an ensemble constructed with the DRF weighting scheme (def. \ref{def:drf-weighting-scheme}, weighted bootstrapping). For the DRF scheme, neither average bias nor average variance are lower, hence the average member error is not lower. However, diversity is much larger.
+        Standard Random Forest and an ensemble constructed with the DRF weighting scheme (\cf \ref{def:drf-weighting-scheme}, weighted bootstrapping). For the DRF scheme, neither \avgBiasCircle~average bias nor \avgVarianceCircle~average variance are lower, hence the average member error is not lower. However, \diversityCircle~diversity is much larger. Evaluated on the \textit{spambase} dataset.
     }
     \label{fig:cover-bvd-standard-vs-drf}
 \end{marginfigure}
 
-We perform experiments using $w_\text{DRF}$ (both weighted bootstrapping and weighted tree construction) and $w_\text{XuChen}$ (weighted bootstrapping only). The full results for all benchmark datasets are given in \ref{sec:drf-full-results}. An illustrative comparison for a single dataset is given in figures \ref{fig:drf-comparison} and \ref{fig:cover-bvd-standard-vs-drf}.
+We perform experiments using $w_\text{DRF}$ (both weighted bootstrapping and weighted tree construction) and $w_\text{XuChen}$ (weighted bootstrapping only). The full results for all benchmark datasets are given in \cref{sec:drf-full-results}. An illustrative comparison for a single dataset is given in \cref{fig:drf-comparison,fig:cover-bvd-standard-vs-drf}.
 
 \begin{observation} ~~
     \label{obs:drf}
@@ -154,18 +158,20 @@ This might be an intuitive explanation why weighted bootstrapping shows a strong
     % results for "a simple weighting function for binary clasification"
     \includegraphics{symlinks/zero-one-plots/bvd-decomps/plot_bvd_drf/bioresponse/bvd.png}
     \caption{
-        ...
-        The full results for all benchmark datasets can be found in figure \ref{fig:plot_bvd_drf}
+        Comparison of $w_\text{DRF}$ and $w_\text{XuChen}$ on a high-dimensional binary classification dataset.
+        The full results for all benchmark datasets can be found in \cref{fig:plot_bvd_drf}
+        \bvdlegend
         % dvc-experiments/classification/zero-one/plots/bvd-decomps/plot_bvd_drf/bvd.png
     }
     \label{fig:drf-comparison}
 \end{figure*}
 
 \subsection{A weighting function informed by diversity for binary classification}
+\label{sec:binary}
 Informed by the theory on diversity, we make the following two claims.
 
 \begin{enumerate}
-    \item Incorrectly classified examples should not receive a particularly higher weight. If anything, examples for which the majority of members is incorrect should receive \textit{lower} weight since any subsequent correct vote will only increase bad diversity (unless the majority vote is tipped).
+    \item Incorrectly classified examples should not receive a particularly higher weight as $w_\text{DRF}$ does. If anything, examples for which the majority of members is incorrect should receive \textit{lower} weight since any subsequent correct vote will only increase bad diversity (unless the majority vote is tipped).
 %  However, across all benchmark datasets, the error rate is rather small, so there is little space opportunity for bad diversity to occur, so we would not expect a big difference between the vanilla sigmoid and the capped version. % TODO wording
 \item Weights should not be related linearly to the ratio of incorrect members $W$. For diversity in \zeroone-classification tasks, it does not matter how many members are correct, as long as the ensemble prediction is correct. Thus, any correctly classified point should receive the same low weight. In the extreme case, the weighting function could be a step function. Interpolating between a step function and a linear function could be expected to provide some sort of smoothing.
 \end{enumerate}
@@ -180,11 +186,11 @@ $$
 % https://www.desmos.com/calculator/kn9tpwdan5
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{symlinks/illustrations/weighting-fns/sigmoid-fns.png}
-    \caption{Illustration of $w_{\text{sigm}}$ for $t = \nicefrac{1}{2}$ and varying $b$.}
+    \caption{Illustration of \tcircle{orange}~$w_{\text{sigm}}$ for \tcircle{red}~$t = \nicefrac{1}{2}$ and varying $b$.}
     \label{fig:sigmoid}
 \end{marginfigure}
+\begin{definition} (Clipped sigmoid weighting function)
     \label{def:sigmoid}
-    \begin{definition} (Clipped sigmoid weighting function)
     % TODO add clipping, introduce scaling later
     \begin{align*}
     w_{\text{sigm} }(X) &\defeq \min\{ s, \nicefrac{1}{2} \} \\
@@ -196,10 +202,9 @@ $$
 \end{definition} 
 The value $b_{\text{max}} \defeq 15$ was chosen based on intuition to provide a smoothed version of a step function (compare \cref{fig:sigmoid}). The clipping using $t$ has the effect of clipping the function exactly at the classification threshold, meaning that incorrectly classified points will be assigned uniform weights.
 
-Additionally, $W \approx \Mavg\Lzo{Y}{q_{i}}$ can not be expected to be a good approximation for low $M$. For the first couple of trees, the distribution will in fact be very discrete. We have already observed that 
-This may cause an overshooting where for the first few trees, weights are very extreme. We have already seen that in weighted bootstrapping, there is an initial sharp increase in member error and diversity (\cf \ref{obs:drf})
-
-This motivates, we will aim to downregulate the influence of the weighting function for the first couple of trees in the ensemble. After this initial period, the function should have the same shape for all $M > M_{\text{max}}$.
+Additionally, $W \approx \Mavg\Lzo{Y}{q_{i}}$ can not be expected to be a good approximation for low $M$. For the first couple of trees, the distribution will in fact be very discrete.  
+We have already seen that in weighted bootstrapping, there is an initial sharp increase in member error and diversity (\cf \ref{obs:drf}).
+We aim to downregulate the influence of the weighting function for the first couple of trees in the ensemble. After this initial period, the function should have the same shape for all $M > M_{\text{max}}$.
 
 \begin{definition} (Lerped clipped sigmoid weighting function)
 $w_{\text{lerp}}(X)$ is defined analogously to $w_\text{sigm}$ (\cf \ref{def:sigmoid}) but $b$ is linearly interpolated ("lerp"-ed) between $0$ and $b_{\text{max}}$ according to $M$.
@@ -208,9 +213,9 @@ b \gets \frac{\min \{ M, M_{\text{max}} \}}{M_{\text{max} }} b_{\text{max} }
 $$
 \end{definition}
 
-\begin{observation} (\cf \cref{fig:sigmoids-comparison, fig:sigmoids-full-results}) % TODO "observation"
+\begin{observation} (\cf \cref{fig:sigmoids-comparison,fig:sigmoids-full-results})
     \begin{itemize}
-        \item Clipping (not assigning higher weights to incorrectly classified examples) already mitigates the spike in member error and diversity. Interpolating the steepness of the weighting function $b$ is not required for this. However, for diversity is lower and the ensemble error higher.
+        \item Clipping (not assigning higher weights to incorrectly classified examples) already mitigates the spike in member error and diversity. Interpolating the steepness of the weighting function $b$ is not required for this. 
         \item Surprisingly, interpolating leads to higher diversity (sometimes even higher than $w_\text{DRF}$) and lower or similar ensemble generalisation error.
     \end{itemize}
 \end{observation}
@@ -228,8 +233,9 @@ $$
     \includegraphics{symlinks/zero-one-plots/bvd-decomps/plot_bvd_capped_lerped_sigmoid/spambase-openml/bvd.png}
     \includegraphics{symlinks/zero-one-plots/bvd-decomps/plot_bvd_capped_lerped_sigmoid/diabetes/bvd.png}
     \caption{
+        Comparison of $w_\text{DRF}$, $w_\text{sigm}$ and $w_\text{lerp}$. \textit{diabetes} is a very small dataset with a high best achievable error rate.
         % Controlling $b$ sucessfullly mitigates spike but lower diversity for some reason. Capping then reaches higher diversity again. 
-        The full results for all benchmark datasets can be found in figure \ref{fig:todo}
+        The full results for all benchmark datasets can be found in \cref{fig:sigmoids-full-results}. \bvdlegend
         % dvc-experiments/classification/zero-one/plots/bvd-decomps/plot_bvd_drf/bvd.png
     }
     \label{fig:sigmoids-comparison}
@@ -268,12 +274,14 @@ $$
 % brown2005 p1639 hints at that flexible diversity learning may be linked to noisy data
 
 \subsection{Weighting functions for non-binary classification}
+\label{sec:nonbinary}
 
 \begin{figure*}
     \includegraphics[]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_multiclass/digits/bvd.png}
     \caption{
-        ...
+        Comparison of $w_\text{lerp}$ and $w_\text{dyn}$ for a non-binary classification problem. Full results for all benchmark datasets can be found in \cref{fig:nonbinary-full-results}
     }
+    \label{fig:nonbinary-results}
 \end{figure*}
 % todo maybe argue that threshold is different here -- but a bit more complicated, would have to think more about it
 
@@ -288,11 +296,11 @@ W_{\Theta}  < \nicefrac{1}{2} ~\leftrightarrow~  \bar{q}(X) = Y \\[1em]
 \compl{W_\Theta }  \leq \nicefrac{1}{2} ~\leftrightarrow~ \bar{q}(X) \not= Y
 \end{cases}
 \end{align}
-In section \ref{sec:k-competence}, we have observed that for non-binary classification problems, the voting threshold is exactly the ratio of votes for the next-best class. This is a quantity that depends on the ensemble and the given example and the equivalences above no longer hold. Because of this, we hypothesize that it is inadequate to use a weighting function centered around a threshold of $\nicefrac{1}{2}$ and it should rather be centered around the actual, dynamic threshold $\kappa$.
+In \cref{sec:k-competence}, we have observed that for non-binary classification problems, the voting threshold is exactly the ratio of votes for the next-best class. This is a quantity that depends on the ensemble and the given example and the equivalences above no longer holds. Because of this, we hypothesize that it is inadequate to use a weighting function centered around a threshold of $\nicefrac{1}{2}$ and it should rather be centered around the actual, dynamic threshold $t$.
 
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{symlinks/illustrations/weighting-fns/sigmoid-fns-k.png}
-    \caption{$t = 1 - \frac{1}{8}$}
+    \caption{ $w_\text{dyn}$ for     $t = 1 - \frac{1}{8}$}
 \end{marginfigure}
 \begin{definition} (Sigmoid weighting function with dynamic threshold)
     $w_\text{dyn}$ is defined analogously to $w_\text{lerp}$, but $t$ is given as
@@ -304,9 +312,11 @@ In section \ref{sec:k-competence}, we have observed that for non-binary classifi
 We evaluate this approach on multiple non-binary classification problems.
 
 
-\begin{observation} 
-     % TODO
-    ... dont seem to gain anything
+\begin{observation}  (\cf \cref{fig:nonbinary-results})
+     \begin{itemize}
+        \item Using $w_\text{dyn}$, one can achieve slighly improvided ensemble generalisation error as compared to any other learner (we consider the generalisation error in \cref{sec:gen-error})
+        \item The development of diversity is slower than with $w_\text{lerp}$ and more similar to standard Random Forests.
+     \end{itemize}
 \end{observation}
 
 \subsection{Ensemble margins}
@@ -315,7 +325,9 @@ We evaluate this approach on multiple non-binary classification problems.
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margin_hists/bioresponse/standard_rf/by-example-150.png}
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margin_hists/bioresponse/drf_weighted_bootstrap/by-example-150.png}
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/margin_hists/bioresponse/capped_lerped_sigmoid/by-example-150.png}
-    \caption{...}
+    \caption{
+        Frequency histogram of the distribution of $W(X,Y)$ over all test pairs $(X,Y)$ for ensembles of $M=150$ trees. In binary classification problems,  $W(X,Y) < \nicefrac{1}{2}$, the ensemble is \tcircle{green}~correct, else it is \tcircle{red}~incorrect.
+    }
     \label{fig:margin_hists}
 \end{marginfigure}
 
@@ -332,45 +344,51 @@ Likewise, for a given ensemble, we look at the distribution of ensemble margin p
 \begin{figure*}
     \includegraphics[]{symlinks/zero-one-plots/margins/drf_sigmoid/spambase-openml/margins.png}
     \caption{
-        ...
+        The ensemble margin (\cf \ref{def:ensemble-margin}) plotted separately for points for which the ensemble is \tcircle{green}~correct ($X_+$) or \tcircle{red}~incorrect ($X_-$).
     }
     \label{fig:margins}
 \end{figure*}
 
-\begin{observation} % TODO observation
+
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/drf_sigmoid/spambase-openml/get_expected_ensemble_loss.png} 
+    \caption{Development of the ensemble generalisation error of different learners as additional trees are added to the resp. ensembles. For the first 10 trees, the error develops similarly in any learner. Beyond, \tcircle{green}~$w_\text{lerp}$ continues to improve while other learners do not.
+    The $y$-axis is $\log$-scaled.
+    } 
+    \label{fig:ensemble-loss-spambase-openml}
+\end{marginfigure}
+
+
+\begin{marginfigure}
+    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/drf_sigmoid/diabetes/get_expected_ensemble_loss.png}
+    \caption{
+     Development of the generalisation error of different learners for a noisy binary classification problem. \tcircle{green} $w_\text{lerp}$ achieves lowest generalisation error across all learners with just $M=23$ trees, but behaviour is very irregular.
+    The $y$-axis is $\log$-scaled.
+     }
+    \label{fig:ensemble-loss-diabetes}
+\end{marginfigure}
+
+\begin{observation}  (\cf \cref{fig:margins,fig:margin_hists})
     \begin{itemize}
-        \item (margin plots) For DRF do have increased green, decreased red. For lerped sigmoid, slightly increased green, very similar red (nice).
-        \item (margin hists) seemingly shifted a little
+        \item For $w_\text{DRF}$, we can clearly observe that, as expected, the ensemble margin is moved towards the threshold of $\nicefrac{1}{2}$. 
+        \item For $w_\text{lerp}$, the ratio of incorrect members on correctly classified points is higher, while the behaviour for incorrectly classified points is similar.
     \end{itemize}
 \end{observation}
 
 \subsection{Ensemble size and generalisation error}
+\label{sec:gen-error}
 
 \subsubsection{Binary classification}
 
 We evaluate the overall ensemble generalisation error of ensembles produced by different weighting strategies. We emphasize that we make no claims about the applicability of a specific learner to a specific dataset. We specifically picked the benchmark datasets to provide diverse classification problems. The datasets have different properties: some are higher-dimensional and some have a high best achievable error rate, implying that the data may be noisy. Likewise, we make no claims about the adequacy of hyperparameter choices for a given dataset. 
 We merely compare different strategies on the same benchmark datasets and for the same hyperparameter choices.
 
-\begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/sdrf_sigmoid/spambase-openml/get_expected_ensemble_loss.png} 
-    \caption{...}
-    \label{fig:ensemble-loss-spambase-openml}
-\end{marginfigure}
-\begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/drf_sigmoid/cover/get_expected_ensemble_loss.png}
-    \caption{...}
-    \label{fig:ensemble-loss-cover}
-\end{marginfigure}
-\begin{marginfigure}
-    \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/drf_sigmoid/diabetes/get_expected_ensemble_loss.png}
-    \caption{...}
-    \label{fig:ensemble-loss-diabetes}
-\end{marginfigure}
+
 
 Let us first consider the weighting function for binary classification tasks.
 In \cref{tab:models-generalisation-error-binary}, we compare the minimum achieved generalisation error over all values of $M$. As already observed in the literature \cite{bernard_SelectionDecisionTrees_2009,buschjager_ThereNoDoubleDescent_2021}, the generalisation error can be expected to be a decreasing function of the number of trees, given that the data is sufficiently large and regular. In \cref{fig:ensemble-loss-diabetes,fig:ensemble-loss-spambase-openml}, we can observe that the behaviour can be irregular for some datasets, although a decreasing trend is still clear. 
 
- \begin{table}[!ht]
+ \begin{table}[h]
     \begin{tabular}{llllll}%
     \csvreader[
         head=false
@@ -385,14 +403,17 @@ In \cref{tab:models-generalisation-error-binary}, we compare the minimum achieve
     \csvcolvi
     }% specify your coloumns here
     \end{tabular}
-    \caption{minimum ensemble test error achieved over all $M$}
+    \caption{minimum ensemble test error achieved over all $M$
+    }
     \label{tab:models-generalisation-error-binary}
  \end{table}
 
 
+ \subsubsection{Non-binary classification}
+
 In \cref{tab:models-generalisation-error-nonbinary}, we analyse the dynamic threshold weighting function $w_\text{dyn}$ for non-binary classification tasks. We additionally include $w_\text{lerp}$ in the comparison but note that it's theoretical motivation here is lacking: It is based on a classification threshold of $\nicefrac{1}{2}$, which does not apply to non-binary classification problems. $w_\text{DRF}$ was derived with a threshold of $\nicefrac{1}{2}$ but can be applied to any threshold since it is a linear function.
 
- \begin{table}[!ht]
+ \begin{table}[h]
     \begin{tabular}{lllll}%
     \csvreader[
         head=false
@@ -412,15 +433,16 @@ In \cref{tab:models-generalisation-error-nonbinary}, we analyse the dynamic thre
 
  \begin{marginfigure}
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/compare_models/dynamic_threshold/digits/get_expected_ensemble_loss.png}
-    \caption{...}
+    \caption{Development of the ensemble generalisation error for a non-binary classification problem.
+    The $y$-axis is $\log$-scaled.}
     \label{fig:dynamic_thresholds-digits-ensemble_loss}
  \end{marginfigure}
 
  \begin{observation} ~~ % TODO observation
     \begin{itemize}
-        \item There is no evident relationship between diversity and ensemble generalisation error. This is not surprising, as we have already argued that ensemble performance is determined by a trade-off of member performance and diversity. 
         \item It is indeed possible to obtain better ensembles using diversity-encouraging weighting strategies, as compared to the standard Random Forest procedure. However, none of the evaluated strategies yielded consistently better ensembles across all benchmark datasets.
-        \item It is possible to obtain smaller ensembles with similar generalisation error. However, here too no strategy yields a consistent improvement. 
+        \item It is possible to obtain smaller ensembles with similar generalisation error. However, here too no strategy yields a consistent improvement across all datasets.
+        \item There is no evident relationship between diversity and ensemble generalisation error. This is not surprising, as we have already argued that ensemble performance is determined by a trade-off of member performance and diversity. 
     \end{itemize}
  \end{observation}
 

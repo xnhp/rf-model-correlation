@@ -5,6 +5,7 @@
 	% secnumdepth=1, % How deep to number headings. Defaults to 1 (sections)
 ]{kaobook}
 
+\raggedbottom
 
 % Choose the language
 \usepackage[english]{babel} % Load characters and hyphenation
@@ -87,7 +88,7 @@
 \begin{titlepage}
   \pagelayout{wide} % No margins
   \begin{center}
-    {\LARGE \textbf{Model Correlation in Random Forests}}
+    {\huge \textbf{Model Correlation in Random Forests}}
     \\[2em]
     {\Large {Master Thesis}}
     \\[5.5em]
@@ -229,23 +230,22 @@ Despite their simplicity and success, it is not yet fully clear when and why Ran
 
 \chapter{Introduction}
 
-Random Forests are some of the most successful and widely used off-the-shelf classifiers
-\cite{biau_RandomForestGuided_2016,yang_ReviewEnsembleMethods_2010}. Despite their intuitive formulation, it is not yet fully understood when and why Random Forests work well. 
+Random Forests are some of the most successful and widely used methods for machine learning \cite{biau_RandomForestGuided_2016,yang_ReviewEnsembleMethods_2010}. Despite their intuitive formulation, it is not yet fully understood when and why Random Forests work well. 
 A Random Forest is an ensemble of randomized decision trees.
 If all trees were very similar, we could not expect to gain much over just using a single tree.  
 It seems reasonable to suspect that differences between individual trees must be essential to the performance gain. How are the differences between individual trees related to the quality of the Random Forest model?
 
-We approach this question from the perspective of ensemble learning. The key challenge is to formally grasp a concept of \textit{diversity} of the ensemble members that can be related to other characteristics of the ensemble.
+We approach this question from the perspective of ensemble learning. The key challenge is to formally grasp a concept of \textit{diversity} of the ensemble members that can be related to the ensemble generalisation error.
 This has been an ongoing line of inquiry for over 20 years. 
 Even though already in \citeyear{krogh_NeuralNetworkEnsembles_1995} and \citeyear{ueda_GeneralizationErrorEnsemble_1996}, decompositions of the generalisation error that describe the interactions between ensemble members have been published, grasping the concept in full generality has remained elusive. Results were either limited to specific loss functions or remained disconnected from the ensemble error \cite{kuncheva_MeasuresDiversityClassifier_2003}.
-Further, empirical investigation has mainly focussed on neural network ensembles
-\cite{abe_BestDeepEnsembles_2022,abe_PathologiesPredictiveDiversity_2023,liu_EnsembleLearningNegative_1999,buschjager_GeneralizedNegativeCorrelation_2020,buschjager_ThereNoDoubleDescent_2021}
-and the exact behaviour of Random Forests remains elusive.
+% Further, empirical investigation has mainly focussed on neural network ensembles
+% \cite{abe_BestDeepEnsembles_2022,abe_PathologiesPredictiveDiversity_2023,liu_EnsembleLearningNegative_1999,buschjager_GeneralizedNegativeCorrelation_2020,buschjager_ThereNoDoubleDescent_2021}
+% and the exact behaviour of Random Forests remains elusive.
 
 In this thesis, we take up two very recent publications 
 \cite{wood_UnifiedTheoryDiversity_2023, theisen_WhenAreEnsembles_2023}
 which, as we will illustrate, provide an exhaustive and unifying framework for analysing ensembles. The central piece is a decomposition of the ensemble error into average member bias, average variance and a diversity term \cite{wood_UnifiedTheoryDiversity_2023}.
-We provide an alternate derivation of this decomposition and link it theoretically to the theory of ensemble competence \cite{theisen_WhenAreEnsembles_2023}. Further, we consider the role of diversity in Random Forests.
+We provide an alternate derivation of this decomposition and link it to the theory of ensemble competence \cite{theisen_WhenAreEnsembles_2023}. Further, we consider the role of diversity in Random Forests.
 
 In \cref{sec:overview} and \cref{fig:overview}, we provide an overview of the contents of this thesis. In \cref{sec:contributions}, we summarise our contributions.
 
@@ -923,7 +923,7 @@ An ensemble is homogeneous if and only if $\Theta_{1}, \dots, \Theta_{M}$ are id
   % TODO generalised from louppe? or, given in wood23?
   % TODO! before corollay 4.2.3, we use this for LE, but in the proof here we assume Bregman divergence
  \label{thm:qstars-same} 
-  $\star$ In homogeneous ensembles, the central models of any two members and the combiner are the same. That is, for any $i, j \in \{ 1, \dots, M \}$ it holds that
+  $\star$ (Generalised from \cite{louppe_UnderstandingRandomForests_2015}) In homogeneous ensembles, the central models of any two members and the combiner are the same. That is, for any $i, j \in \{ 1, \dots, M \}$ it holds that
 $$
 q_{i}^\star = q_{j}^\star = \bar{q}^\star
 $$
@@ -1812,10 +1812,10 @@ This tradeoff is exactly reflected in the ambiguity decomposition.
 %     \label{fig:zero-one-ens-plots}
 % \end{figure*}
 
-\chapter{Proofs and additional Results}
+\chapter{Proofs and additional results}
 \label{sec:proofs}
 
-\subsection{Proof of lemma \ref{thm:bregman-collapse-variances}}
+\subsection{Proof of \cref{thm:bregman-collapse-variances}}
 \label{proof:bregman-collapse-variances}
 \begin{lemma}  ($\star$, Generalised from \cite{wood_UnifiedTheoryDiversity_2023})
 Let $q$ be a function of random variable $Z$ and independent of $Y$. For $q^\star = \mathcal{E}_{Z}\left[ q \right]$, i.e. the left Bregman centroid w.r.t. $Z$, it holds that
@@ -1841,7 +1841,7 @@ By definition of $q^\star$, $\mathbb{E}_{Z}\left[ \nabla \phi(q^\star) \right] =
 \end{align*}
 \end{proof}
 
-\subsection{Proof for lemma \ref{thm:lemma-claim}}
+\subsection{Proof of \cref{thm:lemma-claim}}
 \label{sec:proof-lemma-claim}
 
 \begin{lemma} $\star$ (Generalised from \cite{theisen_WhenAreEnsembles_2023}) In $k$-competent ensembles it holds that
@@ -1896,7 +1896,7 @@ For brevity, we write $\ell_{P}(y) \defeq \sum_{i \in P} \ell(y, y_{i})$.
 \sum_{i \in P} \ell(y_{P}, y_{i}) - \left(  \sum_{i \in L} \ell(y_{L}, y_{i}) + \sum_{i \in R} \ell(y_{R}, y_{i}) \right) \\[1.5em]
 &= \ell_P(y_P) - \left(\ell_L(y_L) + \ell_R(y_R) \right)
 \end{align*}
-In order for a split to yield positive loss gain, the leaf aggregation function needs to be such that the loss does not increase as constraints are removed, i.e. the set of considered examples is reduced. Recall that $\bar{z}$ is a centroid with respect to a loss function $\ell$ and a set of outcomes $P$ if and only if $\bar{z} = \arg\min_{z} \sum_{i \in P} \ell(z, y_{i}) = \arg\min_z \ell_P(z)$ (\ref{prelims:centroids}).
+In order for a split to yield positive loss gain, the leaf aggregation function needs to be such that the loss does not increase as constraints are removed, i.e. the set of considered examples is reduced. Recall that $\bar{z}$ is a centroid with respect to a loss function $\ell$ and a set of outcomes $P$ if and only if $\bar{z} = \arg\min_{z} \sum_{i \in P} \ell(z, y_{i}) = \arg\min_z \ell_P(z)$ (\ref{thm:bregman-centroids}).
 \begin{lemma}
 \label{lemma:loss-gain-nonnegative}
 For a loss function $\ell$, if the leaf aggregator of a node $P$ is $y_{P} \defeq \arg\min_{z} \sum_{i \in P} \ell(z, y_{i})$, i.e. the centroid with respect to $\ell$, the loss gain is nonnegative.
