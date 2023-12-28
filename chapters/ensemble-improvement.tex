@@ -210,6 +210,7 @@ Good and bad diversity can be expressed solely in terms of the ratio of incorrec
 \end{align*}
 Analogous equalities hold in expectation over member parameter $\Theta$.
 \end{lemma}
+\todo{this usage of $\neg y$ doesnt quite check out, should be limited to $k=2$. Arguments about $k$-competence should still work though.}
 
 \subsection{Ensembles of Weak Learners}
 
@@ -228,8 +229,7 @@ $$
     \label{thm:weak-learner-ensembles-nonnegative}
     (\cite{wood_UnifiedTheoryDiversity_2023}) In an ensemble of weak learners, diversity-effect is non-negative:
 $$
-% TODO notation
-\mathbb{E}_{Y,D}\left[ 
+\mathbb{E}_{(X,Y),D}\left[ 
 \Mavg \Lzo{Y}{q_{i}} - \Lzo{Y}{\bar{q}}
 \right] 
 ~ ~ \geq ~ ~ 0

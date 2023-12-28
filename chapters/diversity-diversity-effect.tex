@@ -59,6 +59,7 @@ We can then also find an intuitive interpretation of ambiguity-effect: It is the
 
 \paragraph{Diversity-Effect} The ambiguity decomposition divides the ensemble error into the average member error and the variance among members. How does this relate to the well-known bias-variance decomposition? Indeed, nothing prevents us from applying the bias-variance decomposition of \cref{thm:bias-variance-effect} to the average member error, resulting in a decomposition into \textit{average} bias, \textit{average} variance and expected ambiguity, which is also referred to as \textit{diversity} \cite{wood_UnifiedTheoryDiversity_2023}.
 In summary, the decomposition is given in the following theorem. Note that it holds for \textit{any} loss function. 
+\todo{should not be $y^\star$ there}
 
 \begin{marginfigure}
     \includegraphics[width=\textwidth]{symlinks/zero-one-plots/bvd-decomps/plot_bvd_standard_rf/mnist_subset/bvd-standard_rf.png}
@@ -164,6 +165,7 @@ $$
 }_{\text{diversity}}
 $$
 Due to \cref{thm:qstars-same} which states that in homogeneous ensembles $q_{i}^\star = q_{j}^\star = \bar{q}^\star$, we can conclude that $\Delta = 0$. 
+\todo{this shows it only for Bregman divergences. Not convinced this also holds for \zeroone-loss, although wood23 claim so (maybe just imprecise writing)}
 \begin{corollary} For homogeneous ensembles, we can conclude the following:
 \begin{itemize}
     \item The ensemble bias is equal to the average member bias:

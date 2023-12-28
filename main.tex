@@ -29,17 +29,6 @@
 \usepackage{kaobiblio}
 \addbibresource{symlinks/zotero-library-automatic-export.bib} % Bibliography file
 
-\usepackage{xcolor}
-\definecolor{diversity}{HTML}{0000FF}
-\definecolor{memberbias}{HTML}{FFA604}
-\definecolor{membervariance}{HTML}{1A8D1A}
-\definecolor{ensemble-error}{HTML}{8C8C8C}
-\definecolor{def}{HTML}{F8EBFF}
-\definecolor{thm}{HTML}{FFF7D9}
-\definecolor{cor}{HTML}{EEFFE0}  
-\definecolor{ctporange}{HTML}{DF8E1D}
-\definecolor{ctpred}{HTML}{DD7878}
-\definecolor{ctpblue}{HTML}{04A5E5}
 % Load mathematical packages for theorems and related environments
 \usepackage[
   framed=true,
@@ -51,15 +40,6 @@
   ]{kaotheorems}
 
 
-\newcommand{\tikzcircle}[2][red,fill=red]{\tikz[baseline=-0.5ex]\draw[#1,radius=#2] (0,0) circle ;}%
-\newcommand{\diversityCircle}{\tikzcircle[fill=diversity]{3pt}}
-\newcommand{\avgBiasCircle}{\tikzcircle[fill=memberbias]{3pt}}
-\newcommand{\avgVarianceCircle}{\tikzcircle[fill=membervariance]{3pt}}
-\newcommand{\ensembleErrorCircle}{\tikzcircle[fill=ensemble-error]{3pt}}
-
-\newcommand{\bvdlegend}{(Legend: \avgBiasCircle~average member bias, \avgVarianceCircle~average member variance, \diversityCircle~diversity, \ensembleErrorCircle~ensemble generalisation error.)}
-
-\newcommand{\tcircle}[1]{\tikzcircle[fill=#1]{3pt}}
 
 % \renewcommand{\labelitemi}{$\circ$}
 % \renewcommand{\labelitemii}{$\circ$}
@@ -178,6 +158,14 @@
 
 A Random Forest is an ensemble of randomised decision trees. How are differences between individual trees related to the performance of the forest?
 Despite their simplicity and success, it is not yet fully clear when and why Random Forests work well. We approach this problem from the general perspective of ensemble learning. Guided by the diversity decomposition of the ensemble error, we analyse the role of diversity in regression and classification ensembles and argue that this theory is particularly relevant to Random Forest ensembles. We provide a thorough introduction to the diversity theory and relate it to previous results on ensemble learning. We further link it theoretically to the recently developed notion of ensemble competence. Focusing on \zeroone-classification, we explore methods to regulate diversity in Random Forests. We see that it is possible to obtain smaller and better Random Forest ensembles. We further propose a generalisation of a well-known diversity regularisation scheme for neural network ensembles.
+
+\chapter*{About this version}
+
+This document might contain (slightly) more than what I handed in for the thesis examination. 
+When (or if) I continue thinking about this topic, I will add notes (more likely to-dos) to this document.
+
+As in any project, time is very limited. There might be minor errors here and there. Let me know if you spot anything.
+
 
 
 %----------------------------------------------------------------------------------------
@@ -909,7 +897,6 @@ The output of an ensemble is produced by aggregating the outputs of the member m
 \begin{definition}
    \label{def:ensemble-combiner}
    (Ensemble combiner) The ensemble combiner $\bar{q} : \mathcal{X} \to \mathcal{Y}$ for a given loss function $\ell$ is the centroid with respect to model parameters $\Theta$: 
-% TODO would sort of need to motivate that we already use dual exp here
 $$
 \bar{q} \defeq \arg\min_z \mathbb{E}_\Theta \left[ \ell(z, q_\Theta) \right]
 $$
@@ -936,7 +923,7 @@ q_{i}^\star = \mathbb{E}_{D}\left[ q_{D_{i}, \Theta_{i}} \right]  = \mathbb{E}_{
 $$
 
 % TODO verify that in cases such as sqerr, nabla phi = id??
-For the ensemble combiner, it holds that
+For the ensemble combiner, it holds that \todo{this is showing it only for Bregman divergences}
 \begin{align*}
 \bar{q}^\star &= \mathcal{E}_{\Theta}\left[ q_{D,\Theta} \right] ^\star = \mathcal{E}_{D}\left[ \mathcal{E}_{\Theta}\left[ q_{D,\Theta} \right]   \right] \\
 &= (\nabla \phi)^{-1} \mathbb{E}_{D}\left[ (\nabla \phi) (\nabla \phi)^{-1} \mathbb{E}_{\Theta}\left[ q_{D,\Theta} \right]   \right] \\
