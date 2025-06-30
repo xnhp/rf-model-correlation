@@ -1,0 +1,1128 @@
+\documentclass[10pt]{article}
+% \usepackage{alifeconf}
+% \usepackage{a4wide}
+\usepackage[hmargin=3cm,vmargin=3cm,nohead]{geometry}
+
+% \usepackage{geometry}
+
+% my packages
+% \usepackage{zsfg}
+\usepackage{csquotes}
+\usepackage[font=footnotesize]{subcaption}
+\usepackage[font=footnotesize]{caption}
+\usepackage{enumitem}
+\usepackage[
+% backend=biber,
+style=authoryear,
+sorting=none
+]{biblatex}
+% \usepackage{biblatex}
+\usepackage{blindtext}
+% \usepackage{enumerate}
+\addbibresource{MA-Proj.bib}
+
+\renewcommand*{\bibfont}{\small}
+
+% print url if no doi
+\renewbibmacro*{doi+eprint+url}{%
+  \printfield{doi}%
+  \newunit\newblock%
+  \iftoggle{bbx:eprint}{%
+    \usebibmacro{eprint}%
+  }{}%
+  \newunit\newblock%
+  \iffieldundef{doi}{%
+    \usebibmacro{url+urldate}}%
+  {}%
+}
+
+% \renewcommand{\thesection}{\arabic{section}}
+ % \renewcommand\thesection      {\@Roman\c@section}
+ % \renewcommand\thesubsection   {\thesection.\@Alph\c@subsection}
+ % \renewcommand\thesubsubsection{\thesubsection.\@arabic\c@subsubsection}
+ % \renewcommand\theparagraph    {\thesubsubsection.\@alph\c@paragraph}
+ % \renewcommand\thesubparagraph {\theparagraph.\@roman\c@subparagraph}
+
+% \renewcommand\thesection{\arabic{section}}
+% \renewcommand\thesubsection{\thesection.\arabic{subsection}}
+
+% \def\thesection{\arabic{section}}
+\renewcommand{\ttdefault}{cmtt}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage{nicefrac}
+ % \titleformat{\section}{\LARGE\bfseries}{\thesection}{1em}{}
+\usepackage{tcolorbox}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+
+\setlength{\algoheightrule}{0pt}
+\setlength{\algotitleheightrule}{0pt}
+% \SetCommentSty{\familydefault}
+\newcommand\mycommfont[1]{\footnotesize \textcolor{teal}{#1}}
+\SetCommentSty{mycommfont}
+
+ \setcounter{secnumdepth}{3}% no counters \paragraph and below
+
+ \setlength{\parskip}{1.2ex}
+ \setlength{\parindent}{0pt} 
+
+\renewcommand{\baselinestretch}{1.05}
+
+
+\newcommand{\mat}[1]{
+  \mathbf{#1}
+}
+
+% bold vectors (instead of arrows)
+% \let\oldhat\hat
+% \renewcommand{\vec}[1]{\mathbf{#1}}
+% \renewcommand{\hat}[1]{\oldhat{\mathbf{#1}}}
+
+\newcommand{\card}[1]{%
+  ||#1||
+}
+
+\newcommand{\papertitle}[1]{
+  \vspace{0.5em}{\Large \enquote{#1}} \vspace{0.5em}
+}
+
+\graphicspath{{/} {../figures/}} % Specifies the directory where pictures are stored
+
+% \usepackage[svgnames]{xcolor}
+
+\title{Consistency of Random Forests \\ \vspace{0.5em} \large Project Report}
+\pretitle{\begin{center}\Large}
+\posttitle{\par\end{center}\vskip 0.5em}
+\preauthor{\begin{center}}
+\postauthor{\end{center}}
+\predate{\begin{center}}
+\date{}
+\postdate{\end{center}}
+\author{Benjamin Moser}
+
+\usepackage{hyperref}
+\usepackage{mathpazo}
+\usepackage{csvsimple}
+% \usepackage{multirow}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+
+\newcommand{\cupdot}{\mathbin{\mathaccent\cdot\cup}}
+\theoremstyle{definition}
+% \newtheorem{theorem}{Theorem}[section]
+\newtheorem{mythm}{Theorem}[section]
+\newtheorem{mydef}{Definition}[section]
+
+\usepackage{thmtools}
+\declaretheoremstyle[notefont=\bfseries,notebraces={}{},%
+headpunct={},postheadspace=1em]{mystyle}
+\declaretheorem[style=mystyle,numbered=no,name=Theorem]{mainthm}
+\declaretheorem[style=mystyle,numbered=no,name=Hypothesis]{mainhyp}
+\declaretheorem[style=mystyle,numbered=no,name=Proposition]{myprop}
+\declaretheorem[style=mystyle,numbered=no,name=Lemma]{lemma}
+
+% \newtheorem{def}{Definition}[section]
+
+% , r t   for table of contents
+% , r c   and then search term for inserting a citation
+\begin{document}
+% \raggedbottom
+
+
+  \maketitle 
+  \begin{abstract}
+
+    Random Forest methods are some of the most widely used methods for
+    regression and classification learning tasks, and their effectiveness has
+    been proven empirically. However, the exact forces determining if, when, and
+    why a Random Forest performs well are not yet completely clear.
+%
+    From a
+    statistical point of view, a Random Forest is an estimator of some assumed
+    true regression or classification function. A basic notion in statistics is
+    that, as we observe more and more data samples, an estimate converges indeed
+    to the estimated quantity. This property is called \textit{consistency}.
+    %
+    In this work, we review proofs of the consistency of Random Forests under
+    different conditions as published in \cite{Scornet2015}.
+    
+    % In this report, we review the main contributions of \cite{Scornet2015}. We
+    % begin by recapitulating some basic definitions and introducing the regression
+    % learning task. We then proceed to define the Random Forest estimator and
+    % what it means for an estimator to be consistent. We review two theorems
+    % showing the consistency of Random Forests under different conditions.
+    % % 
+    % One proof is treated in full and repeated in a narrative manner, with a
+    % focus on providing intuition and motivating the imposed assumptions.
+    % %
+    % For the other theorem we illustrate the overall proof structure and
+    % point out the basic ingredients.
+
+    
+    % gather background/foundations
+    % provide overview of contributions
+    % overview and motivation for assumptions made
+    % illustrate main ingredients of proofs and interesting points
+    % more detailed walkthrough of one proof in a more narrative style with a
+    % focus on understanding the overall thing.
+  \end{abstract}
+
+
+  \section{Overview}
+
+  
+  In this report, we review the main contributions of \cite{Scornet2015}. We
+  begin by recapitulating some basic definitions and introducing the regression
+  learning task. We then proceed to define the Random Forest estimator and
+  what it means for an estimator to be consistent. We review two theorems
+  showing the consistency of Random Forests under different conditions.
+  % 
+  One proof is treated in full and repeated in a narrative manner, with a
+  focus on providing intuition and motivating the imposed assumptions.
+  % 
+  For the other theorem we illustrate the overall proof structure and
+  point out the basic ingredients.
+
+% Random Forest methods are some of the most midely used methods for regression and
+% classification learning tasks.
+% %
+% Intuitively, a Random Forest is an ensemble of
+% randomised regression or decision trees. Individual trees are constructed based
+% on a random subsample of the training dataset. A tree partitions the data space
+% such that the training data points falling in each cell are pure with respect to
+% the response variable. The estimate of a tree is the mean (or majority vote) of
+% the cell of the query point and the individual tree estimates are aggregated to
+% form the forest estimate.
+
+% The effectiveness of Random Forests has been proven empirically. However, the
+% exact forces determining if, when and why Random Forests perform well are not
+% yet completely clear.
+% %
+% From a statistical point of view, a Random Forest is an estimator of some
+% assumed true regression or classification function. Since the distribution of
+% the data is not known in practice, the true function cannot be derived
+% explicitly. A basic notion in statistics is that, as we observe more and more
+% samples, an estimate converges indeed to the estimated quantity. This property
+% is called \textit{consistency}.
+% %
+% In this work, we seek to prove the consistency of Random Forest estimators. For
+% the time being, we consider the Random Forest variant for regression as
+% originally introduced in \cite{breiman_RandomForests_2001}.
+
+
+\section{Preliminaries}
+
+
+\subsection{Probability \& Statistics}
+
+
+Since we want to reason about an estimator independent of concrete data,
+we make statistical statements based on the in practice unknown
+probabilistic distribution of data. In this section, we fixate some basic
+language and notation to do that. The definitions are based on
+\cite{wasserman_AllStatisticsConcise_2010} and
+\cite{gyorfi_DistributionFreeTheoryNonparametric_2002}.
+
+\begin{mydef}{Probability Space}
+  A \emph{probability space} is a triple \((\Omega, \Sigma, \mathbb{P})\)
+  where
+  \begin{itemize}
+  \item \(\Omega\) is an arbitrary set modelling the \emph{sample space}
+    i.e.~the set of all possible outcomes.
+  \item \(\Sigma\) is a \(\sigma\)-algebra
+    over \(\Omega\), modelling the set of \emph{events}.
+    % \footnote{A
+    %   \(\sigma\)-algebra over \(\Omega\) can be thought of a set of subsets of
+    %   \(\Omega\), containing \(\Sigma\), such that it is closed under complement
+    %   and countable union and intersection.}
+    \item \(\mathbb{P}\) is a function
+    \(\Sigma \to [0,1]\) such that \(\mathbb{P}(\Omega)=1\) and
+    \(\mathbb{P}\left( \bigcup_{i=1}^\infty A_{i} \right) = \sum_{i=1}^\infty
+    \mathbb{P}(A_{i})\) for a countable collection of (pairwise disjoint) sets
+    in \(\Sigma\), and models the \emph{probability measure}.
+  \end{itemize}
+\end{mydef}
+
+In the following we assume an underyling probability space implicitly.
+
+
+% \begin{mydef}[Conditional Probability]
+%   Let \(A, B\) be events. Given that
+%   \(\mathbb{P}(B) > 0\), the \emph{conditional probability of \(A\) given \(B\)}
+%   is \[ \mathbb{P}(A|B) := \frac{\mathbb{P}(A \cap B)}{\mathbb{P}(B)}
+%   \]
+% \end{mydef}
+
+
+\begin{mydef}[Random Variable]
+  A \textit{random variable} is a quantity
+  that depends on a random event, i.e. a function \(\Omega
+  \to M\) (commonly, we have \(M=\mathbb{R}\)).
+  % that assigns a value to each outcome.
+\end{mydef}
+
+Random variables are commonly denoted with uppercase letters. Random variables
+extend naturally to random vectors. Any function of a random variable is in turn
+a random variable. 
+
+\begin{mydef}[Convergence of Random Variables]
+  A sequence of random variables \(X_{n} := \{X_{1}, \dots, X_{n}\}\) is said to
+  \emph{converge almost surely} (a.s.) towards random variable \(X\) iff \[
+    \mathbb{P}\left(\omega \in \Omega: \lim _{n \rightarrow \infty}
+      X_n(\omega)=X(\omega)\right)=1
+  \]
+\end{mydef}
+
+% In the following, the character of a random variable as a function of an outcome
+% is left implicit and we write \[ \mathbb{P}\left(\lim _{n \rightarrow \infty}
+%     X_n=X\right)=1
+% \]
+
+Since we want to make statements independent of concrete outcomes but rather
+about the general behaviour of random variables, we consider their expected
+value. For random variables with continuous range, this is based the probability
+density function.
+
+
+\begin{mydef}[Probability Density Function]
+  The \textit{probability density function} $f_X$ of a random variable $X$ is a
+  nonnegative function such that
+  $$
+  \mathbb{P}(a < X < b) = \int_a^b f_X(x) dx
+  $$
+\end{mydef} 
+
+\begin{mydef}[Expected Value]
+  The \emph{expected value} (expectation) of random variable \(X\) is
+  defined as
+  % \[ \mathbb{E}[X] := \int_{-\infty}^\infty x \cdot
+  %   \mathbb{P}(X=x) \, dx
+  % \]
+  
+  \[ \mathbb{E}[X] := \int x \cdot
+    f_X(x) \, dx
+  \]
+  where the integral is over the support of $X$. Note that a function \(g(X)\)
+  of a random variable \(X\) is a random variable itself and
+  $\mathbb{E}[g(X)] = {\int g(x)f_X(x) \, dx}$. To emphasize the random
+  variable the function is dependent on, we sometimes mention it in the
+  subscript, e.g. $\mathbb{E}_X[g(X)]$.
+\end{mydef}
+
+Analogous to probabilities, probability densities and expectations can be
+conditioned on the outcome of another random variable.
+%
+% \begin{mydef}[Conditional Expectation]
+%   Let $f$ be the conditional probability density function.
+%   The expected value of \(X\) given that \(Y\) takes on value \(y\) is \[
+%     \mathbb{E}[X | Y=y] := \int x f_{X|Y}(x|y) \, dx
+%   \]
+% \end{mydef}
+Note that $\mathbb{E}[X|Y = y]$  depends on a concrete observation to
+determine a value for \(Y\), thus it is a random variable itself. We
+denote it the conditional expecation by \(\mathbb{E}[X|Y]\) as a function of $Y$.
+% Similar notation is used for other
+% notions below. \^{}dd189d
+
+Let's collect some facts about expectations that will be useful to
+us.
+
+\begin{lemma}
+  For random variables \(X\) and \(Y\):
+  \begin{itemize}
+  \item The expectation of the indicator function of an event and consequently
+    of a random variable taking on some value is just the probability of that
+    happening: \(\mathbb{E}[\mathbb{1}_{X=x}] = \mathbb{P}(X=x)\)
+  \item We can relate a bounded random variable to its cumulative distribution
+    function. For a random variable $X$ with \(X(\omega) < u ~ \forall \omega \in
+    \Omega\) and \(\xi \in \mathbb{R}\), we have \(\mathbb{E}[X] \leq \xi + u
+    \mathbb{P}(X > \xi)\)
+  \item The rule of iterated expectations states that, for any function \(r\):
+    \(\mathbb{E}[r(X,Y)] = \mathbb{E}\left[\mathbb{E}[r(X,Y) | X]\right]\) and,
+    in particular, \(\mathbb{E}[X] = \mathbb{E}[\mathbb{E}[X|Y]]\)
+  \item Jensen's Inequality: Let $X$ be a random variable such that
+    $\mathbb{P}(a \leq X \leq b)=1$. If $g: \mathbb{R} \to
+    \mathbb{R}$ is convex on $[a, b]$, then
+    $
+    g(\mathbb{E}\left[ X \right]) \leq \mathbb{E}\left[ g(X) \right]
+    $.
+  \item If \(X\) and \(Y\) are independent, then \(\mathbb{E}\left[XY\right] =
+    \mathbb{E}\left[X\right] \mathbb{E}\left[Y\right]\)
+  \end{itemize}
+\end{lemma}
+
+The following quantities consider interactions between random variables.
+
+\begin{mydef}[Variance, Covariance, Correlation] ~
+  \begin{itemize}
+  \item \emph{Variance}: \(\text{Var}({X})
+    := \mathbb{E}[X - \mathbb{E}[X]]^2
+    = \mathbb{E}[X^2] - \mathbb{E}[X]^2\)
+  \item \emph{Covariance}: \(\text{Cov}(X, Y)
+    := \mathbb{E}[(X- \mathbb{E}[X]) (Y- \mathbb{E}[Y]) ]
+    = \mathbb{E}[XY] - \mathbb{E}[X] \mathbb{E}[Y]\)
+  \item \emph{Correlation}: $\text{Corr}(X, Y) :=
+    \frac{\text{Cov}(X,Y)}{(\text{Var}(X)\text{Var}(Y))^{\nicefrac{1}{2}}}$
+  \end{itemize}
+\end{mydef}
+The definitions extend naturally to the conditional case.
+
+
+\subsection{Learning}
+
+% We formalise the learning task and introduce some error decompositions
+% that will be relevant later on.
+% The following definitions are based on
+% {[}{[}zotero-mdnotes-export/gyorfi\_DistributionFreeTheoryNonparametric\_2002\textbar{}gyorfi{]}{]}
+% and
+% {[}{[}scornet\_ConsistencyRandomForests\_2015\textbar{}Scornet2015{]}{]}.
+
+
+\paragraph{Regression} We consider the \emph{regression} task, in which, given some
+input vector (\textit{point}) \(x \in [0,1]^p\), we want to predict a response
+\(y \in \mathbb{R}\).
+%
+Generally, we consider input and response to be random variables
+\(X\) and \(Y\).
+%
+We want to find a function 
+\(f\) such that \(f(X)\) is an optimal approximation of \(Y\). Note that
+\(|f(X)-Y|\) is a random variable, thus we are interested in its
+expectation. To assess the quality of \(f\), we use the
+\emph{\(L_{2}\)-risk} of \(f\) given by
+\(\mathbb{E}\left[|f(X)-Y|^2\right]\), where the square is motivated by
+mathematical and computational convenience.
+%
+In fact, we can derive a
+\(L_{2}\)-optimal function explicitly.
+%
+Let $m(x) := \mathbb{E}\left[ Y | X = x \right]$ be the \emph{regression
+  function}. We often also refer to it as a random variable over the
+distribution of $X$, that is $m(X) := \mathbb{E}\left[ Y | X \right]$.
+%
+It can be shown
+that, for some candidate estimator $f$ (see \cite{gyorfi_DistributionFreeTheoryNonparametric_2002} sec. 1.1):
+\begin{align}
+  \mathbb{E}_{(X,Y)}\left[|f(X)-Y|^2\right]
+  = \mathbb{E}_X\left[|f(X)-m(X)|^2\right]
+  + \mathbb{E}_{(X,Y)}\left[|m(X) - Y|^2\right]
+  \label{eq:basic-error-decomp}
+\end{align}
+% where the expectation is over $X$ and $Y$.
+%
+% The first term on the right-hand-side is the \emph{\(L_{2}\)-error}
+% of \(f\).
+One can see that \(f\) is optimal if \(f(x)=m(x)\).
+
+In practice, we do not know the distributions of \(X\) and \(Y\) and hence
+cannot use $m$ directly. However, we do have access to samples of their
+distributions, commonly also referred to as the \textit{dataset} \(D_{n} := \{
+(X_{1}, Y_{1}), \dots, (X_{n}, Y_{n}) \}\). We will consider $D_n$ to be a
+random variable.
+%
+Based on \(D_{n}\), we
+may construct an \emph{estimator of $m$}, which we will refer to as
+$m_n$. Note that $m_n(X)$ is a function of random variables $X$ and $D_n$ and in
+itself a random variable. We assume the samples in $D_n$ to be independently and
+identically distributed and $X$ and $Y$ to be \textit{i.i.d.} to any $(X_i,
+Y_i)$ in $D_n$.
+
+Similarly to (\ref{eq:basic-error-decomp}), the \textit{\(L_2\)-risk of the
+  estimate}  can be decomposed as
+\begin{align}
+  \label{eq:basic-error-decomp2}
+  \mathbb{E}_{D_n} \left[
+    \mathbb{E}_{(X,Y)}\left[|m_{n}(X) - Y|^2 \right]
+  \right] 
+  % &= \mathbb{E}_{(X,Y)}\left[|m_{n}(X) - Y|^2 ~|~ D_{n}  \right] \nonumber
+  % \\
+  &= \mathbb{E}_{X, D_n}\left[|m_{n}(X) - m(X)|^2\right]
+  + \mathbb{E}_{(X,Y)}\left[|m(X)-Y|^2\right]
+\end{align}
+% The term on the left-hand-side is also referred to as the \textit{generalization
+%   error}.
+Therefore,
+we are interested in 
+% we want to find an estimator \(m_{n}\) such that
+% its \textit{\(L_{2}\)-error} given by
+\(\mathbb{E}\left[|m_{n}(X)- m(X)|^2\right]\)
+% is small.
+as a central quality measure that is independent of the concrete realisation of
+$D_n$ (but note that it is not independent of $n$). This notion of error will be the basis for our definition
+the consistency of an estimator later.
+
+Note that we can not directly compute such risks since they
+depend on the distributions of \(X\) and \(Y\). As an approximation we
+consider the \emph{empirical \(L_{2}\)-risk} of some function \(f\) defined as
+\[
+  \frac{1}{n} \sum_{i=1}^n |f(X_{i}) - Y_{i}|^2
+  \approx 
+\mathbb{E}_{(X,Y)}\left[|f(X) - Y|^2\right] 
+\]
+Minimising over the set of all functions
+will likely fit \(D_{n}\) perfectly and result in an estimator that is unlikely to
+generalise to the entire distribution of \((X, Y)\). Due to this, we
+restrict ourselves to a \emph{hypothesis class} of functions
+\(\mathcal{F}_{n}\) and consider \[
+m_{n} 
+:= 
+\arg\min_{f \in \mathcal{F}_{n}}
+\frac{1}{n} \sum_{i=1}^n |f(X_{i}) - Y_{i}|^2
+\] Indeed, any learning method --- such as Random Forests ---
+characterise a hypothesis class that they are algorithmically able to
+cover. For Random Forests in particular, \(\mathcal{F}_{n}\) will depend
+on \(n\) as well as the randomness that goes into constructing
+individual trees.
+
+\paragraph{Estimation and approximation error}
+The error of an estimator can be decomposed into different aspects. First, we
+may not have found the best possible choice in \(\mathcal{F}_{n}\). Second,
+\(\mathcal{F}_{n}\) itself may be too restrictive to allow a close estimate to
+the regression function \(m\).
+Starting from eq. (\ref{eq:basic-error-decomp2}), one can write
+%
+\begin{align*}
+\mathbb{E}\left[|m_{n}(X) - m(X)|^2\right] &= 
+\mathbb{E}\left[|m_{n}(X) - Y|^2 ~|~ D_{n}  \right] 
+-
+\mathbb{E}\left[|m(X)-Y|^2\right] \\
+&=  
+\left(
+\mathbb{E}\left[|m_{n}(X) - Y|^2 ~|~ D_{n}  \right]
+- 
+\inf_{f \in \mathcal{F}_{n}} \mathbb{E}\left[| f(X) -Y |^2\right]  \
+\right)
+ \\ 
+& \hspace{1cm}+ \left(
+\inf_{f \in \mathcal{F}_{n}} \mathbb{E}\left[| f(X) -Y |^2\right]  -
+\mathbb{E}\left[|m(x)-Y|^2\right]\right)
+\end{align*}
+%
+The first term is referred to as the \emph{estimation error} and
+quantifies, in terms of error, the distance from the given estimator to
+the best possible estimator. The second term is the \emph{approximation
+error} and quantifies the distance of the best possible estimator to the
+(true) regression function. We will be seeing very similar notions later on, and
+often such decompositions will be the first step towards showing consistency.
+
+\paragraph{Bias-Variance-Covariance decomposition}
+% TODO cite ueda
+Alternatively, the risk can be divided into components of bias and
+variance (see \cite{ueda_GeneralizationErrorEnsemble_1996}). The \textit{bias} measures how well the average estimate of the
+learning algorithm approximates the true function. The \textit{variance}
+measures the variation of the estimate across different training sets of the
+same size.
+%
+Assume there is a functional relationship between $X_i$ and $Y_i$ in the form of
+$Y_i = g(X_i) + \varepsilon$ where $\varepsilon$ is noise with
+$\mathbb{E}[\varepsilon]=0$ and $\text{Var}(\varepsilon) = \sigma^2 <
+\infty$.
+Then
+\begin{align*}
+  \mathbb{E}\left[ |m_{n}(X) - Y |^2 \right]  &=\mathbb{E}_{X}\left[
+  \text{Var}(m_{n}|X) + \text{Bias}(m_{n}|X)^2 
+                                                \right] + \sigma^2 \\
+  \text{where} \hspace{1cm} &
+                              \text{Var}(m_{n}|X) :=  \mathbb{E}_{D_{n}}\left[  (m_{n}(X) -  \mathbb{E}_{D_{n}}\left[ m_{n}(X) \right])^2  \right] \\
+  & \text{Bias}(m_{n}|X) :=  \mathbb{E}_{D_{n}} \left[ m_{n}(X) \right] - g(X)
+\end{align*}
+
+Recall that Random Forests are ensembles of trees. When is an ensemble better
+than a single tree? Certainly, if the individual tree estimators are very
+similar, we can not expect to gain much over using just a single tree. The individual
+trees ought to be \textit{diverse}.
+%
+For ensemble methods that combine individual
+estimators $m_{n}^{(i)}$ for $i \in [M]$ into an ensemble estimator $m_n$ by
+means of $m_{n}(X) = \sum_{i=1}^M w_{i} m_{n}^{(i)}(X)$ where the weights $w_{i}$ are nonnegative
+and sum to one, the
+variance term can be decomposed further into the variance of individual
+estimators and the pairwise covariance between estimators.
+%
+\begin{align*}
+  \mathbb{E}\left[ |m_{n}(X) - Y |^2\right]   &=  \mathbb{E}_{X}\left[ 
+                                                \frac{1}{M} \overline{\text{Var}}(X) 
+                                                + \left( 1-\frac{1}{M} \right) \overline{\text{Cov}}(X) 
+                                                + \overline{\text{Bias}}(X)^2
+                                                \right]  + \sigma^2
+  \\ \text{where} \hspace{1cm} & \overline{\text{Var}}(X) := \frac{1}{M} \sum_{i=1}^M \text{Var}(m_{n}^{(i)}|X) \\ 
+                                              & \overline{\text{Cov}}(X) := \frac{1}{M(M-1)} \sum_{i \not= j} \text{Cov}(m_{n}^{(i)}, m_{n}^{(j)}|X) \\
+  & 
+    \text{Cov}(m_{n}^{(i)}, m_{n}^{(i)}|X) :=  \mathbb{E}_{D_{n}}\left[  \left(m_{n}^{(i)}(X) -  \mathbb{E}_{D_{n}}\left[ m_{n}^{(i)}(X) \right]\right)  \left(m_{n}^{(j)}(X) -  \mathbb{E}_{D_{n}}\left[ m_{n}^{(j)}(X) \right]\right) \right] \\
+                                              & \overline{\text{Bias}}(X) := \frac{1}{M} \sum_{i=1}^M \text{Bias}(m_{n}^{(i)}|X)
+\end{align*}
+
+
+% \begin{align*}
+%   \mathbb{E}\left[ |m_{n}(X) - m(X)|^2 \right]  = & ~  \overline{\text{bias}}(m_{n})^2 + \frac{1}{M}~ \overline{\text{variance}}(m_{n}) + \left( 1- \frac{1}{M}\right) \overline{\text{covariance}}(m_{n})
+% \end{align*}
+% where
+% \begin{align*}
+%   ~\overline{\text{bias}}(m_{n}) &= \nicefrac{1}{M} \sum_{i=1}^M  \mathbb{E}\left[ m_{n}^{(i)}(X) - m(X) \right]  \\
+%  ~ \overline{\text{variance}}(m_{n}) &= \frac{1}{M}\sum_{i=1}^M  \mathbb{E}\left[ m_{n}^{(i)}(X) -  \mathbb{E}\left[ m_{n}^{(i)}(X) \right]  \right]^2  \\
+%   ~ \overline{\text{covariance}}(m_{n}) &= \frac{1}{M(M-1)} \sum_{i \not= j}^M 
+%                               \mathbb{E}\left[ m_{n}^{(i)}(X) -  \mathbb{E}\left[ m_{n}^{(i)}(X) \right]  \right] 
+%                               ~ ~ \mathbb{E}\left[ m_{n}^{(j)}(X) -  \mathbb{E}\left[ m_{n}^{(j)}(X) \right]  \right] 
+% \end{align*}
+
+This tells us that while combining multiple estimators may mitigate individual
+variances, a good ensemble must be also be one in which the individual
+estimators are not too similar.
+In particular, their errors should exhibit small (absolute) covariance.
+Random Forests establish diversity implicitly via the randomness that goes into
+constructing individual trees, namely the subsampling prior to the tree
+construction and the random selection of candidate split dimensions.
+
+
+
+\subsection{Random Forests}
+
+A Random Forest is an ensemble of $M$ randomized regression trees. The
+randomness that goes into constructing each tree is captured in identically and
+independently distributed random variables $\Theta_1, ..., \Theta_M$. The $k$-th
+tree is constructed as follows.
+
+\begin{enumerate}
+\item \textit{Initialisation:} Sample $a_{n}$ points from the dataset $D_{n}$ at
+  random based on $\Theta_k$ without replacement. These samples define the root
+  node of the tree.
+\item \textit{Recursion:} Split a node $A$, dividing the points in $A$ into two
+  child nodes. A \textit{cut} is a pair $(j, z)$ where $j \in [p]$ indexes the
+  dimension in which to perform the split and $z$ the threshold at which to
+  split. We will split at $(j^\star,z^\star) = \arg\max_{j \in
+    \mathcal{M}_{\text{try}}, (j, z) \in C_{A}} \text{L}(j, z)$ where $L$ is the
+  CART split criterion (see def. \ref{def:cart-crit}).
+
+\item \textit{Termination:} Stop as soon as the total number of leaf nodes reaches some given $t_{n}$ (i.e. in
+  case of $t_{n} = a_{n}$, each leaf node contains exactly one point).
+\end{enumerate}
+
+\begin{mydef}[CART split criterion]
+  Let $C_{A}$ be the set of possible cuts in $A$. Let $\mathcal{M}_{try}$ be a
+  set of possible dimensions, chosen at random based on $\Theta_j$. The
+  \textit{CART Criterion} measures the difference in the (renormalised variance)
+  before and after a given split.
+  \begin{align*}
+    L_{n}(j, z) := & ~ \text{Var}_{\text{before}} - \text{Var}_{\text{after}} \\
+    \text{for~ ~} &
+                    \text{Var}_{\text{before}} = \frac{1}{N_n(A)} \sum_{i=1}^n\left(Y_i-\bar{Y}_A\right)^2 \mathbb{1}_{\mathbf{X}_i \in A}
+                    % = \frac{1}{N_{n}(A)} \sum_{i \in A} (Y_{i} - \bar{Y}_{A})^2
+    \\
+                  & \text{Var}_{\text{after}} = \frac{1}{N_n(A)} \sum_{i=1}^n\left(Y_i-\bar{Y}_{A_L} \mathbb{1}_{\mathbf{x}_i^{(j)}<z}-\bar{Y}_{A_R} \mathbb{1}_{\mathbf{x}_i^{(j)} \geq z}\right)^2 \mathbb{1}_{ \mathbf{X}_i \in A}
+                    % = \frac{1}{N(A)} \sum_{i \in A} (Y_{i} - \tilde Y_{i})^2
+  \end{align*}
+  \label{def:cart-crit}
+\end{mydef}
+
+We refer to \cite{biau_RandomForestGuided_2016} for a comprehensive formulation
+of the algorithm. Each level of the tree induced by $\Theta_j$ corresponds
+exactly to a partition of the entire data space. Each leaf of the tree
+corresponds to a cell in the partition. Let $A_n(x, \Theta_j)$ denote the cell
+of $x$ in the tree generated by $\Theta_j$. We say that two points
+are \textit{connected} in a tree if they are in the same cell.
+
+\begin{mydef}[Tree and Forest estimates] The individual tree estimates are
+  aggregated to form the final Random Forest estimate.
+  
+  \begin{itemize}
+  \item Given a query point $x$, the \textit{estimate of the $j$-th tree},
+    denoted by $m_{n}(x, \Theta_{j}, D_{n})$ is the mean response of the
+    cell of $x$.
+
+    \item The \textit{finite forest estimate} is the average over all individual tree
+    estimates, that is $$m_{M, n}(x, \Theta_{1..M}, D_{n}) := \frac{1}{M}
+    \sum_{j=1}^M m_{n}(x, \Theta_{j}, D_{n})$$
+
+  \item In practice, $M$ can be chosen arbitrarily large and indeed the finite
+    forest estimate converges almost surely to its expectation as the number of
+    trees $M$ grows (see \cite{biau_RandomForestGuided_2016}). Due to this, in
+    the following, we will consider the \textit{infinite forest estimate}
+    $m_{n}(x) = \mathbb{E}_\Theta \left[m_{n}(x, \Theta, D_{n})\right]$.
+  \end{itemize}
+\end{mydef}
+
+
+\subsection{Consistency}
+
+As established earlier, a good estimate is one with small $L_{2}$-error.
+In many methods, the quality of the estimate $m_{n}$ depends on the
+dataset, in particular its size $n$. As such, we are interested in the question
+whether, as $n$ grows, the estimate converges indeed to the optimal 
+regression function $m$. This is equivalent to saying that the $L_{2}$-error of the
+estimate vanishes as $n$ grows to infinity. This property is called
+\textit{consistency}.
+
+\begin{mydef}[Consistency]
+  A sequence of regression function estimates $\{ m_{n} \}_{n}$ is called
+  (strongly universally) \textit{consistent} if, for all possible distributions
+  of $X$ and $Y$, the $L_{2}$-error converges almost surely to 0, that is
+$$
+\mathbb{E}[m_{n}(X) - m(X)]^2 \underset{a.s.}{\rightarrow} 0
+$$
+where the expectation is with respect to the query point $X$ and the
+samples $D_n$.
+\end{mydef}
+
+
+\section{Consistency of Random Forests}
+
+We consider two different settings. In the setting of Theorem 1, cells may
+contain more than one point. Theorem 2 works in the setting of fully-grown
+trees, that is, each cell contains exactly one point. 
+
+\begin{mainhyp}[1]
+  Throughout, we will assume that the response follows an \textit{additive
+    model}, i.e.
+  $$
+  Y=\sum_{j=1}^p m_j\left(\mathbf{X}^{(j)}\right)+\varepsilon
+  $$
+  where $\mathbf{X}=\left(\mathbf{X}^{(1)}, \ldots, \mathbf{X}^{(p)}\right)$ is
+  uniformly distributed over $[0,1]^p$ and each $m_{j}$ is continuous.
+  $\varepsilon$ is an independent, centered Gaussian noise. 
+\end{mainhyp}
+
+Hypothesis 1 (H1) will be used mostly to relate the estimate to the true response via
+a noise term and consequently exploit the fact that the noise $\varepsilon$ is
+assumed to satisfy $\mathbb{E}\left[ \varepsilon \right] = 0$ and
+$\text{Var}(\varepsilon) = \sigma^2$. We could, in fact, also simply work with
+bounded noise with zero mean.
+
+
+An essential tool for both theorems is Proposition 2, which states that the
+variation of $m$ within a cell goes to $0$ as $n$ grows. This will be used to
+address the estimation error.
+
+\begin{mydef}[Variation]
+  The \textit{variation of $m$ within cell $A$} is given as
+  $$\Delta(m, A):=\sup _{\mathbf{x}, \mathbf{x}^{\prime} \in A}\left|m(\mathbf{x})-m\left(\mathbf{x}^{\prime}\right)\right|$$
+\end{mydef}
+
+\begin{myprop}[2 (\cite{scornet_ConsistencyRandomForests_2015})]
+  Let $A_n(X, \Theta)$ be the cell that contains $X$ in a tree generated via $\Theta$.
+  Assume that (H1) holds. Then, for all $\rho, \xi>0$, there exists $N \in
+  \mathbb{N}$ such that, for all $n>N$,
+$$
+\mathbb{P}\left[\Delta\left(m, A_n(X, \Theta)\right) \leq \xi\right]
+\geq 1-\rho
+$$
+\end{myprop}
+
+Intuitively, this means that the variation of $m$ is small, provided that $n$ is
+large enough.
+
+
+
+\subsection{Fully-grown trees (Theorem 2)}
+
+
+Since, by
+definition, the tree
+estimate for a query point $x$ is the mean response of the cell of $x$,
+We
+can express the forest estimate aswell by a local averaging formulation.
+Starting from the finite forest estimate, we have (see also \cite{biau_RandomForestGuided_2016})
+\begin{align*}
+  m_{M, n}(x, \Theta_{1..M}) 
+  &= \frac{1}{M} \sum_{j=1}^M \sum_{i=1}^n \frac{\mathbb{1}_{x_{i} \in A_{n}(x, \Theta_{j})}}{\lvert \lvert A_{n}(x, \Theta_{j}) \rvert \rvert } Y_i \\
+  &= \sum_{i=1}^n W_{M,ni}(x) Y_{i}
+    \hspace{1cm}
+    \text{
+    for $W_{M,ni}(x) := \frac{1}{M} \sum_{j=1}^M \frac{\mathbb{1}_{x_{i} \in A_{n}(x, \Theta_{j})}}{\lvert \lvert A_{n}(x, \Theta_{j}) \rvert \rvert}$
+    }
+\end{align*}
+
+In Theorem 2, we assume that each cell contains exactly one point. Thus,
+motivated by the above discussion, the infinite forest estimate can be written as
+$$
+m_{n}(X) = \sum_{i=1}^n W_{ni}(X)Y_{i} \hspace{1cm} \text{for} \hspace{0.25cm} W_{ni}(X) := \mathbb{E}_{\Theta}\left[ \mathbb{1}_{X_{i}\in A_{n}(X, \Theta)}\right]
+$$
+
+In both cases, the weights sum to one. Note that $W_{ni}$ is the expectation over
+tree randomness $\Theta$ and nothing else but the
+probability that $x_{i}$ and $x$ are connected in a tree generated with
+$\Theta$. The error of the estimate can be bounded from above by
+\begin{align}
+\mathbb{E}\left[m_{n}(X) - m(X) \right]^2 \leq 
+2 \mathbb{E}\left[ \sum_{i=1}^n W_{ni}(X)(Y_{i}-m(X_{i})) \right]^2 + 
+2 \mathbb{E}\left[ \sum_{i=1}^n W_{ni}(X)(m(X_{i})-m(X)) \right]^2 
+  \label{eq:decomp}
+\end{align}
+The first term on the right-hand-side can be considered a kind of
+approximation error and the second term a kind of estimation error.
+(since $\sum_{i=1}^n W_{ni}(X)m(X)$ is the best possible estimate)
+To show consistency, we will show the convergence of each of the two terms separately.
+
+\paragraph{Approximation error} Let us first turn towards the second term. Note
+that it depends on the difference between the responses for two points. Indeed,
+we only need to consider situations in which the two points are in the same
+cell, enabling us to apply Proposition 2, which bounds the variation of $m$ within
+a cell. Using Jensen's inequality and the definition of $\Delta$, it holds that
+$$
+\mathbb{E}\left[ \sum_{i=1}^n W_{ni}(X)(m(X_{i})-m(X)) \right]^2 \leq
+\mathbb{E}\left[ \mathbb{1}_{x_{i} \in A_{n}(x, \Theta)} (m(X_{i}) - m(X))^2 \right]
+\leq
+\mathbb{E}\left[\Delta^2(m, A_{n}(x, \Theta)\right]
+$$
+which, according to Proposition 2 is bounded from above by $\alpha(4 \lvert \lvert
+m \rvert \rvert_{\infty} + 1)$ for sufficiently large $n$, where $\alpha > 0$ is arbitrary.
+
+\paragraph{Estimation error} Let us now rest our attention on the first term in
+(\ref{eq:decomp}). We denote the noise as $\varepsilon_{i} = Y_{i}-m(X_{i})$ and the
+indicator that points are connected to the query point in some tree as $Z_{i} :=
+\mathbb{1}_{X_{i} \in A_{n}(X, \Theta)}$ (resp. $Z'_{j} := \mathbb{1}_{X_{i}\in
+  A_{n}(X, \Theta')}$). It holds that
+$$
+\mathbb{E}\left[ \sum_{i=1}^n W_{ni}(X)\varepsilon_{i} \right]^2 
+= \mathbb{E}\left[
+\sum_{i,j=1}^n   W_{ni}(X)  W_{nj}(X) \varepsilon_{i} \varepsilon_{j}
+\right]
+= 
+ \mathbb{E}\left[ \sum_{i=1}^n  W_{ni}(X)^2 \varepsilon_{i}^2  \right] 
+ +  \mathbb{E}\left[ \sum_{i \not= j} Z_{i} Z'_{j} \varepsilon_{i} \varepsilon_{j}  \right]
+$$
+Note that the left term considers single trees, whereas
+the right term considers interactions between two trees generated with $\Theta$
+and $\Theta'$, respectively.
+
+\paragraph{Single Trees} To find a vanishing upper bound for the left term,
+notice that we have assumed the noise $\varepsilon_{i}$ to be bounded in (H1).
+We can bound the probability of connection $W_{ni}(X)$ with a simple counting
+argument. Informally, since
+\begin{align*}
+W_{ni}(X) &=  \mathbb{E}\left[ Z_{i} \right]  
+  % &= \mathbb{P}( X, X_i \text{selected in subsampling step} \land X, X_i \text{connected in tree generated with} \Theta)
+= \mathbb{P}(\text{$X$, $X_{i}$ selected in subsampling step $\land$ $X, X_{i}$ connected in tree generated via $\Theta$}) \\
+&\leq
+\mathbb{P}(\text{$X$, $X_{i}$ selected in subsampling step}) \\
+&= \frac{{a_{n}-1\choose n_{1}}}{{a_{n} \choose n}} = \frac{a_{n}}{n}
+\end{align*}
+
+Putting this together, assuming that  $\frac{a_n}{n} \to 0$, we have
+$$
+\mathbb{E}\left[ \sum_{i=1}^n W_{ni}(X) \varepsilon_{i}^2 \right] \leq
+\mathbb{E}\left[ \max_{l \in [n]} W_{nl}(X) \max_{i \in [n]} \varepsilon_{i}^2
+\right] \leq \frac{a_{n}}{n}C \to 0
+ $$
+
+ \paragraph{Tree interactions} There are two different assumptions (H2.1) and
+ (H2.2) that we can make that will allow us to bound the tree interaction term.
+ Here, we wil only treat the proof based on (H2.2). By the rule of iterated
+ expectation, we have
+
+ \begin{align}
+ \mathbb{E}\left[ \sum_{i \not= j} Z_{i} Z'_{j} \varepsilon_{i} \varepsilon_{j} \right]  = 
+  \mathbb{E}\left[ \sum_{i \not= j} Z_{i} Z'_{j} \varepsilon_{i} 
+   \mathbb{E}\left[ \varepsilon_{j} ~|~ X_{i}, X_{j}, Z_{i}, Z'_{j}, Y_{i} \right] 
+   \right]
+   \label{eq:tree-interactions}
+ \end{align}
+We will handle the inner and outer expectations separately. To assert their
+boundedness, we will have to impose two assumptions (H2.2a and H2.2b).
+
+\paragraph{Inner expectation}  In general, for random variables $A, B, C$ (where $B$ is discrete), it holds that
+$$
+ \mathbb{E}\left[ A ~|~B, C \right]  = \sum_{b \in \text{range}(B)}  \frac{\mathbb{E}\left[ A \mathbb{1}_{B=b} ~|~ C \right]}{\mathbb{P}(B=b ~|~C)} \mathbb{1}_{B=b}
+$$
+Applied to eq. (\ref{eq:tree-interactions}), this yields
+\begin{align}
+  \mathbb{E}\left[ \varepsilon_{j} ~|~ X_{i}, X_{j}, Z_{i}, Z'_{j}, Y_{i} \right] 
+  = 
+\sum_{k \in \{ 0,1 \}^2}  \frac{\mathbb{E}\left[ \varepsilon_{i}
+    \mathbb{1}_{(Z_{i}, Z'_{j})=k} ~|~ X_{i}, X_{j}, Y_{i}
+  \right]}{\mathbb{P}((Z_{i}, Z'_{j})=k ~|~ X_{i}, X_{j}, Y_{i})}
+\mathbb{1}_{(Z_{i}, Z'_{j})=k}
+\label{eq:b}
+\end{align}
+This is useful since, in fact, $\mathbb{E}\left[ \varepsilon_{i}
+  \mathbb{1}_{(Z_{i}, Z'_{j})=k} ~|~ X_{i}, X_{j}, Y_{i} \right] =
+\text{Cov}(\varepsilon_{1}, \mathbb{1}_{(Z_{i}, Z'_{j})=k} ~|~ X_{i}, X_{j},
+Y_{j})$ due to that $\mathbb{E}\left[ \varepsilon_{i} ~|~ X_{i}, X_{j}, Y_{j}
+\right] = 0$ (by H1). Note that, if $\varepsilon_{i}$ and $(Z_{i}, Z'_j)$ are
+independent, this term and any covariance or correlation based on it will be
+zero. However, in Random Forests, the partitions -- and thus $(Z_{i}, Z'_{j})$ -- depend
+on the responses $Y_{i}$ due to optimising for purity in the CART Criterion
+during tree construction. Consequently, we will formulate an assumption that
+will express the boundedness of this correlation, and consequently the
+expectation. Based on the definition of correlation, we obtain
+$$
+\text{Corr}( \varepsilon_{i}, \mathbb{1}_{(Z_i, Z'_j)=k} ~|~ X_{i}, X_{j}, Y_{j}  ) 
+= \frac{\text{Cov}(\varepsilon_{i}, \mathbb{1}_{(Z_i, Z'_j)=k}  ~|~ X_{i}, X_{j}, Y_{j} )}{
+\text{Var}^{1/2}(\varepsilon_{i} ~|~ X_{i}, X_{j}, Y_{j}) \text{Var}^{1/2}(\mathbb{1}_{(Z_i, Z'_j)=k}  ~|~ X_{i}, X_{j}, Y_{j})
+}
+$$
+where $\text{Var}^{\nicefrac{1}{2}}(\varepsilon_{i} ~|~ X_{i}, X_{j}, Y_{j}) =
+\sigma$ and $\text{Var}^{1/2}(\mathbb{1}_{(Z_i, Z'_j)=k} ~|~ X_{i}, X_{j},
+Y_{j}) \leq \mathbb{P}((Z_{i}, Z_{j})=k)$.
+
+Consequently,
+$$
+ \mathbb{E}\left[ \varepsilon_{i} \mathbb{1}_{(Z_i, Z'_j)=k} ~|~ X_{i}, X_{j}, Y_{j} \right] 
+ \leq \text{Corr}( \varepsilon_{i}, \mathbb{1}_{(Z_i, Z'_j)=k ~|~ X_{i}, X_{j}, Y_{j}} )  
+ \mathbb{P}^{1/2}((Z_{i}, Z_{j})=k)
+ \sigma
+$$
+
+which, applied to (\ref{eq:b}), yields
+
+$$
+\mathbb{E}\left[ \varepsilon_{j} ~|~ X_{i}, X_{j}, Z_{i}, Z'_{j}, Y_{i} \right] 
+ \leq \sigma \cdot 4 \max_{k \in \{ 0,1 \}^2} \frac{|\text{Corr}(\varepsilon_{i}, \mathbb{1}_{(Z_i, Z'_j)=k} ~|~ X_{i}, X_{j}, Y_{j})|}{
+\mathbb{P}^{1/2}({(Z_i, Z'_j)=k} )
+}
+$$
+This motivates assumption (H2.2a), stated as
+$$
+\max_{k \in \{ 0,1 \}^2} \frac{|\text{Corr}(\varepsilon_{i}, \mathbb{1}_{(Z_i, Z'_j)=k} ~|~ X_{i}, X_{j}, Y_{j})|}{
+\mathbb{P}^{1/2}({(Z_i, Z'_j)=k} )}
+\leq \gamma_{n}
+$$
+for sufficiently large $n$ and a sequence $\{\gamma_{n}\}_n \to 0$. In summary,
+this means that (H2.2a) implies that, almost surely
+$$
+\mathbb{E}\left[ \varepsilon_i ~|~ Z_i, Z'_j, X_i, X_j, Y_j \right] \leq 4
+\sigma \gamma_n
+$$
+
+% eODO (additional) intuition on this
+
+\paragraph{Outer Expectation} If (H2.2a) is given, we have, by linearity of expectation
+\begin{align}
+ \mathbb{E}\left[ \sum_{i \not= j} Z_{i} Z'_{j} \varepsilon_{i} \varepsilon_{j} \right]  = 
+  \mathbb{E}\left[ \sum_{i \not= j} Z_{i} Z'_{j} \varepsilon_{i} 
+   \mathbb{E}\left[ \varepsilon_{j} ~|~ X_{i}, X_{j}, Z_{i}, Z'_{j}, Y_{i} \right] 
+   \right] 
+   \leq \gamma_{n} \sum_{i=1}^n  \mathbb{E}\left[ Z_{i} \varepsilon_{i} \right] 
+   \label{eq:outer-exp}
+\end{align}
+This is where we extract another assumption. We
+use the law of iterated expectation to factor out an expection of the noise
+term:
+$$
+\dots \leq \gamma_{n} \sum_{i=1}^n  \mathbb{E}\left[ Z_i  \mathbb{E}^{\nicefrac{1}{2}}\left[ |\varepsilon_{i}|^2 ~|~ X_{i}, Z_{i} \right]  \right] 
+$$
+Similar to previously, one can then derive assumption (H2.2b) and show that for
+some constant $C > 0$
+$$
+\max_{k \in \{ 0,1 \}} \frac{|\text{Corr}(\varepsilon_{i}^2, \mathbb{1}_{Z_{i}=k} ~|~ X_{i})|}{
+\mathbb{P}^{1/2}(Z_{i}=k ~|~ X_{i})
+}
+\leq C
+\hspace{0.5em} \Rightarrow \hspace{0.5cm}
+ \mathbb{E}\left[ |\varepsilon_{i}|^2 ~|~ X_{i}, Z_{i} \right] \leq 4C \sigma^2
+$$
+Assuming this holds, we obtain, continuing from eq. (\ref{eq:outer-exp})
+$$
+\gamma_{n} \sum_{i=1}^n \mathbb{E}\left[ Z_i \mathbb{E}^{\nicefrac{1}{2}}\left[
+    |\varepsilon_{i}|^2 ~|~ X_{i}, Z_{i} \right] \right] \leq \gamma_{n} 2
+C^{\nicefrac{1}{2}} \sigma \sum_{i=1}^n \mathbb{E}\left[ Z_{i} \right] \leq \gamma_{n} 2
+C^{\nicefrac{1}{2}} \sigma
+$$
+Which concludes the proof of (H2.2) $\Rightarrow$ Theorem 2. In summary, the
+full statement is given below.
+
+
+\begin{mainhyp}[2.2]
+  There exist a constant $C>0$ and a sequence $\left(\gamma_n\right)_n
+  \rightarrow 0$ such that, almost surely, the following two statements hold:
+  \begin{align*}
+                \max _{\ell_1, \ell_2=0,1} \frac{\left|\operatorname{Corr}\left(Y_i-m\left(\mathbf{X}_i\right), \mathbb{1}_{Z_{i, j}=\left(\ell_1, \ell_2\right)} \mid \mathbf{X}_i, \mathbf{X}_j, Y_j\right)\right|}{\mathbb{P}^{1 / 2}\left[Z_{i, j}=\left(\ell_1, \ell_2\right) \mid \mathbf{X}_i, \mathbf{X}_j, Y_j\right]} \leq \gamma_n \tag{H2.2a}\\
+              \max _{\ell_1=0,1} \frac{\left|\operatorname{Corr}\left(\left(Y_i-m\left(\mathbf{X}_i\right)\right)^2, \mathbb{1}_{Z_i=\ell_1} \mid \mathbf{X}_i\right)\right|}{\mathbb{P}^{1 / 2}\left[Z_i=\ell_1 \mid \mathbf{X}_i\right]} \leq C . \tag{H2.2b}
+  \end{align*}
+ \end{mainhyp}
+
+
+\begin{mainthm}[2 (\cite{scornet_ConsistencyRandomForests_2015})]
+  Assume that (H1) and (H2.2) are satisfied, and let $t_n=a_n$. Then, provided
+  $a_n \rightarrow \infty, t_n \rightarrow \infty$ and $a_n \log n / n
+  \rightarrow 0$, random forests are consistent, that is,
+  $$
+  \lim _{n \rightarrow \infty}
+  \mathbb{E}\left[m_n(\mathbf{X})-m(\mathbf{X})\right]^2=0
+  $$
+\end{mainthm}
+
+Let us briefly discuss an alternate set of
+assumptions. Again, it comes into action when handling the tree interaction term
+$\mathbb{E}\left[ \sum_{i\not= j} Z_{i} Z'_{j} \varepsilon_{i} \varepsilon_{j}
+\right]$. Recall that $Z_{i} = 1$ if and only if $X_{i}$ is connected to the query point $X$ in
+a tree generated via $\Theta$. We bring in the additional observation that,
+since each cell contains exactly one point, $x_{i}$ can only be connected to the
+query point $x$ if there are no other points in the hyperrectangle defined by
+$x_i$ and $x$. In this case, we call $x_{i}$ and $x$ \textit{layered nearest
+  neighbours} (LNNs). Previous work gives us a bound on the expected number of
+LNNs of a random query point, denoted by $l_{a_{n}}(X)$ (see
+\cite{scornet_ConsistencyRandomForests_2015}). Let $L_{i}$ be the indicator of
+the event that $X_{i}$ is an LNN to $X$ in a tree generated via $\Theta$ and
+likewise for $L_{j}'$. Let ${\psi_{i, j}=\mathbb{E}\left[Z_i Z_j^{\prime} \mid
+    \mathbf{X}, \Theta, \Theta^{\prime}, \mathbf{X}_1, \ldots,
+    \mathbf{X}_n\right]}$ and ${\psi_{i, j}\left(Y_i,
+    Y_j\right)=\mathbb{E}\left[Z_i Z_j^{\prime} \mid \mathbf{X}, \Theta,
+    \Theta^{\prime}, \mathbf{X}_1, \ldots, \mathbf{X}_n, Y_i, Y_j\right]}$. One
+can show that
+\begin{align*}
+\mathbb{E}\left[ \sum_{i \not= j} Z_{i}, Z'_{j} \varepsilon_{i} \varepsilon_{j}
+\right] & \leq \mathbb{E}\left[ \sum_{i \not= j} ~|\varepsilon_{i}|~
+  |\varepsilon_{j}|~ L_{i} L'_{j} ~|\psi_{ij}(Y_{i}, Y_{j}) - \psi_{ij}|~ \right] \\
+& \leq
+\mathbb{E}\left[ \max_{i \in [n]} |\varepsilon_{i}|^2 ~ \max_{i \not= j}
+  |\psi_{ij}(Y_{i}, Y_{j}) - \psi_{ij}| ~\sum_{i \not= j}  L_{i} L'_{j}\right]
+\end{align*}
+The first factor vanishes since by (H1) noise is assumed to be bounded. The
+third factor is bounded by the total number of LNNs $l_{a_{n}}$, seeing that
+$\sum_{i \not= j} L_{i}, L'_{j} \leq l_{a_{n}}^2(X)$. The second factor is assumed
+to vanish by means of (H2.1).
+
+\begin{mainhyp}[2.1] If $\varepsilon$ is a bounded random variable,
+  (H2.1) can be stated as
+  $$
+  \lim _{n \rightarrow \infty} \mathbb{E}\left[\max _{\substack{i, j \\ i \neq
+        j}}\left|\psi_{i, j}\left(Y_i, Y_j\right)-\psi_{i, j}\right|\right]^2=0
+  $$
+  If we assume Gaussian noise, the above term requires an extra factor of $(log a_n)^{2 p-2}(\log n)^2$.
+\end{mainhyp}
+
+
+
+\subsection{Trees not fully grown (Theorem 1)}
+
+
+
+Theorem 1 acts in the setting of leaves containing more than one point.
+
+\begin{mainthm}[1 (\cite{scornet_ConsistencyRandomForests_2015})]
+  Assume that $(\mathrm{H} 1)$ is satisfied. Then, provided $a_n \rightarrow
+  \infty, t_n \rightarrow \infty$ and $t_n\left(\log a_n\right)^9 / a_n
+  \rightarrow 0$, random forests are consistent, that is,
+  $$
+  \lim _{n \rightarrow \infty} \mathbb{E}\left[m_n(\mathbf{X})-m(\mathbf{X})\right]^2=0
+  $$
+\end{mainthm}
+
+Figure \ref{fig:thm-1-overview} illustrates the individual statements that yield
+Theorem 1. The \textit{theoretical Random Forest} is one built by optimizing a
+CART criterion that is not based on empirical variance but instead on the general
+definition of variance in the limit.
+Trees in a theoretical Random Forest do not depend on a given dataset $D_n$, but
+are still random due to the random selection of candidate split dimensions. A theoretical
+random forest is assumed to be of fixed depth.
+
+
+\begin{figure*}[h]
+  \centering
+  \includegraphics[width=\textwidth]{thm-1-overview.pdf}
+  \caption{Overview of the proof of Theorem 1 (omitting Technical Lemma 1 and Lemma 2). }
+  \label{fig:thm-1-overview}
+\end{figure*}
+
+
+We refrain from illustrating the entire proof of Theorem 1 but nevertheless
+attempt to shed light on the overall strategy and some key ideas. 
+% The proof of Theorem 1 rests
+% on theory developed in \cite{gyorfi}.
+Recall that in finding a regression
+function estimate, we restrict ourselves to a hypothesis class $\mathcal{F}_n$.
+The following Lemma gives a bound on the $L_2$-risk of the estimate in terms of
+estimation and approximation error with respect to $\mathcal{F}_n$.
+
+\begin{lemma}[10.1 (\cite{gyorfi_DistributionFreeTheoryNonparametric_2002})]
+  Let
+  $\mathcal{F}_n$ be a class of functions $f:
+  \mathbb{R}^p \to \mathbb{R}$ depending on the data
+  $D_n$. 
+  Then,
+  \begin{align*}
+    \mathbb{E}\left[ \left|m_n(x)-m(x)\right|^2 \right] \leq
+    & ~ 2 \sup _{f \in \mathcal{F}_n}
+      \left|
+      \frac{1}{n}
+      \sum_{j=1}^n
+      \left| f\left(X_j\right)-Y_j\right|^2-\mathbb{E}\left[(f(X)-Y)\right]^2
+      \right| \\
+      & +\inf _{f \in \mathcal{F}_n} \mathbb{E}\left[\left|f(x)-m(x)\right|^2  \right]
+  \end{align*}
+\end{lemma}
+
+
+
+\paragraph{Estimation error} The first term quantifies the difference between
+the empirical $L_2$-risk and the true $L_2$-risk. This is reminiscent of the
+notion of estimation error. The bound for this term rests on theory developed in
+\cite{gyorfi_DistributionFreeTheoryNonparametric_2002}. To enable this, we have
+to take a detour via first considering the truncated estimate. Luckily, it turns
+out that we can conclude the consistency of the untruncated estimate from there.
+To bound the estimation error, we relate it to characteristics of the induced
+partition (\cite{gyorfi_DistributionFreeTheoryNonparametric_2002} Thm 9.1).
+These characteristics
+are indirectly controlled by the rates required by the theorem.
+% TODO (additional) how so?
+
+
+\paragraph{Approximation error} The second term is the classical approximation
+error. To handle this term, the basic idea is that any Random Forest regression
+function will be cell-wise constant. So, the approximation error will compare
+the difference of the cell-wise estimate with the true estimate at a given
+point. This is bounded by the variation of $m$, enabling the application of
+Proposition 2.
+
+
+% Given the right conditions on $\mathcal{F}_n$, one
+% can show that the empirical $L_2$-risk is in fact (uniformly) close to the true
+% $L_2$ risk.
+
+
+
+%
+% The second term is the classical approximation error.
+%
+% To show consistency, it suffices to show that both terms converge to zero.
+% However, in particular for handling the estimation error, we have to take a
+% detour by first considering the truncated estimate. Luckily, it turns out that
+% we can conclude the consistency of the untruncated estimate from there.
+
+% For a positive sequence
+% $(\beta_{n})_{n}$, we define the **truncated-operator** $T_{\beta_{n}}$ by
+% $$T_{\beta_n} u=\begin{cases}u, & \text { if }|u|<\beta_n, \\ \operatorname{sign}(u) \beta_n, & \text { if }|u| \geq \beta_n .\end{cases}$$
+% Of particular interest are the truncation of regression fn to $\beta_{n}$:   $T_{\beta_n} m_n(\mathbf{X}, \Theta)$
+% ; the truncation of outcomes to $L$: $Y_L=T_L Y$; and the truncation of $i$-th
+% output to $L$:  $Y_{i, L}=T_L Y_i$.
+
+% \begin{mainthm}[Gyorfi, Thm 10.2]
+%   Let $\mathcal{F}_n(\Theta)$ be the set of all functions $f:[0,1]^d \rightarrow
+%   \mathbb{R}$ piecewise constant on each cell of the partition
+%   $\mathcal{P}_n(\Theta)$. If the following holds:
+% \begin{enumerate}[(i)]
+% \item $\lim _{n \rightarrow \infty} \beta_n=\infty$
+%   \item $\lim _{n
+%     \rightarrow \infty} \mathbb{E}\left[\inf _{f \in
+%       \mathcal{F}_n(\Theta),\|f\|_{\infty} \leq \beta_n}
+%     \mathbb{E}_{\mathbf{X}}[f(\mathbf{X})-m(\mathbf{X})]^2\right]=0$
+%   \item for all $L>0$, 
+%   $$
+%   \lim _{n \rightarrow \infty} \mathbb{E}\left[\sup _{\substack{f \in \mathcal{F}_n(\Theta) \\\|f\|_{\infty} \leq \beta_n}}\left|\frac{1}{a_n} \sum_{i \in \mathcal{I}_{n, \Theta}}\left[f\left(\mathbf{X}_i\right)-Y_{i, L}\right]^2-\mathbb{E}\left[f(\mathbf{X})-Y_L\right]^2\right|\right]=0 .
+%   $$
+% \end{enumerate}
+% Then
+% $$
+% \lim _{n \rightarrow \infty} \mathbb{E}\left[T_{\beta_n} m_n(\mathbf{X}, \Theta)-m(\mathbf{X})\right]^2=0
+% $$
+% \end{mainthm}
+
+% Here, (ii) corresponds to the approximation error and (iii) to the estimation
+% error of the truncated estimate. To handle the approximation error, the basic
+% idea is that any regression function will be cell-wise constant. So, the
+% approximation (??) error will compare the difference of the cell-wise estimate with the
+% true estimate at a given point. This is bounded by the variation of $m$,
+% enabling the application of Proposition 2. 
+
+% \section{Discussion}
+% remains to be seen how tree interaction terms, covariance is related to
+% diversity, entropy etc
+
+
+
+% biblatex, see usepackages above
+\printbibliography  
+
+\end{document}
